@@ -1,0 +1,224 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style type="text/css">
+        body {
+            background-color: rgb(33, 33, 45);
+        }
+    </style>
+    <script type="text/javascript" src="js/zepto.js"></script>
+    <title>PID Chat</title>
+</head>
+<body>
+    <div id="chart" height="500" width="1200" style="margin:30px;"></div>
+    <script type="text/javascript">
+        var TOTAL_MINUTES = 10;
+        var cBox;
+        var canvas, ctx;
+        var cWidth, cHeight, cMargin, cSpace;
+        var originX, originY;
+
+        // 获取canvas并获得canvas上下文
+        canvas = document.createElement("canvas");
+        if (canvas && canvas.getContext) {
+            ctx = canvas.getContext("2d");
+        }
+        cBox = document.getElementById("chart");
+
+        canvas.innerHTML = "你的浏览器不支持HTML5 canvas";
+        cBox.appendChild(canvas);
+
+        cMargin = 40;
+        cSpace = 80;
+
+        //将canvas扩大2倍，然后缩小，以适应高清屏幕
+        canvas.width = cBox.getAttribute("width") * 2;
+        canvas.height = cBox.getAttribute("height") * 2;
+        canvas.style.height = canvas.height / 2 + "px";
+        canvas.style.width = canvas.width / 2 + "px";
+        cHeight = canvas.height - cMargin * 2 - cSpace * 2;
+        cWidth = canvas.width - cMargin * 2 - cSpace * 2;
+        originX = cMargin + cSpace;
+        originY = cMargin + cHeight;
+
+        //绘制图表轴
+        ctx.font = "24px Arial";
+        ctx.lineWidth = 2;
+        ctx.fillStyle = "#E0E0E0";
+        ctx.strokeStyle = "#E0E0E0";
+
+        drawLine(originX, originY, originX + cWidth, originY);
+        drawLine(originX, originY, originX, cMargin);
+
+        //绘制标签
+        ctx.strokeStyle = "#E0E0E0";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "white";
+        ctx.font = "22px Verdana";
+        for (var i = 0; i < TOTAL_MINUTES + 1; i++) {
+            var xMarker = parseInt(originX + cWidth * (i / 10));
+            var yMarker = originY + 30;
+            if (i > 0) {
+                drawLine(xMarker, originY, xMarker, originY - 10);
+            }
+            if (i < 10) {
+                var xMarker1 = cWidth / 10 / 6;
+                drawLine(xMarker + xMarker1, originY, xMarker + xMarker1, originY - 5);
+                drawLine(xMarker + xMarker1 * 2, originY, xMarker + xMarker1 * 2, originY - 5);
+                drawLine(xMarker + xMarker1 * 3, originY, xMarker + xMarker1 * 3, originY - 5);
+                drawLine(xMarker + xMarker1 * 4, originY, xMarker + xMarker1 * 4, originY - 5);
+                drawLine(xMarker + xMarker1 * 5, originY, xMarker + xMarker1 * 5, originY - 5);
+            }
+            ctx.fillText(i, xMarker, yMarker, cSpace);
+        }
+
+        //绘制标题
+        ctx.fillText("时 间", originX + cWidth / 2, originY + cSpace - 20);
+        ctx.save();
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText("数 据", - originY + cHeight / 2, cSpace - 20);
+        ctx.restore();
+
+        setTimeout( update, 1000);
+
+        // 数据
+        var SetPoint = new Array();
+        var Pv = new Array();
+        var Out = new Array();
+        // y scale of every kinds.
+        var OffsetOfPos = cHeight / 2;
+        var ScaleOfPos = 1;
+        // x points.
+        var X = new Array();
+        var xStep = cWidth / (TOTAL_MINUTES * 60);
+        for (var i = 0; i < TOTAL_MINUTES * 60; i++) {
+            X.push(originX + i * xStep);
+        }
+
+        function update() {
+            setTimeout( update, 1000);
+            $.get("/action/pid", function(_data, _status){
+        		var data_json = JSON.parse(_data);
+                if (data_json.length == 1) {
+                        // clear
+                        ctx.clearRect(originX + 1, originY - cHeight + 10, cWidth - 2, cHeight - 20);
+                		var pid_info = data_json[0];
+                		if (SetPoint.length >= TOTAL_MINUTES * 60) {
+                			SetPoint.splice(0, 1);
+                            Pv.splice(0, 1);
+                            Out.splice(0, 1);
+                		}
+                		SetPoint.push(parseFloat(pid_info.pos_setpt));
+                        Pv.push(parseFloat(pid_info.pos_v));
+                        Out.push(parseFloat(pid_info.pos_output));
+                        var min = 99999999;
+                        var max = -99999999;
+                        for (var i = 0; i < SetPoint.length; i ++) {
+                            if (SetPoint[i] > max) {
+                                max = SetPoint[i];
+                            }
+                            if (Pv[i] > max) {
+                                max = Pv[i];
+                            }
+                            if (SetPoint[i] < min) {
+                                min = SetPoint[i];
+                            }
+                            if (Pv[i] < min) {
+                                min = Pv[i];
+                            }
+                        }
+                        if (max != min) {
+                            ScaleOfPos = (cHeight - 40) / (max - min);
+                            OffsetOfPos = originY - 20 + min * ScaleOfPos;
+                        }
+                		drawBezier(SetPoint, "rgb(194,54,49)", "pos");
+                		drawBezier(Pv, "rgb(47,69,84)", "pos");
+                        drawBezier(Out, "rgb(255,128,64)");
+                }
+        	});
+        }
+
+        function drawLine(x1, y1, x2, y2) {
+            ctx.strokeStyle = "white";
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+        function drawBezier(point, color, dtype) {
+            if (point.length == 0 || point.length > TOTAL_MINUTES * 60) {
+                return;
+            }
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.font = "20px SimSun";
+            ctx.fillStyle = "#ffffff";
+            var offset = originY - cHeight / 2;
+            var scale = 1;
+            if (dtype == "pos") {
+                offset = OffsetOfPos;
+                scale = ScaleOfPos;
+                ctx.lineWidth = 5;
+            } else {
+                var min = 99999999;
+                var max = -99999999;
+                for (var i = 0; i < point.length; i ++) {
+                    if (point[i] > max) {
+                        max = point[i];
+                    }
+                    if (point[i] < min) {
+                        min = point[i];
+                    }
+                }
+                if (max != min) {
+                    scale = (cHeight - 40) / (max - min);
+                    offset = originY - 20 + min * scale;
+                }
+            }
+            for (i = 1; i < point.length; i++) {
+                if (i == 1) {
+                    ctx.moveTo(X[i], offset - point[i] * scale);
+                } else { //注意是从1开始
+                    var ctrlP = getCtrlPoint(point, i - 1);
+                    ctx.bezierCurveTo(ctrlP.pA.x, offset - ctrlP.pA.y * scale, ctrlP.pB.x, offset - ctrlP.pB.y * scale, X[i], offset - point[i] * scale);
+                }
+            }
+            ctx.stroke();
+        }
+
+        function getCtrlPoint(ps, i, a, b) {
+            if (!a || !b) {
+                a = 0.25;
+                b = 0.25;
+            }
+            if (i < 1) {
+                var pAx = X[0] + (X[1] - X[0]) * a;
+                var pAy = ps[0] + (ps[1] - ps[0]) * a;
+            } else {
+                var pAx = X[i] + (X[i + 1] - X[i - 1]) * a;
+                var pAy = ps[i] + (ps[i + 1] - ps[i - 1]) * a;
+            }
+            if (i > ps.length - 3) {
+                var last = ps.length - 1;
+                var pBx = X[last] - (X[last] - X[last - 1]) * b;
+                var pBy = ps[last] - (ps[last] - ps[last - 1]) * b;
+            } else {
+                var pBx = X[i + 1] - (X[i + 2] - X[i]) * b;
+                var pBy = ps[i + 1] - (ps[i + 2] - ps[i]) * b;
+            }
+            return {
+                pA: { x: pAx, y: pAy },
+                pB: { x: pBx, y: pBy }
+            }
+        }
+
+    </script>
+</body>
+</html>

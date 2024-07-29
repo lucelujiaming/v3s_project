@@ -1,0 +1,3602 @@
+@charset "utf-8";
+/* CSS Document */
+body{
+	overflow: auto;
+	font-family: "Microsoft YaHei","微软雅黑", Tahoma, Verdana;
+}
+
+/*index部分*/
+div.middle-wrap{
+	width: 100%;
+}
+
+div.top-banner{
+	width: 100%;
+	height: 70px;
+	position: fixed;
+	background: #252532;
+	z-index: 899;
+}
+
+div.top-banner-logo{
+	width: 215px;
+	height: 70px;
+	position: relative;
+	background: url(../img/logo.png) no-repeat left top;
+	z-index: 900;
+	cursor: pointer;
+	float: left;
+}
+
+
+div.product-info{
+	padding: 16px;
+	color: #fff;
+	font-size: 16px;
+	line-height: 35px;
+}
+
+div.product-info h1{
+	font-size: 20px;
+	margin: 0 45px 0 2px;
+	float: left;
+}
+
+.top-banner .control{
+	margin-right: 45px;
+}
+
+.top-banner .logout,
+.top-banner .user
+{
+	width: 100px;
+	height: 70px;
+	float: right;
+	z-index: 999;
+	cursor: pointer;
+}
+
+.top-banner .logout span.icon{
+	width: 50px;
+	height: 70px;
+	background: url("../img/logout_normal.png");
+	display: inline-block;
+}
+
+.top-banner .logout:hover span.icon{
+	background: url("../img/logout_hover.png");
+}
+
+.top-banner .logout span.text{
+	font-size: 14px;
+	line-height: 70px;
+	display: inline-block;
+	color: #879BB3;
+}
+
+.top-banner .logout:hover span.text{
+	color: #67AEF7;
+}
+
+.top-banner .user span.icon{
+	width: 50px;
+	height: 70px;
+	background: url("../img/user_normal.png");
+	display: inline-block;
+}
+
+.top-banner .user:hover span.icon{
+	background: url("../img/user_hover.png");
+}
+
+.top-banner .user span.text{
+	font-size: 14px;
+	line-height: 70px;
+	display: inline-block;
+	color: #879BB3;
+}
+
+.top-banner .user:hover span.text{
+	color: #67AEF7;
+}
+
+
+div.main-wrap{
+	padding: 70px 0 0;
+}
+
+@media screen and (min-width: 1921px){
+	div.middle-wrap{
+		width: 1440px;
+		margin: 0 auto;
+	}
+}
+
+
+::-webkit-scrollbar{  
+    width: 8px; 
+    height: 15px; 
+    background: #eee;
+}  
+
+::-webkit-scrollbar-thumb{
+	background: #999; 
+	border-radius: 5px;
+}
+
+
+/*GLOBAL-WARNING*/
+#global-warning-msg{
+	z-index: 1000;
+}
+
+/*主菜单*/
+#menu-advanced{
+	width: 220px;
+	height: 100%;
+    position: fixed;
+    overflow-y:auto; 
+    overflow-x: hidden;
+    background-color: #2F2F39;
+    z-index: 901;
+    box-shadow: 3px 2px 5px #888;
+    
+    scrollbar-face-color:#393946;
+	scrollbar-track-color:#393946;
+	scrollbar-arrow-color:#393946;
+	scrollbar-3dlight-color:#393946;
+	scrollbar-highlight-color:#393946;
+	scrollbar-shadow-color:#393946;
+	scrollbar-base-color:#393946;
+	scrollbar-darkshadow-color:#393946;
+}
+
+#menu-advanced::-webkit-scrollbar{
+	width: 8px; 
+    height: 15px; 
+    background: #666;
+    
+}
+
+#menu-advanced::-webkit-scrollbar-thumb{
+	background: #e1e1e1; 
+	border-radius: 5px;
+}
+
+
+/*一级菜单*/
+div.menu-container ul.menu-tree li.fst a.fst{
+	display: table;
+	width: 220px;
+	height: 48px;
+	background: #393946;
+	color: #9AAABA;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.5s;
+	-moz-transition: all 0.5s; /* Firefox 4 */
+	-webkit-transition: all 0.5s; /* Safari 和 Chrome */
+	-o-transition: all 0.5s; /* Opera */
+}
+
+div.menu-container ul.menu-tree li.fst.selected a.fst,
+div.menu-container ul.menu-tree li.fst:hover a.fst{
+    color: #67AEF7;
+    background: #393946;
+}
+
+div.menu-container ul.menu-tree li.fst a.fst:hover{
+	color: #fff;
+    background: #666;
+}
+
+div.menu-container ul.menu-tree li.fst a.fst span.icon{
+	width: 24px;
+	height: 24px;
+	margin: 12px 16px 12px 24px;
+	display: inline-block;
+	line-height: 48px;
+	background: #fff;
+}
+
+
+div.menu-container ul.menu-tree li.fst a.fst span.text{
+	font-size: 14px;
+    font-weight: bold;
+	display: table-cell;
+	width: 167px;
+}
+
+/*一级菜单的图标映射*/
+div.menu-container ul.menu-tree li#menu-advanced-running-status-li span.icon{
+	background: url("../img/menu/status_normal.png");
+}
+
+div.menu-container ul.menu-tree li#menu-advanced-running-status-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-running-status-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-running-status-li span.icon{
+	background: url("../img/menu/status_active.png");
+}
+
+
+
+div.menu-container ul.menu-tree li#menu-advanced-device-mgnt-li span.icon{
+	background: url("../img/menu/device_normal.png");
+}
+
+div.menu-container ul.menu-tree li#menu-advanced-device-mgnt-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-device-mgnt-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-device-mgnt-li span.icon{
+	background: url("../img/menu/device_active.png");
+}
+
+
+
+div.menu-container ul.menu-tree li#menu-advanced-basic-setting-li span.icon{
+	background: url("../img/menu/setting_normal.png");
+}
+
+div.menu-container ul.menu-tree li#menu-advanced-basic-setting-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-basic-setting-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-basic-setting-li span.icon{
+	background: url("../img/menu/setting_active.png");
+}
+
+
+
+div.menu-container ul.menu-tree li#menu-advanced-wireless-li span.icon{
+	background: url("../img/menu/wireless_normal.png");
+}
+
+div.menu-container ul.menu-tree li#menu-advanced-wireless-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-wireless-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-wireless-li span.icon{
+	background: url("../img/menu/wireless_active.png");
+}
+
+div.menu-container ul.menu-tree li#menu-advanced-ap-manager-li span.icon{
+	background: url("../img/menu/ap_setting_normal.png");
+}
+
+div.menu-container ul.menu-tree li#menu-advanced-ap-manager-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-ap-manager-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-ap-manager-li span.icon{
+	background: url("../img/menu/ap_setting_active.png");
+}
+
+
+
+div.menu-container ul.menu-tree li#menu-advanced-behavior-control-li span.icon{
+	background: url("../img/menu/behavior_normal.png");
+}
+
+div.menu-container ul.menu-tree li#menu-advanced-behavior-control-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-behavior-control-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-behavior-control-li span.icon{
+	background: url("../img/menu/behavior_active.png");
+}
+
+
+div.menu-container ul.menu-tree li#menu-advanced-firewall-li span.icon{
+	background: url("../img/menu/safty_normal.png");
+}
+
+div.menu-container ul.menu-tree li#menu-advanced-firewall-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-firewall-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-firewall-li span.icon{
+	background: url("../img/menu/safty_active.png");
+}
+
+
+
+div.menu-container ul.menu-tree li#menu-advanced-vpn-li span.icon{
+	background: url("../img/menu/vpn_normal.png");
+}
+
+div.menu-container ul.menu-tree li#menu-advanced-vpn-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-vpn-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-vpn-li span.icon{
+	background: url("../img/menu/vpn_active.png");
+}
+
+
+div.menu-container ul.menu-tree li#menu-advanced-portal-li span.icon,
+div.menu-container ul.menu-tree li#menu-advanced-newportal-li span.icon{
+	background: url("../img/menu/portal_normal.png");
+}
+
+div.menu-container ul.menu-tree li#menu-advanced-portal-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-portal-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-portal-li span.icon{
+	background: url("../img/menu/portal_active.png");
+}
+
+div.menu-container ul.menu-tree li#menu-advanced-newportal-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-newportal-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-newportal-li span.icon{
+	background: url("../img/menu/portal_active.png");
+}
+
+
+div.menu-container ul.menu-tree li#menu-advanced-advanced-li span.icon{
+	background: url("../img/menu/advance_normal.png");
+}
+
+div.menu-container ul.menu-tree li#menu-advanced-advanced-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-advanced-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-advanced-li span.icon{
+	background: url("../img/menu/advance_active.png");
+}
+
+
+div.menu-container ul.menu-tree li#menu-advanced-sys-tools-li span.icon{
+	background: url("../img/menu/system_normal.png");
+}
+
+div.menu-container ul.menu-tree li#menu-advanced-sys-tools-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-sys-tools-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-advanced-sys-tools-li span.icon{
+	background: url("../img/menu/system_active.png");
+}
+
+#menu-wizard{
+	width: 168px;
+	height: 32px;
+	line-height: 32px;
+	font-size: 14px;
+	color: #D6CDC8;
+	background: #5B677A;
+	text-align: center;
+	border-radius: 5px;
+	margin: 30px auto;
+	cursor: pointer;
+	font-weight: bold;
+	
+
+	transition: all 0.5s;
+	-moz-transition: all 0.5s; /* Firefox 4 */
+	-webkit-transition: all 0.5s; /* Safari 和 Chrome */
+	-o-transition: all 0.5s; /* Opera */
+}
+
+#menu-wizard:hover{
+	background:#666;
+	color: #fff;
+}
+
+/*版权信息*/
+#menu-footer{
+    margin: 60px auto 100px;
+    clear: both;
+    width: 208px;
+    height: 60px;
+    font-size: 13px;
+    line-height: 18px;
+    color: #8f8f8f;
+    text-align: center;
+    cursor: pointer;
+}
+
+/*二级菜单*/
+div.menu-container ul.sec{
+	background:#2F2F39;
+	font-size: 14px;
+
+}
+
+div.menu-container ul.sec li.sec a.sec{
+	display: table-cell;
+	height: 40px;
+	color: #879BB3;
+    width: 220px;
+    cursor: pointer;
+    transition: all 0.5s;
+	-moz-transition: all 0.5s; /* Firefox 4 */
+	-webkit-transition: all 0.5s; /* Safari 和 Chrome */
+	-o-transition: all 0.5s; /* Opera */
+}
+
+div.menu-container ul.sec li.sec a.sec:hover{
+    background: #666;
+	color: #ffffff;
+}
+div.menu-container ul.sec li.sec a.sec.selected{
+    background: #4D4D5A;
+    color: #fff;
+}
+
+div.menu-container ul.sec li.sec span.selected-tag{
+    width: 4px;
+    height: 40px;
+    margin-right: 68px;
+    background: none;
+    display: inline-block; 
+}
+
+div.menu-container ul.sec li.sec.selected span.selected-tag{
+    width: 4px;
+    height: 40px;
+    background: #67AEF7;
+    display: inline-block; 
+}
+
+/*TAB菜单*/
+.tab-menu-wrapper{
+    background-color: #F6F6F6;
+    position: fixed;
+    z-index: 900;
+    min-width: 1280px;
+    width: 100%;
+
+}
+
+@media screen and (min-width: 1921px){
+	.tab-menu-wrapper{
+	    width: 1440px;
+	}
+}
+.tab-menu{
+    height: 50px;
+    
+}
+.tab-menu ul{
+    height: 50px;
+    position: relative;
+    margin-left: 255px;
+}
+.tab-menu li{
+    display: inline-block;
+    height: 50px;
+}
+.tab-menu div.nav-wrap {
+    width: 150px;
+    height: 46px;
+}
+
+.tab-menu .selected div.nav-wrap,
+.tab-menu .hover div.nav-wrap {
+	border-bottom: 4px solid #67AEF7;
+	color: #67AEF7;
+}
+
+.tab-menu .nohover div.nav-wrap {
+	border-bottom: none;
+}
+
+.tab-menu a.nav {
+	margin: 0 auto;
+	display: block;
+    font-size: 16px;
+    line-height: 50px;
+    font-weight: bold;
+    text-align: center;
+}
+.tab-menu a.nav:hover,
+.tab-menu .selected a
+{
+    color: #67AEF7;
+}
+
+.tab-menu a,
+.tab-menu .nohover a
+{
+	color: #666;
+}
+
+
+
+
+
+
+/*主要内容*/
+div.function-container{
+	margin-left: 210px;
+	background-color: #ffffff;
+	padding: 5px 45px;
+
+}
+
+.mask#mask{
+	position: fixed;
+	width: 100%;
+	height: 100%;
+}
+
+
+/*系统状态*/
+.state-wrap{
+	width: 984px;
+	min-height: 1000px;
+}
+
+.state-box{
+	border:1px solid #E7E7E7;
+}
+
+.state-box .head{
+	height: 46;
+	line-height: 46px;
+	border-bottom: 1px solid #E7E7E7;
+}
+
+.state-box .head .more{
+	width: 68px;
+	height: 46px;
+	float: right;
+	text-align: center;
+	font-size: 14px;
+	display: inline-block;
+	cursor: pointer;
+	border-left: 1px solid #E7E7E7;
+	color: #989898;
+}
+
+.state-box .head .more:hover{
+	color: #67AEF7;
+}
+
+.state-box .head h1{
+	margin-left: 24px;
+	font-size: 18px;
+	color: #5A82B0;
+}
+
+
+.state-box#interface-info{
+	margin-bottom: 20px;
+}
+
+.state-box#wireless-info{
+	width: 328px;
+	display: inline-block;
+	vertical-align: top;
+}
+
+.state-wrap-right{
+	display: inline-block;
+	width: 648px;
+	vertical-align: top;
+}
+
+.state-wrap-right.wire{
+	display: inline-block;
+	width: 982px;
+	vertical-align: top;
+}
+
+.state-box#flow-info,
+.state-box#hardware-info{
+	width: 626px;
+	margin: 0 0 24px 20px;
+}
+
+
+.state-wrap-right.wire .state-box#flow-info,
+.state-wrap-right.wire .state-box#hardware-info{
+	width: 982px;
+	margin: 0 0 24px 0px;
+}
+
+.state-box#interface-info .box-body{
+	height: 240px;
+}
+
+.state-box#interface-info .box-body.nine{
+	height: 382px;
+}
+
+.state-box#interface-info .box-body.eight,
+.state-box#interface-info .box-body.line-nine{
+	height: 180px;
+}
+
+
+
+.state-box .interface-wan{
+	width: 192px;
+	height: 234px;
+	border: 2px solid #fff;
+	position: relative;
+	display: inline-block;
+	vertical-align: top;
+}
+
+.state-box .interface-lan{
+	width: 192px;
+	
+	vertical-align: top;
+	border: 2px solid #fff;
+	position: relative;
+	display: inline-block;
+}
+
+.state-box .interface-wan.error:hover{
+	height: 236px;
+	border: 2px solid #E7E7E7;
+	box-shadow: 0 0 8px #E7E7E7;
+	position: relative;
+}
+
+.state-box .box-body.nine .interface-wan,
+.state-box .box-body.nine .interface-lan{
+	border: 1px solid #E7E7E7;
+	width: 194.4px;
+	height: 190px;
+}
+
+.state-box .box-body.nine #wan1{
+	top: -1px;
+	border-top: 2px solid #E7E7E7;
+}
+
+.state-box .box-body.nine #wan3,
+.state-box .box-body.nine #lan7{
+	border-right: 2px solid #E7E7E7;
+}
+
+.state-box .box-body.nine .interface-wan:hover,
+.state-box .box-body.nine .interface-lan:hover{
+	box-shadow: 0 0 15px #E7E7E7;
+	position: relative;
+}
+
+.state-box .box-body.eight .interface-wan,
+.state-box .box-body.eight .interface-lan{
+	border: 1px solid #E7E7E7;
+	width: 120.7px;
+	height: 178px;
+}
+
+.state-box .box-body.line-nine .interface-wan,
+.state-box .box-body.line-nine .interface-lan{
+	border: 1px solid #fff;
+	width: 107px;
+	height: 178px;
+}
+
+.state-box .box-body.eight .interface-wan:hover,
+.state-box .box-body.eight .interface-lan:hover{
+	box-shadow: 0 0 15px #E7E7E7;
+	position: relative;
+}
+
+.state-box .box-body.line-nine .interface-wan:hover,
+.state-box .box-body.line-nine .interface-lan:hover{
+	border: 1px solid #E7E7E7;
+	box-shadow: 0 0 15px #E7E7E7;
+	position: relative;
+}
+
+
+.state-box .interface-wan h1,
+.state-box .interface-lan h1
+{
+	font-size: 14px;
+	color: #5E666E;
+	margin: 18px auto 8px;
+	text-align: center;
+}
+
+.state-box .interface-wan h2,
+.state-box .interface-lan h2{
+	font-size: 14px;
+	color: #5E666E;
+	margin: 8px auto 2px;
+	text-align: center;
+}
+
+
+.state-box .interface-wan h3,
+.state-box .interface-lan h3,
+.state-box .interface-lan-wrap h3{
+	font-size: 12px;
+	color: #5E666E;
+	line-height: 18px;
+	text-align: center;
+}
+
+.state-box .box-body.nine .interface-wan h3,
+.state-box .box-body.nine .interface-lan h3,
+.state-box .box-body.nine .interface-lan-wrap h3{
+	color: #fff;
+}
+
+.state-box .box-body.eight .interface-wan h3,
+.state-box .box-body.eight .interface-lan h3,
+.state-box .box-body.eight .interface-lan-wrap h3{
+	color: #fff;
+}
+
+.state-box .box-body.line-nine .interface-wan h3,
+.state-box .box-body.line-nine .interface-lan h3,
+.state-box .box-body.line-nine .interface-lan-wrap h3{
+	color: #fff;
+}
+
+.state-box .interface-wan .connect-box,
+.state-box .interface-lan .connect-box,
+.state-box .interface-lan-wrap .interface-lan .connect-box{
+	width: 66px;
+	height: 66px;
+	margin: 0 auto;
+	position: relative;
+}
+
+.state-box .interface-wan .connect-box .alert{
+	width: 24px;
+	height: 24px;
+	top: -12px;
+	left: 54px;
+	background: url("../img/wan_alert.png");
+	position: relative;
+}
+
+.state-box .interface-wan.active .connect-box{
+	background: url("../img/wan_active.png");
+}
+
+.state-box .interface-wan.error .connect-box{
+	background: url("../img/wan_error.png");
+}
+
+.state-box .interface-wan.error .wan-error-tips{
+	width: 165px;
+	padding: 10px;
+	top: -40px;
+	left: 80px;
+	position: absolute;
+	background: #000;
+	color: #fff;
+	font-size: 12px;
+	border-radius: 3px;
+	z-index: 997;
+	display: none;
+	
+	opacity: 0;
+	filter : alpha(opacity=0);
+	-moz-opacity:0;
+	-khtml-opacity: 0;
+	
+	transition: all 0.5s;
+	-moz-transition: all 0.5s; /* Firefox 4 */
+	-webkit-transition: all 0.5s; /* Safari 和 Chrome */
+	-o-transition: all 0.5s; /* Opera */
+}
+
+
+
+.state-box .box-body.nine .interface-wan .wan-error-tips,
+.state-box .box-body.nine .interface-lan .wan-error-tips{
+	width: 165px;
+	padding: 10px;
+	top: -40px;
+	left: 80px;
+	position: absolute;
+	background: #000;
+	color: #fff;
+	font-size: 12px;
+	border-radius: 3px;
+	z-index: 997;
+	display: none;
+	
+	opacity: 0;
+	filter : alpha(opacity=0);
+	-moz-opacity:0;
+	-khtml-opacity: 0;
+	
+	transition: all 0.5s;
+	-moz-transition: all 0.5s; /* Firefox 4 */
+	-webkit-transition: all 0.5s; /* Safari 和 Chrome */
+	-o-transition: all 0.5s; /* Opera */
+}
+
+.state-box .box-body.nine .interface-wan.error .wan-error-tips{
+	width: 165px;
+	padding: 10px;
+	top: -80px;
+	left: 80px;
+	position: absolute;
+	background: #000;
+	color: #fff;
+	font-size: 12px;
+	border-radius: 3px;
+	z-index: 997;
+	display: none;
+	
+	opacity: 0;
+	filter : alpha(opacity=0);
+	-moz-opacity:0;
+	-khtml-opacity: 0;
+	
+	transition: all 0.5s;
+	-moz-transition: all 0.5s; /* Firefox 4 */
+	-webkit-transition: all 0.5s; /* Safari 和 Chrome */
+	-o-transition: all 0.5s; /* Opera */
+}
+
+.state-box .box-body.eight .interface-wan .wan-error-tips,
+.state-box .box-body.eight .interface-lan .wan-error-tips{
+	width: 165px;
+	padding: 10px;
+	top: -55px;
+	left: 0px;
+	position: absolute;
+	background: #000;
+	color: #fff;
+	font-size: 12px;
+	border-radius: 3px;
+	z-index: 997;
+	display: none;
+	
+	opacity: 0;
+	filter : alpha(opacity=0);
+	-moz-opacity:0;
+	-khtml-opacity: 0;
+	
+	transition: all 0.5s;
+	-moz-transition: all 0.5s; /* Firefox 4 */
+	-webkit-transition: all 0.5s; /* Safari 和 Chrome */
+	-o-transition: all 0.5s; /* Opera */
+}
+
+.state-box .box-body.eight .interface-wan.error .wan-error-tips{
+	width: 165px;
+	padding: 10px;
+	top: -95px;
+	left: 0px;
+	position: absolute;
+	background: #000;
+	color: #fff;
+	font-size: 12px;
+	border-radius: 3px;
+	z-index: 997;
+	display: none;
+	
+	opacity: 0;
+	filter : alpha(opacity=0);
+	-moz-opacity:0;
+	-khtml-opacity: 0;
+	
+	transition: all 0.5s;
+	-moz-transition: all 0.5s; /* Firefox 4 */
+	-webkit-transition: all 0.5s; /* Safari 和 Chrome */
+	-o-transition: all 0.5s; /* Opera */
+}
+
+
+.state-box .box-body.line-nine .interface-wan .wan-error-tips,
+.state-box .box-body.line-nine .interface-lan .wan-error-tips{
+	width: 165px;
+	padding: 10px;
+	top: -55px;
+	left: 0px;
+	position: absolute;
+	background: #000;
+	color: #fff;
+	font-size: 12px;
+	border-radius: 3px;
+	z-index: 997;
+	display: none;
+	
+	opacity: 0;
+	filter : alpha(opacity=0);
+	-moz-opacity:0;
+	-khtml-opacity: 0;
+	
+	transition: all 0.5s;
+	-moz-transition: all 0.5s; /* Firefox 4 */
+	-webkit-transition: all 0.5s; /* Safari 和 Chrome */
+	-o-transition: all 0.5s; /* Opera */
+}
+
+.state-box .box-body.line-nine .interface-wan.error .wan-error-tips{
+	width: 165px;
+	padding: 10px;
+	top: -95px;
+	left: 0px;
+	position: absolute;
+	background: #000;
+	color: #fff;
+	font-size: 12px;
+	border-radius: 3px;
+	z-index: 997;
+	display: none;
+	
+	opacity: 0;
+	filter : alpha(opacity=0);
+	-moz-opacity:0;
+	-khtml-opacity: 0;
+	
+	transition: all 0.5s;
+	-moz-transition: all 0.5s; /* Firefox 4 */
+	-webkit-transition: all 0.5s; /* Safari 和 Chrome */
+	-o-transition: all 0.5s; /* Opera */
+}
+
+
+
+.state-box .interface-wan.error .wan-error-tips .triangle{
+	font-size: 12px;
+	line-height: 5px;
+	text-align: center;
+	color: #000;
+	z-index: 998;
+	position: absolute;
+	top:53px;
+	left: 82.5px;
+}
+
+.state-box .box-body.nine .interface-wan .wan-error-tips .triangle,
+.state-box .box-body.nine .interface-lan .wan-error-tips .triangle{
+	font-size: 12px;
+	line-height: 5px;
+	text-align: center;
+	color: #000;
+	z-index: 998;
+	position: relative;
+	top:16px;
+	left: 0;
+}
+
+.state-box .interface-wan:hover .wan-error-tips,
+.state-box .box-body.nine .interface-wan:hover .wan-error-tips,
+.state-box .box-body.nine .interface-lan:hover .wan-error-tips{
+	opacity: 0.7;
+	filter : alpha(opacity=70);
+	-moz-opacity:0.7;
+	-khtml-opacity: 0.7;
+	display: block;
+}
+
+.state-box .box-body.eight .interface-wan .wan-error-tips .triangle,
+.state-box .box-body.eight .interface-lan .wan-error-tips .triangle{
+	font-size: 12px;
+	line-height: 5px;
+	text-align: center;
+	color: #000;
+	z-index: 998;
+	position: relative;
+	top:16px;
+	left: 0;
+}
+
+.state-box .interface-wan:hover .wan-error-tips,
+.state-box .box-body.eight .interface-wan:hover .wan-error-tips,
+.state-box .box-body.eight .interface-lan:hover .wan-error-tips{
+	opacity: 0.7;
+	filter : alpha(opacity=70);
+	-moz-opacity:0.7;
+	-khtml-opacity: 0.7;
+	display: block;
+}
+
+.state-box .box-body.line-nine .interface-wan .wan-error-tips .triangle,
+.state-box .box-body.line-nine .interface-lan .wan-error-tips .triangle{
+	font-size: 12px;
+	line-height: 5px;
+	text-align: center;
+	color: #000;
+	z-index: 998;
+	position: relative;
+	top:16px;
+	left: 0;
+}
+
+.state-box .interface-wan:hover .wan-error-tips,
+.state-box .box-body.line-nine .interface-wan:hover .wan-error-tips,
+.state-box .box-body.line-nine .interface-lan:hover .wan-error-tips{
+	opacity: 0.7;
+	filter : alpha(opacity=70);
+	-moz-opacity:0.7;
+	-khtml-opacity: 0.7;
+	display: block;
+}
+
+.state-box .interface-wan.disconnect .connect-box,
+.state-box .interface-lan.disconnect .connect-box{
+	background: url("../img/wan_lan_disabled.png");
+}
+
+.state-box .interface-wan .linktype
+{
+	margin: 20px auto 0;
+}
+
+.state-box .box-body.nine .interface-wan.error .linktype
+{
+	margin: 10px auto 0;
+}
+
+.state-box .box-body.eight .interface-wan.error .linktype
+{
+	margin: 10px auto 0;
+}
+
+.state-box .box-body.line-nine .interface-wan.error .linktype
+{
+	margin: 10px auto 0;
+}
+
+.state-box .box-body.nine .interface-wan .linktype
+{
+	margin: 0 auto;
+}
+
+.state-box .box-body.eight .interface-wan .linktype
+{
+	margin: 0 auto;
+}
+
+.state-box .box-body.line-nine .interface-wan .linktype
+{
+	margin: 0 auto;
+}
+
+.state-box .interface-lan-wrap .linktype{
+	margin: 18px auto 0;
+}
+
+.state-box .interface-lan-wrap{
+	display: inline-block;
+}
+
+.state-box .interface-lan.active .connect-box{
+	background: url("../img/lan_active.png");
+}
+
+
+#interface-more .state-content-title{
+	margin: 24px 0 16px 0;
+	font-size: 16px;
+	color: #5E666E;
+}
+
+/*无线状态*/
+.state-box .wireless-box{
+	padding: 24px 0;
+	border:1px solid #E7E7E7;
+	border-width: 0  0 1px 0;
+	overflow: hidden;
+}
+
+.state-box .wireless-box span.icon{
+	width: 24px;
+	height: 24px;
+	display: inline-block;
+	margin: 0 8px 0 24px;
+	background: url("../img/wireless_enable_icon.png");
+}
+
+.state-box .wireless-box.disabled span.icon{
+	background: url("../img/wireless_disable_icon.png");
+}
+
+.state-box .wireless-box span.icon.visitor{
+	width: 24px;
+	height: 24px;
+	display: inline-block;
+	margin: 0 8px 0 24px;
+	background: url("../img/visitor_enable_icon.png");
+}
+
+.state-box .wireless-box.disabled span.icon.visitor{
+	background: url("../img/visitor_disable_icon.png");
+}
+
+.state-box .wireless-box span.text{
+	width: 106px;
+	font-size: 22px;
+	line-height: 24px;
+	color: #5C5C5C;
+	display: inline-block;
+}
+
+.state-box .wireless-box span.button{
+	width: 44px;
+	height: 24px;
+	font-size: 14px;
+	color: #5E666E;
+	line-height: 24px;
+	display: inline-block; 
+}
+
+.state-box .wireless-box.disabled span.button{
+
+}
+
+.state-box .wireless-box table{
+	margin: 16px  0 0 56px;
+}
+
+.state-box .wireless-box table tr{
+	height: 26px;
+	line-height: 26px;
+	font-size: 12px;
+	color: #5E666E;
+
+}
+
+.state-box .wireless-box table tr td{
+	width: 106px;
+	display: inline-block; 
+	text-align: left;
+	white-space: nowrap;
+}
+
+
+.state-content .state-tab-wrap{
+	margin: 0 auto 24px;
+	text-align: center;
+}
+
+.state-content .state-tab-wrap .state-tab{
+	width: 160px;
+	height: 32px;
+	background: #F2F2F2;
+	border: 1px solid #E7E7E7;
+	color: #8f8f8f;
+	font-size: 16px;
+	line-height: 32px;
+	text-align: center;
+	display: inline-block;
+	cursor: pointer;
+
+	transition: all 0.5s;
+	-moz-transition: all 0.5s; /* Firefox 4 */
+	-webkit-transition: all 0.5s; /* Safari 和 Chrome */
+	-o-transition: all 0.5s; /* Opera */
+}
+
+.state-content .state-tab-wrap .state-tab.fst{
+	border-radius: 5px 0 0 5px;
+}
+
+.state-content .state-tab-wrap .state-tab.lst{
+	border-radius: 0 5px 5px 0;
+}
+
+.state-content .state-tab-wrap .state-tab:hover,
+.state-content .state-tab-wrap .state-tab.selected{
+	color: #49A3FF;
+	background: #fff;
+}
+
+
+/*流量统计*/
+.state-box .rate-title{
+	height: 72px;
+}
+
+.state-wrap-right.wire .state-box .rate-title{
+	width: 630px;
+	margin: 0 auto;
+}
+
+.state-box .rate-title span.current{
+	margin: 0 380px 0 24px;
+	font-size: 16px;
+	color: #5C5C5C;
+	display: inline-block;
+	line-height: 72px;
+}
+
+.state-box .rate-title span.icon{
+	width: 14px;
+	height: 14px;
+	display: inline-block;
+	line-height: 72px;
+	border-radius: 3px;
+	margin-right: 6px;
+}
+
+.state-box .rate-title span.icon.up{
+	background: #36CC8F;
+}
+
+.state-box .rate-title span.icon.down{
+	background: #65B2FB;
+	margin-left: 20px;
+}
+
+
+.state-box .flow-box{
+	height: 72px;
+}
+
+.state-wrap-right.wire .state-box .flow-box{
+	width: 630px;
+	margin: 0 auto;
+}
+
+.state-box .flow-box span.icon{
+	width: 24px;
+	height: 24px;
+	display: inline-block;
+	margin: 24px 8px 24px 24px;
+	background: url("../img/wan_small.png");
+}
+
+.state-box .flow-box span.text{
+	width: 45px;
+	height: 72px;
+	line-height: 72px;
+	font-size: 14px;
+	display: inline-block;
+}
+
+.state-box .flow-box span.rate{
+	width: 507px;
+	height: 72px;
+	margin-left: 12px;
+	display: inline-block;
+}
+
+
+.state-box .flow-box .rate .bar{
+	width: 500px;
+	margin-top: 15px;
+	display: inline-block;
+
+}
+
+.state-box .flow-box .rate .bar span.bar-bg{
+	width: 340px;
+	height: 8px;
+	background: #F5F5F5;
+	display: inline-block;
+	position: relative;
+	border-radius: 5px;
+}
+
+.state-box .flow-box .rate .up.bar span.bar-data{
+	max-width: 340px;
+	height: 8px;
+	background: #75E1A9;
+	position: absolute;
+	top:0;
+	left: 0;
+	display: inline-block;
+	border-radius: 5px;
+}
+
+.state-box .flow-box .rate .down.bar span.bar-data{
+	max-width: 410px;
+	height: 8px;
+	background: #65B2FB;
+	position: absolute;
+	top:0;
+	left: 0;
+	display: inline-block;
+	border-radius: 5px;
+}
+
+.state-box .flow-box .rate .bar span.speed{
+	font-size: 12px;
+	line-height: 12px;
+	margin-left: 4px;
+}
+
+.state-box .flow-box .rate .up.bar span.speed{
+	color: #36CC8F;
+}
+
+.state-box .flow-box .rate .down.bar span.speed{
+	color: #3A93E7;
+}
+
+.state-box .flow-box .rate .bar span.arrow{
+	width: 12px;
+	height: 12px;
+	display: inline-block;
+	margin-left: 10px;
+}
+
+.state-box .flow-box .rate .up.bar span.arrow{
+	background: url("../img/arrow_up.png");
+}
+
+.state-box .flow-box .rate .down.bar span.arrow{
+	background: url("../img/arrow_down.png");
+}
+
+
+#flow-more .ipstat-text{
+	margin: 5px 0;
+	line-height: 20px;
+}
+
+/*硬件资源*/
+.state-box .percent-box{
+	width: 310px;
+	height: 270px;
+	display: inline-block;
+	vertical-align: top;
+}
+
+.state-box#hardware-info .box-body{
+	height: 270px;
+}
+
+.state-wrap-right.wire .state-box#hardware-info .box-body{
+	width: 630px;
+	margin: 0 auto;
+}
+
+.state-box .percent-box h1.title{
+	margin: 16px 0 20px 24px;
+	font-size: 16px;
+	color: #5C5C5C;
+}
+
+.state-box .percent-box .percent{
+	margin: 0 auto;
+	text-align: center;
+}
+
+.state-box .percent-box h2.description{
+	margin: 24px auto;
+	color: #5E666E;
+	font-size: 12px;
+	text-align: center;
+}
+
+
+.version{
+	margin-top: 24px;
+	display: block;
+	color: #969696;
+	line-height: 26px;
+	font-size: 14px;
+}
+
+/*快速配置*/
+.wizard-container .wizard-step{
+	width: 200px;
+	height: 540px;
+	display: inline-block;
+}
+
+
+/*WAN-MODE*/
+.interface-mode{
+	width: 720px;
+	height: 160px;
+	margin: 20px 0 30px;
+	border: 1px solid #D3D3D3;
+	border-radius: 4px;
+}
+
+.interface-mode.nine{
+	height: 320px;
+}
+
+.interface-mode .interface-box{
+	width: 144px;
+	height: 160px;
+	display: inline-block;
+	text-align: center;
+}
+
+.interface-mode.eight .interface-box{
+	width: 90px;
+	height: 160px;
+	display: inline-block;
+	text-align: center;
+}
+
+.interface-mode.line-nine .interface-box{
+	width: 80px;
+	height: 160px;
+	display: inline-block;
+	text-align: center;
+}
+
+.interface-mode .interface-box h1{
+	font-size: 14px;
+	color: #5E666E;
+	margin: 20px auto 4px;
+}
+
+.interface-mode .interface-box h2{
+	font-size: 14px;
+	color: #5E666E;
+	margin:8px auto 0;
+}
+
+.interface-mode .interface-box .icon{
+	width: 66px;
+	height: 66px;
+	margin: 0 auto;
+	display: block;
+}
+
+.interface-mode .interface-box.wan .icon{
+	background:url("../img/wan_active.png");
+}
+
+.interface-mode .interface-box.lan .icon{
+	background:url("../img/lan_active.png");
+}
+
+
+
+/*WAN设置*/
+.wan-btn-wrap{
+	margin-top: 40px;
+}
+
+#wan_adv{
+	display: none;
+}
+
+
+
+
+
+
+
+
+div.top-footer{
+	background-color: #e6e6e6;
+    display: none;
+	/*clear: both;*/
+}
+div.top-footer div.top-footer-wrap{
+	padding: 16px 20px;
+}
+div.top-footer div.top-footer-wrap span#hardware-version-title{
+	margin-left: 30px;
+}
+div.top-footer div.top-footer-wrap span.help-faq{
+	float: right;
+	/*margin-left: 288px;*/
+}
+div.top-footer div.top-footer-wrap a.btn-faq{
+	color: #000000;
+	text-decoration: underline;
+}
+
+
+
+
+
+@media screen and (max-height: 800px) { /*当屏幕尺寸小于800px时，应用下面的CSS样式*/
+
+}
+
+
+div.menu-container{
+	float: left;
+}
+div.menu-container ul.menu-tree{
+	/*padding: 18px 0 8px 0;*/
+	/*padding-top: 20px;*/
+	padding-bottom: 8px;
+}
+div.menu-container ul.menu-tree li a{
+	overflow: hidden;
+	white-space: normal;
+	word-break: normal;
+	word-wrap: normal;
+}
+
+.top-main-wrap{
+
+}
+
+
+
+
+.user-info{
+	background-color: #f2f2f2;
+	height: 30px;
+	border-bottom: 1px solid #ccc;
+}
+
+/*span.reboot-confirm-msg-icon{
+	display: inline-block;
+	width: 30px;
+	height: 30px;
+	background: url(../img/icons-01.png) no-repeat -219px -111px;
+}
+span.reboot-confirm-msg-text{
+	display: inline-block;
+	margin-left: 20px;
+}
+div.reboot-confirm-qa{
+	margin: 30px 0;
+}*/
+div.msg-container.reboot-confirm-size{
+	width: 400px;
+}
+
+div.msg-container.new-page{
+	width: 800px;
+	max-height: 600px;
+	min-height: 400px;
+}
+
+div.msg-container.wizard{
+	width: 810px;
+	height: 605px;
+
+	width: 810px \9;
+	height: 608px \9;
+	overflow: hidden;
+}
+
+div.msg-container.caution{
+	width: 600px;
+	height: 400px;
+}
+
+div.msg-container.state-more{
+	width: 1000px;
+	height: 650px;
+}
+
+div.msg-container .state-content{
+	width: 100%;
+	height: 430px;
+	overflow: auto;
+}
+
+
+div.msg-container.reboot-confirm-size div.msg-wrap{
+	/*height: 166px;*/
+}
+div.reboot-loading-msg{
+	margin: -6px 10px 64px -20px;
+	color: #115b96;
+	width: 390px; 
+}
+div.reboot-loading-msg div#multi_probar_note{
+	margin: 20px 5px 0;
+	width: 390px;
+}
+div.reboot-loading-msg div#multi_probar_note span.text{
+	color: #000;
+	margin-left: 10px;
+}
+div.reboot-loading-msg div#multi_probar_note div{
+	margin-top: 5px;
+}
+div.reboot-loading-msg div#multi_probar_note span{
+	display: inline-block;
+}
+div.reboot-loading-msg div#multi_probar_note span.multi_probar_step{
+	background: url(../img/icons-01.png) no-repeat -79px -430px;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    color: #FFFFFF;
+    line-height: 20px;
+    text-align: center;
+}
+div.reboot-loading-msg div#multi_probar_note span.probar_finish{
+	background: url(../img/icons-01.png) no-repeat -137px -430px;
+    display: none;
+    width: 20px;
+    height: 20px;
+    margin-left: 30px;
+}
+div.reboot-loading-msg div.progressbar-wrap-outer{
+	margin-top: 20px;
+}
+div.reboot-loading-msg div.progressbar-text{
+}
+p.reboot-progressbar-text{
+	padding-left: 5px;
+	line-height: 20px;
+}
+
+/*div.menu-container ul.menu-tree li#menu-basic-qos-li.fst a.fst span.icon{
+	background-position: -7px -151px;
+}
+div.menu-container ul.menu-tree li#menu-basic-qos-li.fst:hover a.fst span.icon,
+div.menu-container ul.menu-tree li#menu-basic-qos-li.fst.selected a.fst span.icon{
+	background-position: -43px -151px;
+}*/
+
+/*div.advanced-block.part-seperate,
+div.basic-block.part-seperate{
+	margin-top: 15px;
+	margin-bottom: 5px;
+}*/
+div.advanced-block,
+div.basic-block{
+	padding: 5px 0;
+	cursor: pointer;
+	/*width: 100px;*/
+	margin-bottom: 12px;
+	display: inline-block;
+}
+div.advanced-block span.advanced-icon,
+div.advanced-block span.advanced-text,
+div.basic-block span.basic-icon,
+div.basic-block span.basic-text{
+	display: inline-block;
+}
+div.advanced-block span.advanced-text,
+div.basic-block span.basic-text{
+	margin-left: 5px;
+	color: #3E97F3;
+}
+div.advanced-block span.advanced-icon,
+div.basic-block span.basic-icon{
+	width: 24px;
+	height: 24px;
+}
+div.basic-block span.basic-icon{
+	background: url(../img/pullup_normal.png) no-repeat;
+}
+div.advanced-block span.advanced-icon{
+	background: url(../img/pulldown_normal.png) no-repeat;
+}
+
+div.advanced-block:hover,
+div.basic-block:hover{
+	color: #78B6F6;
+}
+div.basic-block:hover span.basic-icon{
+	background: url(../img/pullup_hover.png) no-repeat;
+}
+div.advanced-block:hover span.advanced-icon{
+	background: url(../img/pulldown_hover.png) no-repeat;
+}
+
+
+/**** add by szz start *********************************************************************************************/
+/** internet****/
+div.mode-change{
+	position: absolute;
+	top: 3px;
+	right: 10px;
+}
+div.mode-change span.first-mode, div.mode-change span.second-mode{
+	display: inline-block;
+	cursor: pointer;
+	padding: 2px 3px;
+}
+div.mode-change span.mode-select{
+	color: #0094BC;
+}
+div.radio-content-wrap div.widget-container.custom-mac-value{
+	margin-left: 13px;
+}
+div.mode-change span.disabled{
+	cursor: default;
+	color: #b2b2b2;
+}
+
+/***  streamboost  ****/
+div.sb-network-map{
+	width: 706px;
+	min-height: 500px;
+	position: relative;
+/*	background: url(../img/streamboost_map_1.png) no-repeat left top;	*/
+}
+div.sb-network-map div.line-speed{
+	width: 215px;
+	border-top: 1px solid #d9d9d9;
+	position: absolute;
+	top: 110px;
+	left: 206px;
+}
+div.sb-network-map div.line-vertical{
+	height: 28px;
+	border-left: 1px solid #d9d9d9;
+	position: absolute;
+	top: 164px;
+	left: 472px;
+}
+div.sb-network-map div.line-content{
+	width: 385px;
+	height: 30px;
+	border: 1px solid #d9d9d9;
+	border-bottom: none;
+	position: absolute;
+	top: 192px;
+	left: 166px;	
+}
+div.sb-network-map div.line-box-left, div.sb-network-map div.line-box-right{
+	width: 340px;
+	height: 130px;
+	border: 1px solid #d9d9d9;
+	position: absolute;
+	top: 223px;
+	left: 0px;
+	border-radius: 4px;
+}
+div.sb-network-map div.line-box-right{
+	left: 370px;	
+}
+div.sb-network-map span.text{
+	position: absolute;
+	bottom: -20px;
+	display: inline-block;
+	width: 100%;
+	text-align: center;
+}
+div.sb-network-map span.num{
+	position: absolute;
+	top: -12px;
+	right: -17px;
+	display: none;
+	padding-top: 2px;
+	width: 20px;
+	height: 18px;
+	border: 1px solid #f7931e;
+	background-color: #f7931e;
+	border-radius: 20px;
+	color: #fff;
+	text-align: center;
+}
+div.sb-map-internet-up span.speed-up-icon, div.sb-map-internet-down span.speed-down-icon{
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	margin-right: 5px;
+	background: url(../img/icons-02.png) no-repeat -2px -2px;
+}
+div.sb-map-internet-down span.speed-down-icon{
+	background: url(../img/icons-02.png) no-repeat -2px -20px;	
+}
+
+div.sb-map-internet, div.sb-map-internet-up, div.sb-map-internet-down, div.sb-map-router, div.sb-map-windows, div.sb-map-android, div.sb-map-ios, div.sb-map-unix, div.sb-map-linux, div.sb-map-macos, div.sb-map-otheros{
+	position: absolute;
+	height: 62px;
+	cursor: pointer;
+	top: 255px;
+}
+div.sb-map-internet-up, div.sb-map-internet-down{
+	height: 30px;
+	top: 83px;
+	left: 286px;
+}
+ div.sb-map-internet-down{
+ 	top: 116px;
+ }
+div.sb-map-internet{
+	width: 72px;
+	height: 70px;
+	top: 60px;
+	left: 120px;
+	background: url(../img/icons-03.png) no-repeat -9px -10px;
+}
+ div.sb-map-router{
+ 	top: 50px;
+ 	left: 430px;
+ 	width: 100px;
+ 	height: 81px;
+	background: url(../img/icons-03.png) no-repeat -283px -4px;
+ }
+ div.sb-map-windows{
+ 	width: 63px;
+ 	left: 25px;
+	background: url(../img/icons-03.png) no-repeat -13px -302px;
+ }
+ div.sb-map-windows.item-slt{
+	background: url(../img/icons-03.png) no-repeat -13px -374px;
+ }
+ div.sb-map-android{
+ 	width: 56px;
+ 	left: 138px;
+	background: url(../img/icons-03.png) no-repeat -89px -302px;
+ }
+ div.sb-map-android.item-slt{
+	background: url(../img/icons-03.png) no-repeat -89px -374px;
+ }
+ div.sb-map-ios{
+ 	width: 50px;
+ 	left: 243px;
+	background: url(../img/icons-03.png) no-repeat -164px -302px;
+ }
+ div.sb-map-ios.item-slt{
+	background: url(../img/icons-03.png) no-repeat -164px -374px;
+ }
+ div.sb-map-unix{
+ 	width: 62px;
+ 	left: 395px;
+	background: url(../img/icons-03.png) no-repeat -230px -302px;
+ }
+ div.sb-map-unix.item-slt{
+	background: url(../img/icons-03.png) no-repeat -230px -374px;
+ }
+ div.sb-map-linux{
+ 	width: 52px;
+ 	left: 506px;
+	background: url(../img/icons-03.png) no-repeat -307px -302px;
+ }
+ div.sb-map-linux.item-slt{
+	background: url(../img/icons-03.png) no-repeat -307px -374px;
+ }
+ div.sb-map-otheros{
+ 	width: 62px;
+ 	left: 603px;
+	background: url(../img/icons-03.png) no-repeat -374px -302px;
+ }
+ div.sb-map-otheros.item-slt{
+	background: url(../img/icons-03.png) no-repeat -374px -374px;
+ }
+ .inlineBlock{
+ 	display: inline-block;
+ }
+div.router-return-icon{
+	background: url(../img/icons-01.png) no-repeat -151px -151px;
+	width: 21px;
+	height: 18px;
+	position: absolute;
+	top: -2px;
+	left: 60px;
+	cursor: pointer;
+}
+div.device-return-icon{
+	background: url(../img/icons-01.png) no-repeat -151px -151px;
+	width: 21px;
+	height: 18px;
+	position: absolute;
+	top: -2px;
+	left: 60px;
+	cursor: pointer;
+}
+div.policy-optimal, div.policy-nominal, div.policy-best{
+ 	position: absolute;
+ 	top: 20px;
+ 	right: 8px;
+	width: 15px;
+	height: 15px;
+	border-radius: 15px;
+	margin-right: 10px;
+	border: none;
+}
+div.policy-optimal{
+	background-color: #8CBC39;
+}
+div.policy-nominal{
+	background-color: #54C7E2;
+}
+div.policy-best{
+	background-color: #F9B61E;
+}
+span.test-bandwidth{
+	text-decoration: underline;
+	color: #F9B61E;
+	cursor: pointer;
+}
+span.stick-top, span.priority-up, span.priority-down{
+	display: inline-block;
+	margin-right: 10px;
+	cursor: pointer;
+	color: #8CBC39;
+}
+span.stick-top-text, span.priority-up-text, span.priority-down-text{
+	display: none;
+}
+div.sb-device-grid div.grid-content-td-wrap, div.sb-router-grid  div.grid-content-td-wrap{
+	position: relative;
+	padding: 3px 0;
+	height: 52px;
+}
+.pro300{
+ 	width: 310px;
+ }
+div.progressbar-container.pro300 div.progressbar-content{
+ 	border: none;
+ }
+ div.progressbar-container.colorBlue div.progressbar-content div.progressbar-value{
+ 	background-color: #9EE6F2;
+ }
+.pro300 div.progressbar-value{
+ 	border-radius: 8px;
+ }
+div.h20{
+	margin: 0;
+}
+div.h20 div.widget-wrap input.text-text{
+	height: 20px;
+	padding: 0;
+	border: none;
+	color: #599E00;
+}
+div.colorBlue div.widget-wrap input.text-text{
+	color: #0094BC;
+}
+img.device-icons, img.router-icons{
+	width: 40px;
+	height: 40px;
+	position: absolute;
+	top: 10px;
+	left: 8px;
+}
+div.router-name{
+	position: absolute;
+	top: 23px;
+	left: 53px;
+}
+
+/*by szz 公用*/
+
+div.button-context{
+	margin: 5px 0;
+}
+
+div.part-seperate, p.part-seperate{
+	margin-top: 20px;
+}
+.hidden{
+	display: none;
+}
+
+/** status ***/
+div.status-panel{
+	display: inline-block;
+	vertical-align: top;
+	width: 321px;
+	position: relative;
+	margin-bottom: 12px;
+}
+div.status-panel-main{
+	border: 1px solid #d8d8d8;
+	border-top: none;
+	background-color: #ffffff;
+	padding: 10px 0px 20px 22px;
+}
+div.status-panel h4.status{
+	margin: 0px;
+	padding: 8px 0 8px 18px;
+	font-size: 12px;
+	color: #3d3d3d;
+	background-color: #F2F2F2;
+	border: 1px solid #d8d8d8;
+	border-bottom: none;
+}
+div.status-panel h4.status span.status-icon{
+	display: inline-block;
+	width: 24px;
+	height: 24px;
+	background-image: url(../img/icons-01.png);
+	margin-right: 6px;
+}
+div.status-panel h4.status span.status-icon-internet{
+	background-position: -6px -42px;
+}
+div.status-panel h4.status span.status-icon-wireless{
+	background-position: -6px -78px;
+}
+div.status-panel h4.status span.status-icon-lan{
+	background-position: -78px -293px;
+}
+div.status-panel h4.status span.status-icon-guest{
+	background-position: -6px -114px;
+}
+div.status-panel h4.status span.status-icon-usb{
+	background-position: -6px -186px;
+}
+div.status-panel h4.status span.status-icon-performance{
+	background-position: -6px -6px;
+}
+div.status-panel h4.status span.status-icon-access-wired{
+	background-position: -78px -329px;
+}
+div.status-panel h4.status span.status-icon-access-wireless{
+	background-position: -7px -79px;
+}
+div.usb-panel div.status-panel-main{
+	padding-left: 0px;
+}
+div.usb-panel div.usb-form-usb, div.usb-panel div.usb-form-printer{
+	display: inline-block;
+	width: 155px;
+	/*height: 160px;*/
+	vertical-align: top;
+}
+div.usb-panel span.icon-usb-storage{
+	display: inline-block;
+	height: 51px;
+	width: 53px;
+	background: url("../img/icons-03.png") no-repeat -310px -163px;
+	margin: 15px 0px 5px 47px;
+	position: relative;
+}
+input#printer_name{
+	width: 260px;
+}
+
+div.usb-panel span.icon-usb-storage-disconn{
+	background: url("../img/icons-03.png") no-repeat  -310px -93px;
+}
+span.icon-usb-storeage-qs{
+	position: absolute;
+	width: 16px;
+	height: 16px;
+	background-color: red;
+	top: -8px;
+	right: -8px;
+	background: url("../img/icons-03.png") no-repeat  -444px -260px;
+}
+span.usb-storage-label{
+	display: inline-block;
+	margin-right: 3px;
+}
+div.usb-panel p.usb-text-usb, div.usb-panel p.usb-text-printer{
+	margin-bottom: 20px;
+	padding-left: 45px;
+}
+div.usb-panel p.usb-text-printer{
+	padding-left: 50px;
+}
+div.usb-panel p.usb-form-line{
+	padding-left: 30px;
+	position: relative;
+	line-height: 25px;
+}
+div.usb-panel p.usb-form-line span.usb-storage-dot{
+	position: absolute;
+	top: 4px;
+	left: 12px;
+	width: 10px;
+	height: 10px;
+	background: url(../img/icons-02.png) no-repeat -184px -40px;
+}
+div.usb-panel p.usb-form-line span.usb-disk-dot{
+	top: 9px;
+}
+span.usb-storage-text{
+	display: inline-block;
+	line-height: 18px;
+	width: 120px;
+	word-wrap: break-word;
+	word-break: break-all;
+}
+div.usb-panel p.usb-form-line div.widget-container{
+	margin: 0;
+}
+div.usb-panel span.icon-usb-printer{
+	display: inline-block;
+	height: 54px;
+	width: 56px;
+	background: url(../img/icons-03.png) no-repeat -376px -160px;
+	margin: 10px 0px 5px 40px;
+}
+
+div.usb-panel span.icon-usb-printer-disconn{
+	background: url(../img/icons-03.png) no-repeat -376px -224px;
+}
+/*div.usb-panel  div.status-panel-main, div.performance-panel  div.status-panel-main{
+	height: 160px;
+}*/
+div.performance-without-usb{
+	width: 654px;
+}
+div.performance-without-usb div.performance-half-part{
+	display: inline-block;
+	width: 300px;
+	padding-left: 13px;
+}
+p.performance-line{
+	margin-top: 30px;
+	padding-left: 3px;
+}
+
+div.access-wired-panel{
+	margin-right: 8px;
+}
+div.access-wired-panel div.status-panel-main, div.access-wireless-panel div.status-panel-main{
+	padding-top: 30px;
+}
+div.access-panel{
+	width: 652px;
+	border: 1px solid #d8d8d8;
+}
+div.access-panel h4.status{
+	border: none;
+}
+/*
+div.access-panel-left{
+	display: inline-block;
+	width: 298px;
+	border: none;
+	padding: 0;
+	margin: 30px 0 0 30px;
+	border-right: 1px solid #d8d8d8;
+	vertical-align: top;
+}
+div.access-panel-right{
+	display: inline-block;
+	width: 288px;
+	border: none;
+	padding: 0;
+	margin: 30px 0 20px 30px;
+	vertical-align: top;
+	max-height: 240px;
+}
+*/
+div.icon-access-wire, div.icon-access-wireless{
+	position: relative;
+	display: inline-block;
+	width: 40px;
+	height: 36px;
+	margin-left: 10px;
+	background: url(../img/icons-03.png) no-repeat -459px -100px;
+}
+div.icon-access-wireless{
+	background: url(../img/icons-03.png) no-repeat -456px -171px;
+}
+span.access-wire-clients-num, span.access-wireless-clients-num{
+	font-size: 10px;
+	position: absolute;
+	top: -12px;
+	right: -18px;
+	width: 20px;
+	height: 20px;
+	line-height: 20px;
+	/*height: 17px;*/
+	text-align: center;
+	/*padding-top: 3px;*/
+	color: #fff;
+	background: url(../img/icons-01.png) no-repeat -152px -332px;
+}
+p.access_client_name{
+	display: inline-block;
+	vertical-align: top;
+	margin: 8px 0 0 30px;
+}
+div.progressbar-container.performance-memory-usage div.progressbar-content div.progressbar-value{
+	background-color: #54C7E2;
+}
+div.status-panel h4.status span.conn-status{
+	background: url(../img/icons-01.png) no-repeat -183px -151px;
+	display: inline-block;
+	width: 18px;
+	height: 18px;
+	margin-left: 5px;
+}
+div.status-panel h4.status span.conn-status.not-secure{
+	background-position: -150px -187px; /*-185px -150px;*/
+	width: 23px;
+	height: 22px;
+}
+div.status-panel h4.status span.conn-status.not-open{
+	background-position: -186px -187px;
+	width: 23px;
+	height: 22px;
+}
+div.status-panel h4.status span.conn-status.conn-wireless-connected{
+	width: 28px;
+}
+div.status-panel h4.status span.conn-status.conn-guest-connected{
+	width: 28px;
+}
+div.status-panel h4.status span.conn-status.conn-internet-connected{
+	background: url(../img/icons-02.png) no-repeat -18px 0px;
+}
+div.status-panel h4.status span.conn-status.conn-internet-disconnected{
+	background: url(../img/icons-02.png) no-repeat -36px 0px;
+}
+div.status-panel h4.status span.conn-status.conn-internet-poor-connected{
+	background: url(../img/icons-02.png) no-repeat -162px 0px;
+}
+div.status-panel h4.status span.conn-status.hidden{
+	display: none;
+}
+p.status-textarea-read{
+	min-height: 30px;
+	line-height: 30px;
+	margin: 5px 0;
+	vertical-align: middle;
+}
+p.status-textarea-read label.xs{
+	display: inline-block;
+	width: 110px;
+	line-height: 22px;
+}
+p.status-textarea-read label.m{
+	display: inline-block;
+	width: 160px;
+	line-height: 22px;
+}
+p.status-textarea-read span{
+	display: inline-block;
+	width: 170px;
+	margin-left: 10px;
+	word-wrap: break-word;
+	line-height: 22px;
+}
+p.status-textarea-read span.input-readonly-m{
+	width: 118px;
+}
+/*********** simple version */
+div.access-client-list{
+	margin-top: 20px;
+	height: 165px;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+div.access-client-list p.access-client-list-p{
+	width: 260px;
+	padding: 8px 0;
+	border-bottom: 1px solid #d9d9d9;
+	cursor: pointer;
+	position: relative;
+}
+span.access-client-list-icon{
+	position: absolute;
+	top: 13px;
+	right: 0;
+	width: 10px;
+	height: 8px;
+	background: url(../img/icons-02.png) no-repeat -240px -41px;	
+}
+div.access-client-list p.selected-list-p{
+	width: 260px;
+	padding: 8px 0 0;
+	border-bottom: 1px solid #d9d9d9;
+	cursor: pointer;
+	color: #599e00;
+	border-bottom: none;
+}
+div.access-client-list p.selected-list-p span.access-client-list-icon{
+	right: 3px;
+	background: url(../img/icons-02.png) no-repeat -328px -40px;
+}
+div.access-client-list div.access-client-detail{
+	background-color: #f2f2f2;
+	width: 260px;
+	margin: 10px 0;
+}
+p.cfg_status{
+	line-height: 26px;
+}
+label.label_status_s{
+	display: inline-block;
+	width: 115px;
+	margin-left: 10px;
+}
+div.text-container.read-only div.widget-wrap input.text-text.usb-input-blue{
+	color: #0094BC;
+	text-align: left;
+}
+.usb-input-blue{
+	color: #0094BC;
+}
+/********* end simple version */
+
+
+
+
+
+
+
+
+
+div.internet-panel, div.lan-panel, div.usb-panel{
+	margin-right: 8px;
+}
+div.status-panel div.mode-change{
+	top: 12px;
+	right: 6px;
+}
+div.lan-panel div.status-panel-main{
+	height: 172px;
+}
+div.guest-panel div.status-panel-main{
+	height: 172px;
+}
+div.internet-panel div.status-panel-main, div.wireless-panel div.status-panel-main{
+	height: 248px;
+}
+div.text-container div.widget-wrap span.text-wrap input.usb-storage-input{
+	width: 18px;
+	padding: 0px;
+	text-align: left;
+	text-indent: 0;
+}
+div.textarea-container.read-only div.widget-wrap textarea.textarea-text.printer-textarea{
+	padding: 2px 0;
+}
+
+div.wireless-panel div.status-panel-main div.widget-container div.widget-fieldlabel-wrap.xs{
+	width: 100px;
+}
+div.wireless-panel div.status-panel-main p.status-textarea-read label.xs{
+	width: 100px;
+}
+div.wireless-panel div.status-panel-main p.status-textarea-read span{
+	width: 180px;
+}
+
+div.guest-panel div.status-panel-main div.widget-container div.widget-fieldlabel-wrap.m{
+	width: 145px;
+}
+div.guest-panel div.status-panel-main p.status-textarea-read label.m{
+	width: 145px;
+}
+div.guest-panel div.status-panel-main p.status-textarea-read span.input-readonly-m{
+	width: 138px;
+}
+/**/
+
+div.map_wrap{
+	top: 0;
+	left: 0;
+	width: 715px;
+	min-height: 380px;
+	position: relative;
+}
+div.map-internet{
+	position: absolute;
+	top: 35px;
+	left: 155px;
+	width: 74px;
+	padding-top: 75px;
+	text-align: center;
+	cursor: pointer;
+}
+div.map-internet-connect{
+}
+div.map-router{
+	position: absolute;
+	top: 25px;
+	left: 420px;
+	width: 84px;
+	padding-top: 85px;
+	padding-right: 17px;
+	text-align: center;
+	cursor: pointer;
+}
+div.map-router-connect{
+}
+
+div.map-router-tip{
+	position: absolute;
+	top: 10px;
+	left: 80px;
+	height: 40px;
+	font-weight: normal;
+	width: 100px;
+	text-align: left;
+}
+div.map-router-tip div.map-router-wrap{
+	display: inline-block;
+	width: 45px;
+	height: 40px;
+	font-size: 10px;
+	text-align: center;
+}
+div.map-router-tip div.hidden{
+	display: none;
+}
+div.map-router-tip div.map-router-wrap 	div.map-router-24g-img{
+	display: inline-block;
+	width: 26px;
+	height: 20px;
+	margin-bottom: 3px;
+	background: url(../img/icons-01.png) no-repeat -185px -152px;
+}
+div.map-router-tip div.map-router-wrap 	div.map-router-24g-img.not-open{
+	background: url(../img/icons-01.png) no-repeat -188px -190px;
+}
+div.map-router-tip div.map-router-wrap 	div.map-router-24g-img.not-secure{
+	background: url(../img/icons-01.png) no-repeat -152px -190px;
+}
+
+div.map-router-tip div.map-router-bar{
+	position: absolute;
+	left: 44px;
+	top: 3px;
+	width: 1px;
+	height: 14px;
+	background-color: #ADB1A3;
+}
+
+div.map-wireless{
+	position: absolute;
+	top: 30px;
+	left: 155px;
+	width: 120px;
+	height: 20px;
+	padding-top: 60px;
+	padding-right: 17px;
+	text-align: center;
+	cursor: pointer;
+}
+div.map-wireless span.map-icon-num, div.map-wire span.map-icon-num{
+	font-size: 10px;
+}
+
+div.map-wire{
+	position: absolute;
+	top: 30px;
+	left: 15px;
+	width: 120px;
+	height: 20px;
+	padding-top: 60px;
+	padding-right: 17px;
+	text-align: center;
+	cursor: pointer;
+}
+div.map-wire-connect{
+
+}
+div.map-wire span.map-icon-num{
+	top: -10px;
+	right: -22px;
+}
+div.map-printer{
+	position: absolute;
+	top: 30px;
+	left: 15px;
+	width: 120px;
+	height: 20px;
+	padding-top: 60px;
+	text-align: center;
+	cursor: pointer;
+}
+div.map-printer-connect{
+}
+div.map-usb{
+	position: absolute;
+	top: 30px;
+	left: 150px;
+	width: 120px;
+	height: 20px;
+	padding-top: 60px;
+	text-align: center;
+	cursor: pointer;
+}
+div.map-usb-connect{
+}
+div.map-usb span.map-icon-num{
+	top: -10px;
+	right: -20px;
+}
+
+div.map-line-horizontal{
+	position: absolute;
+	top: 85px;
+	left: 240px;
+	width: 165px;
+	height: 1px;
+	border: none;
+	border-top: 1px solid #d9d9d9;
+}
+div.map-line-vertical{
+	position: absolute;
+	top: 144px;
+	left: 460px;
+	height: 20px;
+	width: 1px;
+	border: none;
+	border-left: 1px solid #d9d9d9;
+}
+div.map-line-vertical.line-vertical-without-usb{
+	height: 46px;
+}
+div.map-line-branch{
+	position: absolute;
+	top: 164px;
+	left: 192px;
+	width: 298px;
+	height: 25px;
+	border: 1px solid #d9d9d9;
+	border-bottom: none;
+}
+div.map-wrap-left, div.map-wrap-right{
+	position: absolute;
+	border: 1px solid #d9d9d9;
+	border-radius: 5px;
+	width: 283px;
+	height: 132px;
+	top: 190px;
+	left: 40px;
+}
+div.map-wrap-right{
+	left: 360px;
+}
+div.wireless-without-usb{
+	left: 320px;
+}
+
+div.map-icon-internet{
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 71px;
+	height: 71px;
+	background: url(../img/icons-03.png) no-repeat -9px -9px;
+}
+div.map-icon-internet.selected{
+	background: url(../img/icons-03.png) no-repeat -9px -81px;
+}
+span.map-icon-internet-status{
+	background: url(../img/icons-03.png) no-repeat -52px -268px;
+	position: absolute;
+	width: 21px;
+	height: 21px;
+	right: 0;
+	bottom: 0;
+}
+span.map-icon-internet-conn{
+	background-position: -14px -268px;
+}
+span.map-icon-internet-disconn{
+	background-position: -52px -268px;
+}
+span.map-icon-internet-poor-conn{
+	background-position: -49px -231px;
+	width: 24px;
+}
+
+div.map-icon-router{
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100px;
+	height: 80px;
+	background: url(../img/icons-03.png) no-repeat -283px -5px;
+}
+div.map-icon-router-conn{
+	background: url(../img/icons-03.png) no-repeat -427px -5px;
+}
+div.map-icon-wireless{
+	position: absolute;
+	top: 0;
+	left: 28px;
+	width: 59px;
+	height: 54px;
+	background: url(../img/icons-03.png) no-repeat -94px -17px;
+}
+div.map-icon-wireless-conn{
+	background: url(../img/icons-03.png) no-repeat -94px -91px;
+}
+div.map-icon-wire{
+	position: absolute;
+	top: 0;
+	left: 30px;
+	width: 52px;
+	height: 51px;
+	background: url(../img/icons-03.png) no-repeat -90px -164px;
+}
+div.map-icon-wire-conn{
+	background: url(../img/icons-03.png) no-repeat -90px -236px;
+}
+div.map-icon-printer{
+	position: absolute;
+	top: 0;
+	left: 30px;
+	width: 61px;
+	height: 54px;
+	background: url(../img/icons-03.png) no-repeat -230px -90px;
+}
+div.map-icon-printer-conn{
+	background: url(../img/icons-03.png) no-repeat -230px -162px;
+}
+
+div.map-icon-printer-disconn{
+	background: url(../img/icons-03.png) no-repeat -374px -224px;
+}
+div.map-icon-usb{
+	position: absolute;
+	top: 3px;
+	left: 30px;
+	width: 53px;
+	height: 60px;
+	background: url(../img/icons-03.png) no-repeat -160px -21px;
+}
+div.map-icon-usb-conn{
+	background: url(../img/icons-03.png) no-repeat -160px -93px;
+}
+div.map-icon-usb-disconn{
+	background: url(../img/icons-03.png) no-repeat -160px -165px;
+}
+span.map-icon-usb-qs{
+	position: absolute;
+	width: 18px;
+	height: 18px;
+	top: -10px;
+	right: -10px;
+	background: url(../img/icons-03.png) no-repeat -464px -259px;
+}
+span.map-icon-num{
+	position: absolute;
+	top: -10px;
+	right: -15px;
+	width: 22px;
+	/*height: 18px;*/
+	height: 22px;
+	line-height: 22px;
+	text-align: center;
+	/*padding-top: 2px;*/
+	color: #fff;
+	font-weight: normal;
+	background: url(../img/icons-01.png) no-repeat -151px -331px;
+}
+div.map-panel{
+	background-color: #FAFAFA;
+	position: relative;
+	margin-bottom: 10px;
+}
+div.map-panel h4.map-panel-title{
+	height: 35px;
+	line-height: 35px;
+	background-color: #96CC56;
+	padding-left: 15px;
+	color: #fff;
+	font-size: 14px;
+}
+div.map-panel div.map-panel-cnt{
+	min-height: 233px;
+	padding: 10px 20px 15px;
+}
+div.map-panel div.map-panel-cnt div.panel-container{
+	margin-bottom: 0;
+}
+span.map-panel-icon-internet, span.map-panel-icon-router,  span.map-panel-icon-wireless, span.map-panel-icon-wire, span.map-panel-icon-printer, span.map-panel-icon-usb{
+	display: inline-block;
+	width: 22px;
+	height: 22px;
+	margin-right: 5px;
+	margin-bottom: 3px;
+}
+div.map-panel p.usb-form-line{
+	line-height: 30px;
+}
+span.map-panel-icon-internet{
+	background: url(../img/icons-01.png) no-repeat -79px -7px;
+}
+span.map-panel-icon-router{
+	background: url(../img/icons-01.png) no-repeat -79px -43px;
+}
+span.map-panel-icon-wireless{
+	background: url(../img/icons-01.png) no-repeat -79px -152px;
+}
+span.map-panel-icon-wire{
+	background: url(../img/icons-01.png) no-repeat -79px -115px;
+}
+span.map-panel-icon-printer{
+	background: url(../img/icons-01.png) no-repeat -79px -186px;
+}
+span.map-panel-icon-usb{
+	background: url(../img/icons-01.png) no-repeat -79px -79px;
+}
+span.map-panel-icon-text{
+	display: inline-block;
+	margin-bottom: 3px;
+}
+div.map-form-left, div.map-form-right{
+	display: inline-block;
+	width: 305px;
+	padding: 10px 0 10px 0;
+	vertical-align: top;
+}
+h5.map-form-title{
+	color: #599E00;
+	line-height: 30px;
+}
+p.note-msg{
+	padding-left: 48px;
+}
+p.note-no-label{
+	margin: 10px 0;
+}
+span.lan-ipv4-note{
+	font-size: 14px;
+	color: #191919;
+	vertical-align: bottom;
+}
+
+div.map-panel div.text-container input.text-text.l{
+    width: 195px;
+}
+
+/**** add by szz end *********************************************************************************************/
+
+
+/**** add by ycf start *********************************************************************************************/
+div#log_filter_form{
+    margin-bottom: 10px;
+}
+div#log_list{
+   margin-bottom: 10px;
+   margin-top: 20px;
+}
+div#log_btn_cnt{
+   margin-bottom: 5px;
+}
+
+div#localGrid{
+	margin-top: 40px;
+}
+
+/*label#filter{
+	color:#3E3A39;
+}*/
+
+.time_padding{
+	padding-left: 32px;
+}
+
+.hour_padding{
+	margin-left: 10px;
+}
+
+div.week_padding{
+	margin-right: 20px;
+}
+
+div.key_pos{
+	position:absolute;
+	bottom:-60px;
+	right:120px;
+}
+
+div.key_reset{
+    position:static;
+}
+
+
+
+.form-panel div.pos{
+	left:300px;
+}
+
+div.grid-container div.grid-content-container tr.grid-content-tr a.grid-content-btn.btn-detail:hover span.icon{
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	margin-right: 0px;
+	background: url(../img/icons-02.png) no-repeat -445px -54px;
+}
+
+div.grid-container div.grid-content-container tr.grid-content-tr a.grid-content-btn.btn-detail span.icon{
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	margin-right: 0px;
+	background: url(../img/icons-02.png) no-repeat -424px -54px;
+}
+
+div.grid-container div.grid-content-container tr.grid-content-tr.disabled a.grid-content-btn.btn-detail span.icon {
+	background-position: -343px -36px;
+}
+
+.share_adapt{
+	position:absolute;
+	bottom:10px;
+	left:380px;
+}
+
+div.mp5{
+margin:5px 0px;
+}
+
+li.detail_app_name{
+display:inline-block;
+min-width:108px;
+height:20px;
+line-height: 20px;
+margin-bottom: 5px;
+vertical-align: top;
+}
+
+span.dot{
+display:inline-block;
+width:8px;
+height:8px;
+background: url(../img/icons-02.png) no-repeat -301px -23px;
+}
+
+span.detail_app_name{
+margin-left:7px;
+/*vertical-align: top;*/
+}
+
+div.widget-container.ml12{
+margin-right:12px;
+}
+
+.fixed-width{
+	display:inline-block;
+	width:87px;
+}
+.type_separator{
+	color: #cccccc;
+}
+.type_title{
+	/*font-weight: bolder;*/
+	color: #1a1a1a;
+	border-bottom: 1px solid #cccccc;
+	padding-bottom: 7px;
+}
+
+h4.detail_app_title{
+margin-bottom: 21px;
+margin-bottom: 18px !important;
+}
+
+.app_name_info{
+	width:130px;
+}
+
+#detail_app_list{
+	margin-bottom: 8px;
+}
+
+.detail_app_cnt{
+padding-left:8px;
+vertical-align: top;
+}
+
+div.app_info_cnt{
+	margin:6px 0px 25px 0px;
+}
+
+span.no-volumn-notice{
+	margin-left:10px;
+	color:red;
+}
+
+label.disabled{
+	color: #b2b2b2;
+}
+
+
+div.widget-container.button-container.clicked button.button-button.disabled,
+div.widget-container.button-container button.button-button.disabled,
+div.widget-container.button-container button.button-button.disabled:hover {
+background-color: #b2b2b2;
+cursor: default;
+}
+
+.save_failed{
+	color:#e00000;
+}
+
+/**** add by ycf end *********************************************************************************************/
+
+span.dhcp-link-status{
+	color: red;
+	display: inline-block;
+	margin-left: 20px;
+}
+span.pin-lock-status{
+	color: red;
+	display: block;
+	margin-top: 20px;
+}
+span.tips_red{
+	color: red;
+	display: block;
+	margin-top: 20px;
+}
+span.tips{
+	display: block;
+	margin-top: 20px;
+}
+
+div.ml5,
+div.ml5.widget-container{
+	margin-left: 5px;
+}
+div.ml10,
+div.ml10.widget-container{
+	margin-left: 10px;
+}
+div.same-line.widget-container{
+	margin-left: 42px;
+}
+div.hidden, span.hidden{
+	display: none;
+}
+
+div#list_cnt.disk-grid-list{
+	margin-top: 26px;
+}
+div#list_cnt.disk-grid-list div.disk-name input.grid-display{
+	padding-left: 0;
+	text-indent: 0;
+	font-size: 14px;
+	color: #191919;
+}
+div#setGrid.folder-sharing-set-grid{
+	margin-top: 16px;
+}
+div#pingCnt, div#traceCnt{
+	margin-bottom: 20px;
+}
+
+div#mail.system-log-mail-container{
+	margin-top: 0;
+}
+div#mail.system-log-mail-container div.panel-content{
+	padding-top: 0;
+}
+
+
+
+div.textarea-container textarea.textarea-text.fixed-height{
+	height: 200px;
+}
+
+
+.bold{
+	font-weight: bold;
+}
+span.led-time-to{
+	display: inline-block;
+	margin: 0 5px;
+}
+
+
+/** qos ***/
+div.qos-panel{
+	width: 210px;
+}
+
+label.label_status_ss {
+	display: inline-block;
+	width: 65px;
+	margin-left: 10px;
+}
+
+label.label_status_sss {
+	display: inline-block;
+	width: 30px;
+	margin-left: 10px;
+}
+
+p.access-client-list-pp{
+	width: 180px;
+	padding: 8px 0;
+	border-bottom: 1px solid #d9d9d9;
+	cursor: pointer;
+	position: relative;
+}
+
+span.list-icon-pos{
+	right:34px;
+}
+
+div.access-client-list p.selected-list-p span.list-icon-pos
+{
+	right:34px;
+}
+
+p.access-client-list-pp span.icon-del {
+	background: url(../img/icons-02.png) no-repeat -90px -36px;
+	display: inline-block;
+	float: right;
+	right:0px;
+	width: 18px;
+	height: 18px;
+	margin-top: -4px;
+	margin-right: 11px;
+}
+
+p.access-client-list-p span.icon-del {
+background: url(../img/icons-02.png) no-repeat -90px -36px;
+	display: inline-block;
+	width: 18px;
+	height: 18px;
+	margin-top: -4px;
+	margin-left: 15px;
+}
+/*span.icon-del {
+	background: url(../img/icons-02.png) no-repeat -90px -36px;
+	display: inline-block;
+	width: 18px;
+	height: 18px;
+	margin-top: -4px;
+	margin-right: 9px;
+}*/
+
+p.access-client-list-p span.icon-del:hover{
+	background-position: -126px -54px;
+}
+
+p.access-client-list-pp span.icon-del:hover{
+	background-position: -126px -54px;
+}
+
+div.access-client-list div.qos-item-detail
+{
+	width:180px;
+}
+
+h5.type_collapse{
+	cursor: pointer;
+}
+
+h5.type_collapse span.icon {
+	/*position: relative;
+	left:5px;
+	top:5px;*/
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	margin: 3px;
+	float: right;
+	cursor: pointer;
+	background: url(../img/icons-02.png) no-repeat -238px -40px;
+
+}
+h5.type_collapse span.collapsed {
+	background: url(../img/icons-02.png) no-repeat -4px -40px;
+}
+span.wps-submit-wait-loading
+{
+	background: url(../img/waiting.gif) no-repeat top left;
+	width: 20px;
+	height: 20px;
+	margin: 8px -27px 8px 0;
+	display: inline-block;
+}
+
+div.access-priority-panel{
+	margin-right: 6px;
+}
+
+span.custom-xl{
+	width: 250px;
+	margin-right: 10px;
+	display: inline-block;
+}
+
+.qos-display-name{
+	white-space:nowrap; 
+	overflow:hidden; 
+	text-overflow:ellipsis;
+	display: inline-block;
+	width:130px;
+}
+div.access-wired-panel div.status-panel-main{
+	padding-top: 30px;
+}
+div.access-wireless-panel div.status-panel-main-pad{
+	padding-top: 1px;
+}
+
+/*
+div.access-wired-panel div.status-panel-main{
+	padding-top: 2px;
+}
+*/
+
+div.right-pos{
+	margin-left: 90px;
+}
+
+div.widget-container.indent-label-m{
+	margin-left: 178px;
+}
+.indent-label-m{
+	margin-left: 178px;
+}
+.red{
+	color: red;
+}
+
+div.msg-container.lan-pro-msg{
+    width: 700px;
+}
+
+span#share-all-tips{
+	width: 380px;
+}
+span#txt-mode-tips{
+	width: 360px;
+}
+
+@media screen and (max-width: 1000px){
+	div.top-footer div.top-footer-wrap span.help-faq{
+		margin-right: 20px;
+	}
+}
+
+div.textarea-container.read-only div.widget-wrap.textarea-wrap, div.textarea-container.read-only.valid div.widget-wrap.textarea-wrap, div.textarea-container.read-only.focus div.widget-wrap.textarea-wrap, div.textarea-container.read-only div.widget-wrap.textarea-wrap:hover {
+	border: 1px solid #e6e6e6;
+}
+
+span#wps-loading{
+	margin: 5px 0 5px 6px;
+}
+
+div.msg-btn-wrap  span.form-error-tips{
+	color: #e00000;
+	margin-right: 12px;
+	display: inline-block;
+}
+
+div.access-client-list p.qos-list-p{
+	width: 180px;
+	padding: 8px 0;
+	border-bottom: 1px solid #d9d9d9;
+	cursor: pointer;
+	position: relative;
+}
+
+div.msg-container.qos-width {
+width: 635px;
+}
+.pppoe_time{
+	margin-right: 20px;
+}
+
+div.map-panel div.map-panel-cnt p.status-textarea-read label.xxs {
+width: 78px;
+display: inline-block;
+}
+
+p.status-textarea-read-usb span {
+width: 115px;
+}
+div.widget-container div.widget-tips div.tips-content a{
+	text-decoration: underline;
+	vertical-align: text-bottom;
+	color: #0094bc;
+}
+
+div.widget-container div.widget-tips div.tips-content a:hover{
+	cursor: pointer;
+}
+
+p.note-half-margin{
+	margin-top: 10px;
+}
+
+div.status-page-panel div.widget-container label.widget-fieldlabel, div.status-page-panel div.status-panel div.status-panel-main p.status-textarea-read label.xs,
+div.status-page-panel div.status-panel div.status-panel-main p.status-textarea-read label.m,  div.status-page-panel div.status-panel div.status-panel-main p.status-textarea-read span{
+	line-height: 16px;
+}
+
+div#setGrid td.grid-content-td-link a.text.selectable{
+	padding: 6px;
+}
+p.mode-slt-p{
+	margin: 5px 0 25px 32px;
+}
+span.mode-switch-text{
+	font-size: 26px;
+	display: inline-block;
+	margin-bottom: 20px;
+}
+
+div.func_container #guest_2g5g #guest_setting_5g{
+	margin-top:22px;
+}
+
+div.combobox-container div.combobox-wrap input.combobox-text.time_hour{
+	width: 62px;
+}
+div.time-to{
+	width:80px;
+}
+
+p.modem-line{
+	margin: 5px 0;
+	padding-left: 144px;
+	line-height: 30px;
+	vertical-align: top;
+	position: relative;
+	min-height: 30px;
+}
+p.modem-line label{
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+p.modem-line span{
+
+}
+span.jump-to-modem{
+	cursor: pointer;
+	vertical-align: top;
+	text-decoration: underline;
+	color: blue;
+}
+
+form#recovery-setting #recovery_btn_ctn{
+	text-align: right;
+}
+span#recovery_tips{
+	margin-top :0px;
+	margin-right: 30px;
+	line-height: 40px;
+	display: inline-block;
+}
+
+input[type="password"]::-ms-reveal{
+	display: none;
+}
+
+.can-select{
+	-moz-user-select: text;
+	-webkit-user-select: text;
+	-ms-user-select: text;
+	user-select: text;
+}
+
+
+#system_time_date{
+    margin: 0 40px 20px;
+}
+
+#system_run_time{
+    margin: 20px 40px 20px;
+}
+
+#time_wrapper{
+    margin: 0 50px;
+}
+#current_time{
+    font: normal 22px Verdana;
+    margin-right: 15px;
+    position: relative;
+    left: 14px;
+    top: 9px;
+    letter-spacing: 10px;
+}
+
+.sysTime_word{
+    color: #115b96;
+}
+
+.system_cpu{
+    position: relative;
+    text-align: center;
+    width: 75px;
+    display: inline-block;
+    zoom: 1;
+}
+
+.system_cpu .outer{
+    position: relative;
+    background: #F3F3F5;
+    margin: 12px auto;
+    height: 100px;
+    width: 22px;
+}
+
+.system_cpu .inner{
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    background: #5E9ECA;
+    width: 100%;
+}
+
+#version{
+    overflow: hidden;
+}
+
+#version_hard{
+    float: left;
+}
+
+#version_soft{
+    float: right;
+    margin-right: 300px;
+}
+
+/*** add by fgf start*******************************/
+
+/*** interface ********/
+div#port-indicator{
+    margin: 5px 80px 15px;
+    padding: 12px 0 12px 20px;
+    background-color: #EAEEED;
+    border: 1px solid #46606F;
+}
+div.port-icon-wrapper{
+    width: 24px;
+    text-align: center;
+    margin-right: 20px;
+}
+span.port-icon-index{
+    height: 18px;
+}
+span.port-indicate-icon{
+    width: 23px;
+    height: 19px;
+    background: url("../img/port_indicate.gif") no-repeat;
+}
+span.port-indicate-icon.upport-indicate-icon{
+    background: url("../img/upport_indicate.gif") no-repeat;
+}
+
+
+/********  quick wizard *******/
+.light-icon{
+    background: url("../img/slot_disabled.gif") no-repeat;
+    width: 15px;
+    height: 15px;
+}
+.light-icon.light-disable, .light-icon.light-inf-5{
+    background: url("../img/slot_disabled.gif") no-repeat;
+}
+.light-icon.light-enable, .light-icon.light-lan, .light-icon.light-inf-3{
+    background: url("../img/slot_enabled.gif") no-repeat;
+}
+.light-icon.light-wan, .light-icon.light-inf-2{
+    background: url("../img/slot_orange.gif") no-repeat;
+}
+.light-icon.light-inf-1{
+    background: url("../img/slot_red.gif") no-repeat;
+}
+.light-icon.light-dmz, .light-icon.light-inf-4{
+    background: url("../img/slot_yellow.gif") no-repeat;
+}
+
+
+/*** add by fgf end*******************************/
+
+#quick_show .itemList{
+    border: 1px solid #E0E0E0;
+    margin: -12px 10px 5px 10px;
+    /* float: left; */
+    width: 200px;
+    display: inline-block;
+    zoom: 1;
+    position: relative;
+    height: 129px;
+    float: left;
+}
+
+#quick_show .item_title{
+    line-height: 12px;
+    padding: 8px 0;
+    text-indent: 1em;
+    color: #115b96;
+    font-weight: normal;
+    font-size: 12px;
+    clear: both;
+    background-color: #e4edf2;
+    /*visibility: hidden;*/
+}
+
+#quick_show .display_index{
+    line-height: 12px;
+    margin: 5px 0;
+    vertical-align: middle;
+    position: relative;
+}
+
+#quick_show .label_display{
+    padding-left: 6px;
+    width: 70px;
+    display: inline-block;
+}
+
+#quick_show .value_display{
+    padding-left: 6px;
+    margin-right: 6px;
+}
+
+#quick_show div.display_shut{
+    float: right;
+    position: absolute;
+    right: 0px;
+    top: -4px;
+}
+
+#quick_show a.display_shut{
+    background: url(../img/help_close_all.gif) no-repeat scroll left -14px transparent;
+    height: 14px;
+    width: 14px;
+    display: block;
+    position: absolute;
+    right: 0px;
+    top: 4px;
+    cursor: pointer;
+    /*visibility: hidden;*/
+}
+
+#quick_show a.display_shut:hover{
+    background:url(../img/help_close_all.gif) no-repeat scroll left 0px transparent;
+}
+
+#quick_show a.add_btn{
+    width: 30px;
+    height: 35px;
+    background: url(../img/add_btn.gif) no-repeat scroll center center transparent;
+    cursor: pointer;
+    display: block;
+    border: 0px solid red;
+    margin: auto;
+    position: absolute;
+    top: 45px;
+    left: 88px;
+}
+
+#quick_show .itemList_title{
+    display: none;
+}
+
+#dialog_add_interface{
+    display:none;
+    position: absolute;
+    height: 180px;
+    width: 450px;
+    border: solid 1px #cccccc;
+    background: #ffffff;
+    left: 218px;
+    top: 30px;
+}
+
+#dialog_add_interface h5{
+    padding: 6px;
+    background-image: linear-gradient(180deg,#5680B0,#395F86);
+    color: #ffffff;
+}
+
+#add_if{
+    margin: 10px;
+    padding: 2px;
+    width: 422px;
+    background-color: white;
+    border: 2px inset;
+}
+
+#if_list{
+    margin: 0 10px 10px;
+    width: 428px;
+    border: 1px solid #cccccc;
+    height: 70px;
+    overflow-y: scroll;
+}
+
+#if_list li{
+    padding: 0 2px;
+}
+
+#if_list li:hover{
+    background-color: #115b96;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+#btn_cancel, #btn_apply{
+    float: right;
+    margin: 0 10px;
+}
+
+#time_wrapper{
+    height: 48px;
+    background: url(../img/time_bg.gif) no-repeat transparent;
+}
+
+#run_time{
+    position: relative;
+    top: 18px;
+    left: 10px;
+}
+
+#line_chart{
+    position: relative;
+    top: 20px;
+    width: 580px;
+    height: 220px;
+    display: inline-block;
+    zoom: 1;
+}
+
+#flood_enable .checkbox-group-container{
+    width: 250px;
+}
+
+#top-control-logout{
+    margin-right: 20px;
+    position: absolute;
+    right: 30px;
+    top: 94px;
+}
+
+#top-control-save-config{
+    margin-right: 20px;
+    position: absolute;
+    right: 90px;
+    top: 94px;
+}
+
+#top-control-config-status{
+    margin-right: 20px;
+    position: absolute;
+    right: 190px;
+    top: 94px;
+    color: red;
+}
+
+#top-control-reboot{
+    margin-right: 15px;
+}
+.top-banner{
+    color: #ffffff;
+    position: relative;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+#user-modify-form{
+	width: 450px;
+	margin: 0 auto;
+}
+
+
+.notice{
+	line-height: 20px;
+}
+
+
+
+
+/*DHCP-CLIENT*/
+.dhcp-client-bind{
+	cursor: pointer;
+}
+	
+.dhcp-client-bind span.icon{
+	width: 80px;
+	height: 30px;
+	display: inline-block;
+	background: url("../img/add_table.png");
+}
+
+.dhcp-client-bind:hover span.icon{
+	background: url("../img/add_table.png");
+}
+
+.dhcp-client-bind .add{
+	font-size: 14px;
+	line-height: 24px;
+	margin-left: 6px;
+	color:#C2C2C2;
+}
+
+.dhcp-client-bind:hover .add{
+	color: #67AEF7;
+}
+
+.dhcp-client-not,
+.dhcp-client-already{
+	color: #000;
+}
+
+
+/*IMB*/
+.grid-wrap{
+	margin-top:  50px ;
+}
+
+/*wds*/
+.ap-slt{
+	text-align: center;
+	height: 200px;
+}
+
+.ap-slt #scan-type{
+	width: 430px;
+	text-align: left;
+	margin: 0 auto;
+	position: relative;
+}
+
+
+/*devmgr*/
+.grid-search-box{
+	float: right;
+}
+
+a.to-black-list{
+	width: 96px;
+	height: 30px;
+	display: inline-block;
+	background: url("../img/intobl.png");
+}
+
+a.back-to-line{
+	width: 96px;
+	height: 30px;
+	display: inline-block;
+	background: url("../img/backtoline.png");
+}

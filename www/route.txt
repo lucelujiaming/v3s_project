@@ -1,0 +1,9 @@
+route uri=/login.html
+route uri=/action/login methods=POST handler=action redirect=200@/ redirect=401@/login.html
+route uri=/action/logout methods=POST handler=action redirect=200@/login.html
+route uri=/ auth=form handler=continue redirect=401@/login.html
+
+route uri=/action handler=action
+
+route uri=/
+

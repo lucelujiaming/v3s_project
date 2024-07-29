@@ -1,0 +1,80 @@
+﻿<!DOCTYPE html>  
+<html>  
+<head>  
+    <title>实时数据可视化图表</title>  
+</head>  
+<body>
+<div class="container widget-container panel-container">
+    <div class="panel-header">
+        <h3 class="panel-title">
+        <span class="panel-title-text">仪表采样</span>
+        </h3>
+    </div>
+    <div class="panel-content" stype="display:block">
+        <div class="panel-content-container">
+                <div class="container widget-container text-container file-container inline error">
+                    <div class="widget-fieldlabel-wrap m">
+                        <label class="widget-fieldlabel text-fieldlabel">采样日期</label>
+                        <span class="widget-separator">:</span>
+                    </div>
+                    <div class="file-wrap widget-wrap">
+                        <div class="widget-wrap text-wrap">
+                            <span class="text-wrap">
+                                <select id="instrument_info_date_select" 
+                                      name="instrument_info_date_select" style="width: 200px;" ></select>                               
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="container widget-container text-container file-container inline error">
+                    <div class="widget-wrap-outer button-wrap-outer">
+                        <div class="widget-wrap button-wrap">
+                            <button type="button" id="stat_instrument_info" name="stat_instrument_info" class="button-button">
+                            <span class="text button-text">获得</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            <iframe id="firmware-setting-iframe" name="firmware-setting-iframe" style="left: 0px; top: 0px; display: none"></iframe>
+        </div>    
+        <div class="panel-fbar-container"></div>
+    </div>
+</div>
+<div>
+<canvas id="myChart" width="400" height="500"></canvas>
+</div>
+
+<div class="container widget-container grid-container" style="width:48%;hight:100%;float:left;">
+    <div class="grid-header-container">
+        <h3 class="panel-title" style="margin-bottom: 4px;">
+            <span class="panel-title-text">串口状态不可用</span>
+        </h3>
+    </div>
+    <div class="grid-content-container">
+        <table id = "usart_info" name = "usart_info" class="grid-content-container"  style="margin-top: 0px;margin-left: 2px;">
+            <tr>
+                <th style="width:32%;" >发生时间</th>
+                <th style="width:16%;" >状态</th>
+            </tr>
+        </table>
+    </div>
+</div>
+<div class="container widget-container grid-container" style="width:48%;hight:100%;float:left;">
+    <div class="grid-header-container">
+        <h3 class="panel-title" style="margin-bottom: 4px;">
+        <span class="panel-title-text">电源状态不可用</span>
+        </h3>
+    </div>
+    <div class="grid-content-container">
+        <table id = "battery_info" name = "battery_info" class="grid-content-container"  style="margin-top: 0px;margin-left: 2px;">
+            <tr>
+                <th style="width:32%;" >发生时间</th>
+                <th style="width:16%;" >状态</th>
+            </tr>
+        </table>
+    </div>
+</div>
+<br>
+
+</body>  
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>system update</title>
+</head>
+<body>
+
+<div class="container widget-container panel-container">
+    <div class="panel-header">
+        <h3 class="panel-title">
+        <span class="panel-title-text">系统MAC设置</span>
+        </h3>
+    </div>
+    <div class="panel-content" stype="display:block">
+        <div class="panel-tbar-container"></div>
+        <div class="panel-content-container">
+                <div class="container widget-container text-container file-container inline error">
+                    <div class="widget-fieldlabel-wrap m">
+                        <label class="widget-fieldlabel text-fieldlabel">第一个MAC地址</label>
+                        <span class="widget-separator">:</span>
+                    </div>
+                    <div class="file-wrap widget-wrap">
+                        <div class="widget-wrap text-wrap">
+                            <span class="text-wrap">
+			                   <input id="new_first_mac_address" style="width: 200px;" onchange="checkMACAddress()"/>
+			                </span>
+                        </div>
+
+	                    <div class="widget-error-tips" style="left: 0px; top: 0px; display: none;">
+	                        <span class="widget-error-tips-delta"></span>
+	                        <div class="widget-error-tips-wrap">
+	                            <div class="content error-tips-content" style="width: 198px; white-space: normal;">
+	                            </div>
+	                        </div>
+	                    </div>
+                    </div>
+                </div>
+        </div>
+        <div class="panel-content-container">
+                <div class="container widget-container text-container file-container inline error">
+                    <div class="widget-fieldlabel-wrap m">
+                        <label class="widget-fieldlabel text-fieldlabel">第二个MAC地址</label>
+                        <span class="widget-separator">:</span>
+                    </div>
+                    <div class="file-wrap widget-wrap">
+                        <div class="widget-wrap text-wrap">
+                            <span class="text-wrap">
+                               <input id="new_second_mac_address" style="width: 200px;" onchange="checkMACAddress()"/>                           
+                            </span>
+                        </div>
+
+                            <div class="widget-error-tips" style="left: 0px; top: 0px; display: none;">
+                                <span class="widget-error-tips-delta"></span>
+                                <div class="widget-error-tips-wrap">
+                                    <div class="content error-tips-content" style="width: 198px; white-space: normal;">
+                                    </div>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+                <div class="container widget-container text-container file-container inline error">
+                    <div class="widget-wrap-outer button-wrap-outer">
+                        <div class="widget-wrap button-wrap">
+                            <button type="button" id="set_macaddress" name="set_macaddress" class="button-button">
+                            <span class="text button-text">设定</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            <iframe id="firmware-setting-iframe" name="firmware-setting-iframe" style="left: 0px; top: 0px; display: none"></iframe>
+        </div>
+        <div class="panel-fbar-container"></div>
+    </div>
+</div>
+</body>
+</html>

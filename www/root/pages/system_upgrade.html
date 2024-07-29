@@ -1,0 +1,103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>system update</title>
+</head>
+<body>
+
+<div class="container widget-container panel-container">
+    <div class="panel-header">
+        <h3 class="panel-title">
+        <span class="panel-title-text">系统升级</span>
+        </h3>
+    </div>
+    <div class="panel-content" stype="display:block">
+        <div class="panel-tbar-container"></div>
+        <div class="panel-content-container">
+            <form id="firmware-setting" class="form-panel" method ="post" enctype="multipart/form-data" action="/action/upgrade" target="firmware-setting-iframe">
+                <!--
+                        <div class="container widget-container text-container read-only">
+                            <div class="widget-fieldlabel-wrap m">
+                                <label class="widget-fieldlabel text-fieldlabel">u-boot版本</label>
+                                <span class="widget-separator">:</span>
+                            </div>
+                            <div class="widget-wrap-outer text-wrap-outer">
+                                <div class="widget-wrap text-wrap">
+                                    <span class="text-wrap">
+                                        <input type="text" id="uboot_version" name="uboot_version" value="" readonly="readonly" class="text-text xxl" maxlength="50">
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="container widget-container text-container read-only">
+                            <div class="widget-fieldlabel-wrap m">
+                                <label class="widget-fieldlabel text-fieldlabel">Kernel版本</label>
+                                <span class="widget-separator">:</span>
+                            </div>
+                            <div class="widget-wrap-outer text-wrap-outer">
+                                <div class="widget-wrap text-wrap">
+                                    <span class="text-wrap">
+                                        <input type="text" id="kernel_version" name="kernel_version" value="" readonly="readonly" class="text-text xxxl" maxlength="100">
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="container widget-container text-container read-only">
+                            <div class="widget-fieldlabel-wrap m">
+                                <label class="widget-fieldlabel text-fieldlabel">机器名</label>
+                                <span class="widget-separator">:</span>
+                            </div>
+                            <div class="widget-wrap-outer text-wrap-outer">
+                                <div class="widget-wrap text-wrap">
+                                    <span class="text-wrap">
+                                        <input type="text" id="machine_name" name="machine_name" value="" readonly="readonly" class="text-text xxl" maxlength="50">
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                -->
+                <div class="container widget-container text-container file-container inline error">
+                    <div class="widget-fieldlabel-wrap m">
+                        <label class="widget-fieldlabel text-fieldlabel">升级镜像文件路径</label>
+                        <span class="widget-separator">:</span>
+                    </div>
+                    <div class="file-wrap-outer widget-wrap-outer">
+                        <div class="file-wrap widget-wrap">
+                            <div class="widget-wrap text-wrap">
+                                <span class="text-wrap"><label id="system_filename" 
+									class="file-text text-text l" style="width:275px;"></label></span>
+                            </div>
+                            <div class="button-container file-button-container inline-block">
+                                <button class="file-button button-button" type="button" id="broswer">
+                                <span class="text button-text">浏览</span>
+                                </button>
+                            </div>
+                            <input id="file" name="file" type="file" class="file-input" accept=".bin" onchange="document.getElementById('system_filename').innerText=this.files[0].name;checkSystemFileName()"/>
+                        </div>
+                        <div class="widget-error-tips" style="left: 0px; top: 0px; display: none;">
+                            <span class="widget-error-tips-delta"></span>
+                            <div class="widget-error-tips-wrap">
+                                <div class="content error-tips-content" style="width: 198px; white-space: normal;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="container widget-container button-container submit inline">
+                    <div class="widget-wrap-outer button-wrap-outer">
+                        <div class="widget-wrap button-wrap">
+                            <button type="button" id="upgrade" name="upgrade" class="button-button">
+                            <span class="text button-text">升级</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <iframe id="firmware-setting-iframe" name="firmware-setting-iframe" style="left: 0px; top: 0px; display: none"></iframe>
+        </div>
+        <div class="panel-fbar-container"></div>
+    </div>
+</div>
+</body>
+</html>

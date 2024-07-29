@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>system update</title>
+</head>
+<body>
+
+<div class="container widget-container panel-container">
+    <div class="panel-header">
+        <h3 class="panel-title">
+        <span class="panel-title-text">系统信息</span>
+        </h3>
+    </div>
+    <div class="panel-content" stype="display:block">
+        <div class="panel-tbar-container"></div>
+        <div class="panel-content-container">
+            <form id="firmware-setting" class="form-panel" method ="post" enctype="multipart/form-data" action="/action/upgrade" target="firmware-setting-iframe">
+                <div class="container widget-container text-container read-only">
+                    <div class="widget-fieldlabel-wrap m">
+                        <label class="widget-fieldlabel text-fieldlabel">CPU占用率</label>
+                        <span class="widget-separator">:</span>
+                    </div>
+                    <div class="widget-wrap-outer text-wrap-outer">
+                        <div class="widget-wrap text-wrap">
+                            <span class="text-wrap">
+                                <input type="text" id="cpuload_info" name="cpuload_info" value="" readonly="readonly" class="text-text xxl"  style="width:300px;">
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="container widget-container text-container read-only">
+                    <div class="widget-fieldlabel-wrap m">
+                        <label class="widget-fieldlabel text-fieldlabel">内存使用率</label>
+                        <span class="widget-separator">:</span>
+                    </div>
+                    <div class="widget-wrap-outer text-wrap-outer">
+                        <div class="widget-wrap text-wrap">
+                            <span class="text-wrap">
+                                <input type="text" id="mem_info" name="mem_info" value="" readonly="readonly" class="text-text xxxl" style="width:500px;">
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="container widget-container text-container read-only">
+                    <div class="widget-fieldlabel-wrap m">
+                        <label class="widget-fieldlabel text-fieldlabel">服务运行状态</label>
+                        <span class="widget-separator">:</span>
+                    </div>
+                    <div class="widget-wrap-outer text-wrap-outer">
+                        <div class="widget-wrap text-wrap">
+                            <span class="text-wrap">
+                                <input type="text" id="svm_info" name="svm_info" value="" readonly="readonly" class="text-text xxl" maxlength="50">
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <iframe id="firmware-setting-iframe" name="firmware-setting-iframe" style="left: 0px; top: 0px; display: none"></iframe>
+        </div>
+        <div class="panel-fbar-container"></div>
+    </div>
+</div>
+</body>
+</html>

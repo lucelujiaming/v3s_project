@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<script type="text/javascript" src="../js/zepto.js"></script>
+<head>
+	<meta charset="UTF-8">
+	<title>Ajax上传</title>
+	<script>
+		$(document).ready(function(){
+			$('button#upload').click(function() 
+			{
+				$("#uploadForm").submit();
+				var updateStatus = function() {
+					$.get("/action/status", function(_data, _status){
+						alert("CCC");
+					});
+				};
+			});
+		});
+	</script>
+</head>
+
+<body>
+ <h1>文件上传3</h1>
+ <div>
+	<form   id="uploadForm"  method="post" enctype="multipart/form-data">
+		<label>上传电子书</label>
+		<input type="file"  name="file" >
+		<button  id="upload" type="button"  name="button" >上传</button>
+	</form>
+  </div>
+</body>
+</html>
