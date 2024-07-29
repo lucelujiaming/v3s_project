@@ -1,0 +1,6 @@
+#
+#   auth.txt - Authorization data
+#
+
+
+user name=admin password=6eaf6e241082cb92213e8538717fe0bb roles=admin

@@ -1,0 +1,72 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<style type="text/css">
+	body{
+		width: 100%;
+		height: 100%;
+		margin: 0;
+		background-color: #393946;
+	}
+	#login{
+		width:480px;
+		height:280px;
+		margin:140px auto;
+		border-radius: 0.5em;
+		background-color: WHITE;
+	}
+	#login img{
+		padding-top:20px;
+	}
+	#login h1{
+		padding-top:20px;
+		color: #888;
+		text-align: center;
+	}
+	input{
+		width: 280px;
+		height: 25px;
+		margin-bottom: 20px;
+		padding: 6px;
+		font-size: 20px;
+		color: black;
+		background-color: WHITE;
+		border:1px solid #D3D3D3;
+		border-radius: 5px;
+	}
+	input:hover{
+		border:1px solid #949494;
+	}
+	#but{
+		width: 290px;
+		height: 40px;
+		margin-bottom: 20px;
+		padding: 6px;
+		background-color: #21A957;
+		color: white;
+		font-size: 20px;
+		border: none;
+		border-radius: 5px;
+		cursor:pointer;
+	}
+	#but:hover{
+		background:#128A42;
+	}
+</style>
+<head>
+<title>Login</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+</head>
+<body>
+<div id="login">
+<form name="details" method="post" action="/action/login">
+<h1>User Login</h1>
+<div align="center" >
+<input type="text" name="username" value='' placeholder="请输入用户名" autofocus><br>
+<input type="password" name="password" value='' placeholder="请输入密码"><br>
+<button id="but" type="submit"><b>登录</b></button>
+</div>
+</form>
+</div>
+</body>
+</html>

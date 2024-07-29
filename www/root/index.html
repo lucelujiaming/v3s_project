@@ -1,0 +1,912 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+<link rel="shortcut icon" href="favicon.ico"/>
+<link type="text/css" href="css/widget.css" rel="stylesheet" />
+
+<link type="text/css" href="themes/neoteric/css/widget.css" rel="stylesheet" />
+<link type="text/css" href="themes/neoteric/css/style.css" rel="stylesheet" />
+
+<script type="text/javascript" src="js/chart.js"></script>
+<script type="text/javascript" src="js/zepto.js"></script>
+<script type="text/javascript">
+var application_filestatus = 1;
+var system_filestatus = 1;
+
+var first_ip_address_status  = 1;
+var second_ip_address_status = 1;
+var first_mac_address_status  = 1;
+var second_mac_address_status = 1;
+
+var current_subpage = "";
+
+var checkApplicationFileName = function() {
+    var fname = $("#application_filename")[0].innerText;
+    if (!fname || fname.length == 0) {
+        application_filestatus = 1;
+    } else if (fname == "app.sab") {
+        application_filestatus = 0;
+    } else if (fname == "app.scode") {
+        application_filestatus = 0;
+    } else {
+        application_filestatus = 2;
+        $("div.error-tips-content").html("必须是app.sab和app.scode文件");
+        $("div.widget-error-tips").css("display", "block");
+    }
+};
+
+var checkSystemFileName = function() {
+    var fname = $("#system_filename")[0].innerText;
+    if (!fname || fname.length == 0) {
+        system_filestatus = 1;
+    } else if (/^firmware_V\d+\.\d+\.\d+-beta_\d+\.bin/.test(fname)) {
+        system_filestatus = 0;
+    } else {
+        system_filestatus = 2;
+        $("div.error-tips-content").html("必须是firmware_V0.0.0-beta_1665709921.bin格式的文件名");
+        $("div.widget-error-tips").css("display", "block");
+    }
+};
+
+var checkIPAddress = function() {
+    var first_ip_address = $("#new_first_ip_address")[0].value;
+    if (!first_ip_address || first_ip_address.length == 0) {
+        first_ip_address_status = 1;
+    } else if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(first_ip_address)) {
+        first_ip_address_status = 0;
+    } else {
+        first_ip_address_status = 2;
+        $("div.error-tips-content").html("IP地址错误");
+        $("div.widget-error-tips").css("display", "block");
+    }
+    var second_ip_address = $("#new_first_ip_address")[0].value;
+    if (!second_ip_address || second_ip_address.length == 0) {
+        second_ip_address_status = 1;
+    } else if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(second_ip_address)) {
+        second_ip_address_status = 0;
+    } else {
+        second_ip_address_status = 2;
+        $("div.error-tips-content").html("IP地址错误");
+        $("div.widget-error-tips").css("display", "block");
+    }
+};
+
+var checkMACAddress = function() {
+    var first_mac_address = $("#new_first_mac_address")[0].value;
+    if (!first_mac_address || first_mac_address.length == 0) {
+        first_mac_address_status = 1;
+    } else if (/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/.test(first_mac_address)) {
+        first_mac_address_status = 0;
+    } else {
+        first_mac_address_status = 2;
+        $("div.error-tips-content").html("MAC地址错误");
+        $("div.widget-error-tips").css("display", "block");
+    }
+    var second_mac_address = $("#new_first_mac_address")[0].value;
+    if (!second_mac_address || second_mac_address.length == 0) {
+        second_mac_address_status = 1;
+    } else if (/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/.test(second_mac_address)) {
+        second_mac_address_status = 0;
+    } else {
+        second_mac_address_status = 2;
+        $("div.error-tips-content").html("MAC地址错误");
+        $("div.widget-error-tips").css("display", "block");
+    }
+};
+
+var funs = {};
+funs["su"] = function() {
+    //   alert("current_subpage=" + current_subpage);
+    // onClick
+    if(current_subpage == "pages/ip_address_setting.html")
+    {
+        $("div.loading-container#loading-container").css("display", "block");
+        // 获取IP地址
+        $.get("/action/status?mode=get_ipconfig", function(_data, _status){
+            // alert("get_ipconfig = " + _data);
+            $("div.loading-container#loading-container").css("display", "none");
+            // $("#new_ip_address").attr("value", _data);
+            var pos = _data.indexOf(";");
+            var first_ip = _data.substring(0, pos);
+            var second_ip = _data.substring(pos + 1);
+            $("#new_first_ip_address").attr("value", first_ip);
+            $("#new_second_ip_address").attr("value", second_ip);
+        });
+    }
+    else if(current_subpage == "pages/mac_address_setting.html")
+    {
+        $("div.loading-container#loading-container").css("display", "block");
+        // 获取MAC地址设定
+        $.get("/action/status?mode=get_macconfig", function(_data, _status){
+            // alert("get_macconfig = " + _data);
+            $("div.loading-container#loading-container").css("display", "none");
+            // $("#new_mac_address").attr("value", _data);
+            var pos = _data.indexOf(";");
+            var first_mac = _data.substring(0, pos).trim();
+            var second_mac = _data.substring(pos + 1).trim();
+            $("#new_first_mac_address").attr("value", first_mac);
+            $("#new_second_mac_address").attr("value", second_mac);
+        });
+    }
+    else if((current_subpage == "pages/application_upgrade.html")
+        ||(current_subpage == "pages/system_upgrade.html"))
+    {
+        $("div.loading-container#loading-container").css("display", "block");
+        // 当前版本 & 发布日期
+        $.get("/action/status?mode=init", function(_data, _status){
+            $("div.loading-container#loading-container").css("display", "none");
+            var data_json = JSON.parse(_data);
+            // alert("init::get_systeminfo = " + data_json);
+            $.each(data_json, function(index, info){
+                // if (info.version && $("#software_version").length > 0) {
+                if (index == "version") {
+                    // $("#software_version").attr("value", info.version);
+                    $("#software_version").attr("value", info);
+                }
+                // if (info.buildtime && $("#software_time").length > 0) {
+                else if (index == "buildtime") {
+                    var date = new Date(parseInt(info) * 1000);
+                    // Substract GMT+08:00
+                    date.setHours(date.getHours() - 8);
+                    var dateStr = date.getFullYear() + '-' + 
+                        (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-' + 
+                        (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + ' ' + 
+                        (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':' + 
+                        (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()) + ':' + 
+                        (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds());
+                    $("#software_time").attr("value", dateStr);
+                }
+                else if (index == "status") {
+                    $("#software_status").attr("value", info);
+                }
+                else if (index == "uboot") {
+                    $("#uboot_version").attr("value", info);
+                }
+                else if (index == "kernel") {
+                    $("#kernel_version").attr("value", info);
+                }
+                else if (index == "machine") {
+                    $("#machine_name").attr("value", info);
+                }
+            });
+        });
+    }
+    else if(current_subpage == "pages/system_state.html")
+    {
+        $("div.loading-container#loading-container").css("display", "block");
+        // 系统信息
+        $.get("/action/status?mode=get_systeminfo", function(_data, _status){
+            $("div.loading-container#loading-container").css("display", "none");
+            var data_json = JSON.parse(_data);
+            $.each(data_json, function(index, info){
+                // if (info.version && $("#software_version").length > 0) {
+                if (index == "cpuload") {
+                    $("#cpuload_info").attr("value", info);
+                }
+                else if (index == "mem") {
+                    $("#mem_info").attr("value", info);
+                }
+                else if (index == "svm") {
+                    $("#svm_info").attr("value", info);
+                }
+            });
+        });
+    }
+    else if(current_subpage == "pages/show_record_diagram.html")
+    {
+        // alert("AAAA current_subpage=" + current_subpage);
+        $("div.loading-container#loading-container").css("display", "block");
+        // 系统信息
+        $.get("/action/status?mode=get_history_datelist", function(_data, _status){
+            $("div.loading-container#loading-container").css("display", "none");
+            var select = document.getElementById('instrument_info_date_select');
+            var data_json = JSON.parse(_data);
+            $.each(data_json, function(index, info){
+                if (index == "date") {
+                    // alert("info = " + info + " and info.length = " + info.length);
+                    for (let i = 0; i < info.length; i++) {
+                        // alert("info = " + info[i]);
+                        // 创建新的选项元素
+                        var option = document.createElement('option');
+                        option.value = info[i]; // 设置选项的值
+                        option.text = info[i]; // 设置选项显示的文本
+                        select.append(option);
+                    }
+                    select.options[info.length - 1].selected = true;
+                }
+            });
+        });
+    }
+    else if(current_subpage == "pages/datetime_setting.html")
+    {
+        // Set date
+        var date = new Date();
+        var year = date.getFullYear();
+        var month = date.getMonth() + 1;
+        var day = date.getDate();
+        var dateValue = year;
+        if(parseInt(month) >= 10)
+        {
+            dateValue = dateValue + "-" + month;
+        }
+        else 
+        {
+            dateValue = dateValue + "-0" + month;
+        }
+        if(parseInt(day) >= 10)
+        {
+            dateValue = dateValue + "-" + day;
+        }
+        else 
+        {
+            dateValue = dateValue + "-0" + day;
+        }
+        $("#date_setting").attr("value", dateValue);
+        // alert("date_setting = " + dateValue);
+        // Set Time
+        var hour = date.getHours();
+        var minute = date.getMinutes();
+        // var second = date.getSeconds();
+        var timeValue = ""
+        if(parseInt(hour) >= 10)
+        {
+            timeValue = hour;
+        }
+        else 
+        {
+            timeValue = "0" + hour;
+        }
+        if(parseInt(minute) >= 10)
+        {
+            timeValue = timeValue + ":" + minute;
+        }
+        else 
+        {
+            timeValue = timeValue + ":0" + minute;
+        }
+        $("#time_setting").attr("value", timeValue);
+        // alert("CCCCC");
+        $("div.loading-container#loading-container").css("display", "block");
+        // 获取MAC地址设定
+        $.get("/action/status?mode=get_date", function(_data, _status){
+            // alert("get_macconfig = " + _data);
+            $("div.loading-container#loading-container").css("display", "none");
+            $("#current_date").attr("value", _data);
+        });
+    }
+    // onClick
+    if((current_subpage == "pages/application_upgrade.html")
+        ||(current_subpage == "pages/system_upgrade.html"))
+    {
+        // 浏览
+        $("button#broswer").on("click", function(e){
+            $("div.widget-error-tips").css("display", "none");
+            $("#file").click();
+        });
+        // 应用程序升级
+        $("button#upgrade").on("click", function(e){
+            if (application_filestatus == 0)
+            {
+                $("#firmware-setting").submit();
+                $("#loading-text").html("上传中...");
+                $("div.loading-container#loading-container").css("display", "block");
+                $("div.mask#mask").css("display", "block");
+                var updateStatus = function() {
+                    $("div.loading-container#loading-container").css("display", "none");
+                    $("div.mask#mask").css("display", "none");
+                    alert("升级成功");
+                };
+                var waitforUploadDone = function() {
+                    setTimeout(updateStatus, 500);
+                }
+                $.get("/action/uploadProc?mode=upload", function(_data, _status){});
+                waitforUploadDone();
+            }
+            else if (system_filestatus == 0)
+            {
+                $("#firmware-setting").submit();
+                $("#loading-text").html("上传中...");
+                $("div.loading-container#loading-container").css("display", "block");
+                $("div.mask#mask").css("display", "block");
+                var updateStatus = function() {
+                    $("div.loading-container#loading-container").css("display", "none");
+                    $("div.mask#mask").css("display", "none");
+                    alert("升级成功");
+                };
+                var waitforUploadDone = function() {
+                    setTimeout(updateStatus, 500);
+                }
+                $.get("/action/uploadProc?mode=upload", function(_data, _status){});
+                waitforUploadDone();
+            }
+            else // if (application_filestatus == 1)
+            {
+                $("div.error-tips-content").html("请选择一个文件");
+                $("div.widget-error-tips").css("display", "block");
+            }
+        });
+    }
+    else if(current_subpage == "pages/ip_address_setting.html")
+    {
+        // IP设置
+        $("button#set_ipaddress").on("click", function(e){
+            checkIPAddress();
+            if ((first_ip_address_status == 0) && (second_ip_address_status == 0))
+            {
+                var first_ip_address = $("#new_first_ip_address")[0].value;
+                var second_ip_address = $("#new_second_ip_address")[0].value;
+                var ip_address = first_ip_address + ";" + second_ip_address;
+		
+                // alert("click::ip_address = " + ip_address);
+                $("div.widget-error-tips").css("display", "none");
+                // 
+                $("#loading-text").html("修改中...");
+                $("div.loading-container#loading-container").css("display", "block");
+                $("div.mask#mask").css("display", "block");
+                var updateIPAddress = function() {
+                    $("div.loading-container#loading-container").css("display", "none");
+                    $("div.mask#mask").css("display", "none");
+                    alert("设置成功");
+                    // self.location='http://192.168.168.' + first_ip_address;
+                    self.location='http://' + first_ip_address;
+                };
+                var waitforIPSetDone = function() {
+                    setTimeout(updateIPAddress, 2000);
+                }
+                // Do submit job
+                $.get("/action/status?mode=set_ipaddress&value=" + ip_address, function(_data, _status){});
+                waitforIPSetDone();
+            }
+            else if ((first_ip_address_status == 1) || (second_ip_address_status == 1))
+            {    
+                // alert("ip_address_status = " + ip_address_status);
+                $("div.error-tips-content").html("IP地址格式错误");
+                $("div.widget-error-tips").css("display", "block");
+            }
+        });
+    }
+    else if(current_subpage == "pages/mac_address_setting.html")
+    {
+        // MAC设置
+        // alert("click::mac_address = " + current_subpage);
+        $("button#set_macaddress").on("click", function(e){
+            checkMACAddress();
+            alert("click::mac_address_status = " + first_mac_address_status);
+            if ((first_mac_address_status == 0) && (second_mac_address_status == 0))
+            {
+                var first_mac_address = $("#new_first_mac_address")[0].value;
+                var second_mac_address = $("#new_second_mac_address")[0].value;
+                var mac_address = first_mac_address + ";" + second_mac_address;
+                alert("click::mac_address = " + first_mac_address);
+                $("div.widget-error-tips").css("display", "none");
+                // 
+                $("#loading-text").html("修改中...");
+                $("div.loading-container#loading-container").css("display", "block");
+                $("div.mask#mask").css("display", "block");
+                var updateMACAddress = function() {
+                    $("div.loading-container#loading-container").css("display", "none");
+                    $("div.mask#mask").css("display", "none");
+                    alert("设置成功");
+                    // self.location='http://192.168.168.' + ip_address;
+                    location.reload(); 
+                };
+                var waitforMACSetDone = function() {
+                    setTimeout(updateMACAddress, 2000);
+                }
+                // Do submit job
+                $.get("/action/status?mode=set_macaddress&value=" + mac_address, function(_data, _status){});
+                waitforMACSetDone();
+            }
+            else if ((first_mac_address_status == 1) || (second_mac_address_status == 1)) 
+            {
+                // alert("mac_address_status = " + first_mac_address_status);
+                $("div.error-tips-content").html("MAC地址格式错误");
+                $("div.widget-error-tips").css("display", "block");
+            }
+        });
+    }
+    else if(current_subpage == "pages/show_record_diagram.html")
+    {
+        $("button#stat_instrument_info").on("click", function(e){
+            var instrument_info_date_select = $("#instrument_info_date_select")[0].value;
+            // alert("click::instrument_info_date_select = " + instrument_info_date_select);
+            $("div.widget-error-tips").css("display", "none");
+            // 
+            $("#loading-text").html("数据抓取中...");
+            $("div.loading-container#loading-container").css("display", "block");
+            $("div.mask#mask").css("display", "block");
+            var statInstrumentInfo = function() {
+                $("div.loading-container#loading-container").css("display", "none");
+                $("div.mask#mask").css("display", "none");
+                alert("设置成功");
+                // self.location='http://192.168.168.' + ip_address;
+                // location.reload(); 
+            };
+            var waitforInstrumentInfoDone = function() {
+                setTimeout(statInstrumentInfo, 2000);
+            }
+          
+            // Do submit job
+            $.get("/action/status?mode=get_instrument_info&record_time="
+                        + instrument_info_date_select, function(_data, _status){
+                // alert("_data = " + _data);
+                var data_json = JSON.parse(_data);
+                var instrument_scale = 0;
+                var instrument_scale_array   = new Array();
+                var battery_info_array       = new Array();
+                var usart_info_array         = new Array();
+                var battery_usart_info_array = new Array();
+                var particle_first_array     = new Array();
+                var particle_second_array    = new Array();
+                var particle_third_array     = new Array();
+                
+                $.each(data_json, function(index, info){
+                    if (index == "Scale") {
+                        alert("Scale = " + info );
+                        instrument_scale = info;
+                        for (let i = 0; i < info; i++) {
+                            instrument_scale_array[i] = i;
+                        }
+                    }
+                    else if (index == "InstrumentInfo") {
+                        // alert("InstrumentInfo = " + info + " and info.length = " + info.length);
+                        for (let i = 0; i < info.length; i++) {
+                            particle_first_array[i]  = info[i][0];
+                            particle_second_array[i] = info[i][1];
+                            particle_third_array[i]  = info[i][2];
+                        }
+                        for (let i = info.length; i < instrument_scale; i++) {
+                            particle_first_array[i]  = 0;
+                            particle_second_array[i] = 0;
+                            particle_third_array[i]  = 0;
+                        }
+                    }
+                    else if (index == "BatteryInfo") {
+                        // alert("BatteryInfo = " + info + " and info.length = " + info.length);
+                        for (let i = 0; i < info.length; i++) {
+                            if(info[i] == 0)
+                            {
+                                battery_info_array[i]  = 0;
+                            }
+                            else 
+                            {
+                                battery_info_array[i]  = 100;
+                            }
+                        }
+                        for (let i = info.length; i < instrument_scale; i++) {
+                            battery_info_array[i]  = 0;
+                        }
+                    }
+                    else if (index == "UsartInfo") {
+                        // alert("UsartInfo = " + info + " and info.length = " + info.length);
+                        for (let i = 0; i < info.length; i++) {
+                            if(info[i] == 0)
+                            {
+                                usart_info_array[i]  = 0;
+                            }
+                            else 
+                            {
+                                usart_info_array[i]  = 100;
+                            }
+                        }
+                        for (let i = info.length; i < instrument_scale; i++) {
+                            usart_info_array[i]  = 0;
+                        }
+                    }
+                });
+                
+                for (let i = 0; i < instrument_scale; i++) {
+                    if((battery_info_array[i] != 0) && (usart_info_array[i] != 0))
+                    {
+                        battery_usart_info_array[i]  = 100;
+                    }
+                    else 
+                    {
+                        battery_usart_info_array[i]  = 0;
+                    }
+                }
+
+                const record_diagram_data = {
+                  labels: instrument_scale_array,
+                  datasets: [{
+                    type: 'line',
+                    label: '颗粒度通道1',
+                    data: particle_first_array,
+                    fill: false,
+                    borderColor: 'rgb(54, 56, 235)'
+                  }, {
+                    type: 'line',
+                    label: '颗粒度通道2',
+                    data: particle_second_array,
+                    fill: false,
+                    borderColor: 'rgb(80, 162, 235)'
+                  }, {
+                    type: 'line',
+                    label: '颗粒度通道3',
+                    data: particle_third_array,
+                    fill: false,
+                    borderColor: 'rgb(54, 162, 55)'
+                  }, {
+                    type: 'bar',
+                    label: '掉电情况',
+                    data: battery_info_array,
+                    barPercentage: 1,
+                    categoryPercentage: 1,
+                    borderColor: 'rgb(0, 99, 132)',
+                    backgroundColor: 'rgba(0, 99, 132, 0.2)'
+                  }, {
+                    type: 'bar',
+                    label: '串口状态',
+                    data: usart_info_array,
+                    barPercentage: 1,
+                    categoryPercentage: 1,
+                    borderColor: 'rgb(255, 0, 132)',
+                    backgroundColor: 'rgba(255, 0, 132, 0.2)'
+                  }, {
+                    type: 'bar',
+                    label: '掉电情况和串口状态',
+                    data: battery_usart_info_array,
+                    barPercentage: 1,
+                    categoryPercentage: 1,
+                    borderColor: 'rgb(255, 99, 0)',
+                    backgroundColor: 'rgba(255, 99, 0, 0.2)'
+                  }]
+                };
+                
+                const record_diagram_config = {
+                  type: 'scatter',
+                  data: record_diagram_data,
+                  options: {
+                    responsive: true, // 设置图表为响应式，根据屏幕窗口变化而变化
+                    maintainAspectRatio: false,// 保持图表原有比例
+                    scales: {
+                      y: {
+                        beginAtZero: true
+                      }
+                    }
+                  }
+                };
+                
+                const ctx = document.getElementById('myChart');
+                const myChart = new Chart(ctx, record_diagram_config);
+            });
+            
+            // get_battery_info
+            $.get("/action/status?mode=get_battery_info&record_time="
+                        + instrument_info_date_select, function(_data, _status){
+                alert("_data = " + _data);
+                var data_json = JSON.parse(_data);
+                var table_id = document.getElementById("battery_info");
+                
+                $.each(data_json, function(index, info){
+                    if (index == "BatteryInfo") {
+                        // alert("InstrumentInfo = " + info + " and info.length = " + info.length);
+                        for (let i = 0; i < info.length; i++) {
+                            // table 的ID 值
+                            var new_row = table_id.insertRow(table_id.rows.length);
+                            // new_row.setAttribute("id","row"+rowIndex);
+                            var new_first_col = new_row.insertCell(0);
+                            new_first_col.innerText = info[i][0];
+                            
+                            var new_second_col = new_row.insertCell(1);
+                            if(info[i][1] == "0")
+                            {
+                                new_second_col.innerText = "可用";
+                            }
+                            else
+                            {
+                                new_second_col.innerText = "不可用";
+                            }
+                            // new_second_col.innerHTML = 
+                            //      "<input type='text' style='width:80%' name='" + info[i][1] + "'";
+                        }
+                    }
+                });
+                
+            });
+            
+            // get_usart_info
+            $.get("/action/status?mode=get_usart_info&record_time="
+                        + instrument_info_date_select, function(_data, _status){
+                alert("_data = " + _data);
+                var data_json = JSON.parse(_data);
+                var table_id = document.getElementById("usart_info");
+                
+                $.each(data_json, function(index, info){
+                    if (index == "BatteryInfo") {
+                        // alert("InstrumentInfo = " + info + " and info.length = " + info.length);
+                        for (let i = 0; i < info.length; i++) {
+                            // table 的ID 值
+                            var new_row = table_id.insertRow(table_id.rows.length);
+                            // new_row.setAttribute("id","row"+rowIndex);
+                            var new_first_col = new_row.insertCell(0);
+                            new_first_col.innerText = info[i][0];
+                            
+                            var new_second_col = new_row.insertCell(1);
+                            if(info[i][1] == "0")
+                            {
+                                new_second_col.innerText = "可用";
+                            }
+                            else
+                            {
+                                new_second_col.innerText = "不可用";
+                            }
+                            // new_second_col.innerHTML = 
+                            //      "<input type='text' style='width:80%' name='" + info[i][1] + "'";
+                        }
+                    }
+                });
+                
+            });
+            
+            waitforInstrumentInfoDone();
+        });
+    }
+    else if(current_subpage == "pages/datetime_setting.html")
+    {
+        // 日期时间设置
+        $("button#set_datetime").on("click", function(e){
+            var date_str = $("#date_setting")[0].value;
+            var time_str = $("#time_setting")[0].value;
+            var datetime_str  = date_str.substr(0, 4) + ".";
+                datetime_str += date_str.substr(5, 2) + ".";
+                datetime_str += date_str.substr(8, 2) + "-";
+                datetime_str += time_str.substr(0, 2) + ":";
+                datetime_str += time_str.substr(3, 2) ;
+            alert("click::datetime_str = " + datetime_str);
+            // alert("click::datetime_str = " + date_str + ", time_str= " + time_str);
+            
+            $("div.widget-error-tips").css("display", "none");
+            // 
+            $("#loading-text").html("设置中...");
+            $("div.loading-container#loading-container").css("display", "block");
+            $("div.mask#mask").css("display", "block");
+            var updateDatetime = function() {
+                $("div.loading-container#loading-container").css("display", "none");
+                $("div.mask#mask").css("display", "none");
+                alert("设置成功");
+                location.reload(); 
+            };
+            var waitforDatetimeSetDone = function() {
+                setTimeout(updateDatetime, 2000);
+            }
+            $.get("/action/status?mode=set_datetime&value=" + datetime_str, function(_data, _status){});
+            waitforDatetimeSetDone();
+        });	
+    }
+    // alert("BBBBB");
+};
+var updateContent = function(url, fun) {
+    var req = false;
+    if (window.XMLHttpRequest) {
+        try {
+            req = new XMLHttpRequest();
+        } catch (e) {
+            req = false;
+        }
+    } else if (window.ActiveXObject) {
+        try {
+            req = new ActiveXObject("Msxml2.XMLHTTP");
+        } catch (e) {
+            try {
+                req = new ActiveXObject("Microsoft.XMLHTTP");
+            } catch (e) {
+                req = false;
+            }
+        }
+    }
+    if (req) {
+        req.open('GET', url, false);
+        req.send(null);
+        $("#func-advanced").html(req.responseText);
+        if (funs[fun]) {
+            funs[fun]();
+        }
+        else
+        {
+            // alert("updateContent = " + url);
+            if(url == "pages/system_state.html")
+            {
+                $("div.loading-container#loading-container").css("display", "block");
+                // 当前版本 & 发布日期
+                $.get("/action/status?mode=get_systeminfo", function(_data, _status){
+                    $("div.loading-container#loading-container").css("display", "none");
+                    var data_json = JSON.parse(_data);
+                    $.each(data_json, function(index, info){
+                        // if (info.version && $("#software_version").length > 0) {
+                        if (index == "cpuload") {
+                            $("#cpuload_info").attr("value", info);
+                        }
+                        else if (index == "mem") {
+                            $("#mem_info").attr("value", info);
+                        }
+                        else if (index == "svm") {
+                            $("#svm_info").attr("value", info);
+                        }
+                    });
+                });
+            }
+        }
+    } else {
+        $("#func-advanced").html("Inner Error !");
+    }
+    
+};
+$(document).ready(function(e){
+    var container = $("div#menu-advanced");
+    container.delegate("ul.menu-tree li.fst a.fst", "click", function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var me = $(this), url = me.attr("ref-url"), fun = me.attr("ifun");
+            // alert("url:" + url);
+            current_subpage = url;
+            var fstMenuList = $("li.fst");
+            $(fstMenuList).each(function(i, obj) {
+                    var that = $(obj);
+                    that.removeClass("selected")
+                });
+            fstMenuList = $("a.fst");
+            $(fstMenuList).each(function(i, obj) {
+                    var that = $(obj);
+                    that.removeClass("selected")
+                });
+            if (me.attr("data-child") == "no") {
+                updateContent(url, fun);
+                me.addClass("selected");
+                me.closest("li.fst").addClass("selected");
+            } else {
+            }
+        }).delegate("ul.menu-tree li.sec a.sec", "click", function(e) {
+        });
+    // 隐藏显示加载图标
+    $("div.loading-container#loading-container").css("display", "none");
+    $("div.mask#mask").css("display", "none")
+    document.title = "CMP500";
+    updateContent("pages/system_state.html", "none");
+});
+</script>
+
+<title>Opening...</title>
+</head>
+<body>
+<noscript>
+	<meta http-equiv="refresh" content="0; url=error.html"/>
+</noscript>
+
+<!--主界面-->
+<!--顶部颜色条-->
+<div class="top-banner">
+    <div class="control">
+        <div class="logout">
+            <span class="icon"></span>
+            <span class="text">登出</span>
+        </div>
+        <div class="user">
+            <span class="icon"></span>
+            <span class="text">用户</span>
+        </div>
+    </div>
+    
+    <a href="http://www.xungaoauto.com.cn" target="_blank">
+        <div class="top-banner-logo"></div>
+    </a>
+    
+    <div class="product-info">
+        <h1>|</h1>
+        <div id="product-type">CMP500</div>
+    </div>
+</div>
+
+<div class="middle-wrap">
+    <div class="main-wrap">
+		<div class="top-content">
+			<div class="top-content-wrap" id="top-content">
+				<div id="menu-advanced" class="menu-container">
+					<ul class="menu-tree advanced">
+					<li class="fst " id="menu-advanced-running-status-li">
+					     <a class="fst none-sec" data-child="no" 
+						    data-name="running-status" name="running-status" tab-id="tab-menu-ul-1010746721" 
+							ref-url="pages/system_state.html" ifun="su"><span class="icon">
+							   </span><span class="text">运行状态</span>
+						 </a>
+					</li>
+					<li class="fst selected" id="menu-advanced-sys-tools-li">
+					     <a class="fst none-sec selected" data-child="no" 
+						    data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
+							ref-url="pages/ip_address_setting.html" ifun="su">
+							   <span class="icon"></span><span class="text">IP地址设置</span>
+						 </a>
+				    </li>
+					<li class="fst selected" id="menu-advanced-sys-tools-li">
+					     <a class="fst none-sec selected" data-child="no" 
+						    data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
+							ref-url="pages/mac_address_setting.html" ifun="su">
+							   <span class="icon"></span><span class="text">MAC地址设置</span>
+						 </a>
+				    </li>
+					<li class="fst selected" id="menu-advanced-sys-tools-li">
+					     <a class="fst none-sec selected" data-child="no" 
+						    data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
+							ref-url="pages/datetime_setting.html" ifun="su">
+							   <span class="icon"></span><span class="text">时间设置</span>
+						 </a>
+				    </li>
+					<li class="fst selected" id="menu-advanced-sys-tools-li">
+					     <a class="fst none-sec selected" data-child="no" 
+						    data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
+							ref-url="pages/show_record_diagram.html" ifun="su">
+							   <span class="icon"></span><span class="text">采样统计</span>
+						 </a>
+				    </li>
+					<li class="fst selected" id="menu-advanced-sys-tools-li">
+					     <a class="fst none-sec selected" data-child="no" 
+						    data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
+							ref-url="pages/application_upgrade.html" ifun="su">
+							   <span class="icon"></span><span class="text">应用升级</span>
+						 </a>
+				    </li>
+					<li class="fst selected" id="menu-advanced-sys-tools-li">
+					     <a class="fst none-sec selected" data-child="no" 
+						    data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
+							ref-url="pages/system_upgrade.html" ifun="su">
+							   <span class="icon"></span><span class="text">系统升级</span>
+						 </a>
+				    </li>
+					</ul>
+				</div>
+                <div id="func-advanced" class="function-container"></div>
+			</div>
+		</div><!-- top-content -->
+		
+
+<!--遮蔽层-->
+<div id="mask" class="mask"></div>
+<!--loading-->
+<div class="loading-container" id="loading-container">
+	<div class="loading-container-wrap">
+        <span class="text" id="loading-text" style="position: absolute; left: 2px; bottom: 2px; color: #FFFFFF;"></span>
+		<div class="loading-container-inner">
+			<div class="loading-waiting-icon"></div>
+		</div>
+	</div>
+</div>
+
+<!-- 登出的确认 -->
+
+<div id="logout_confirm_msg" class="hidden warning">
+	<div class="reboot-confirm-qa">
+		<h4 class="title">
+			<span class="icon"></span>
+			<span class="text" id="logout_confirm_msg_text"></span>
+		</h4>
+	</div>
+</div>
+
+<!-- 用户账户修改 -->
+<div id="user-modify-msg" class="hidden warning">
+	<form id="user-modify-form">
+		<input type="text"  id="old_acc" name="old_acc" value="" />
+    	<input type="password"  id="old_pwd" name="old_pwd" value="" />
+		<input type="text"  id="new_acc" name="new_acc" value="" />
+    	<input type="password"  id="new_pwd" name="new_pwd" value="" />
+		<input type="password"  id="cfm_pwd" name="cfm_pwd" value="" />
+		<input id="pwd_status"  value="" />
+	</form>
+	<button type="button" id="user-modify-btn"></button>
+</div>
+
+<!--全局警告提示框-->
+<div id="global-warning-msg" class="hidden warning">
+	<h4 class="title">
+		<span class="icon"></span>
+		<span class="text" id="global-warning-text"></span>
+	</h4>
+</div>
+</div>
+</div>
+
+</body>
+</html>
