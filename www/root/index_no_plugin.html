@@ -539,127 +539,6 @@ funs["su"] = function() {
                         battery_usart_info_array[i]  = 0;
                     }
                 }
-                
-                const getOrCreateLegendList = (chart, id) => {
-                  const legendContainer = document.getElementById(id);
-                  let listContainer = legendContainer.querySelector('ul');
-
-                  if (!listContainer) {
-                    listContainer = document.createElement('ul');
-                    listContainer.style.display = 'block';
-                    // listContainer.style.display = 'flex';
-                    // listContainer.style.flexDirection = 'row';
-                    listContainer.style.margin = 0;
-                    listContainer.style.padding = 0;
-
-                    legendContainer.appendChild(listContainer);
-                  }
-
-                  return listContainer;
-                };
-
-                const htmlLegendPlugin = {
-                 id: 'htmlLegend',
-                  afterUpdate(chart, args, options) {
-                    const ul = getOrCreateLegendList(chart, options.containerID);
-
-                    // Remove old legend items
-                    while (ul.firstChild) {
-                      ul.firstChild.remove();
-                    }
-
-                    // Reuse the built-in legendItems generator
-                    const items = chart.options.plugins.legend.labels.generateLabels(chart);
-                    items.forEach(item => {
-                      const li = document.createElement('li');
-                      li.style.alignItems = 'center';
-                      li.style.cursor = 'pointer';
-                      // li.style.display = 'block';
-                      li.style.display = 'flex';
-                      li.style.flexDirection = 'row';
-                      li.style.marginLeft = '10px';
-                      li.style.float = 'left';
-                      // li.style.list_style_type = 'none';
-
-                      // Check box
-                      const boxCheckBox = document.createElement('input');
-                      var check_id = "input_check_flag" + item.datasetIndex;
-                      boxCheckBox.id = boxCheckBox.name = check_id;
-                      boxCheckBox.type="checkbox";
-                      // boxCheckBox.setAttribute("checked",true);
-                      if(chart.isDatasetVisible(item.datasetIndex))
-                      {
-                          boxCheckBox.checked = true;
-                          //boxCheckBox.setAttribute('checked',true);
-                      }
-                      else 
-                      {
-                          boxCheckBox.checked = false;
-                          //boxCheckBox.setAttribute('checked',false);
-                      }
-                      boxCheckBox.style.background = item.fillStyle;
-                      boxCheckBox.style.borderColor = item.strokeStyle;
-                      boxCheckBox.style.borderWidth = item.lineWidth + 'px';
-                      boxCheckBox.style.display = 'inline-block';
-                      boxCheckBox.style.flexShrink = 0;
-                      boxCheckBox.style.height = '20px';
-                      boxCheckBox.style.marginRight = '10px';
-                      boxCheckBox.style.width = '20px';
-                      
-                      // Color box
-                      const boxSpan = document.createElement('span');
-                      boxSpan.style.background = item.fillStyle;
-                      boxSpan.style.borderColor = item.strokeStyle;
-                      boxSpan.style.borderWidth = item.lineWidth + 'px';
-                      boxSpan.style.display = 'inline-block';
-                      boxSpan.style.flexShrink = 0;
-                      boxSpan.style.height = '15px';
-                      boxSpan.style.marginRight = '10px';
-                      boxSpan.style.width = '25px';
-
-                      // Text
-                      const textContainer = document.createElement('p');
-                      textContainer.style.color = item.fontColor;
-                      textContainer.style.margin = 0;
-                      textContainer.style.padding = 0;
-                      textContainer.style.textDecoration = item.hidden ? 'line-through' : '';
-
-                      const text = document.createTextNode(item.text);
-                      textContainer.appendChild(text);
-
-                      li.appendChild(boxCheckBox);
-                      li.appendChild(boxSpan);
-                      li.appendChild(textContainer);
-                      ul.appendChild(li);
-                      
-                      
-                      li.onclick = () => {
-                        const {type} = chart.config;
-                        if (type === 'pie' || type === 'doughnut') {
-                          // Pie and doughnut charts only have a single dataset and visibility is per item
-                          chart.toggleDataVisibility(item.index);
-                        } else {
-                          chart.setDatasetVisibility(item.datasetIndex, !chart.isDatasetVisible(item.datasetIndex));
-                        }
-                        chart.update();
-                        
-                        var checkboxBox = document.getElementById(check_id);
-                        if(chart.isDatasetVisible(item.datasetIndex))
-                        {
-                            // alert("1111  " + check_id);
-                            checkboxBox.checked = true;
-                            //checkboxBox.setAttribute('checked',true);
-                        }
-                        else 
-                        {
-                            // alert("2222  " + check_id);
-                            checkboxBox.checked = false;
-                            //checkboxBox.setAttribute('checked',false);
-                        }
-                      };
-                    });
-                  }
-                }; 
 
                 const record_diagram_data = {
                   labels: instrument_scale_array,
@@ -669,80 +548,70 @@ funs["su"] = function() {
                     data: particle_first_array,
                     fill: false,
                     borderWidth: 1,
-                    borderColor: 'rgb(54, 56, 235)',
-                    backgroundColor: 'rgb(54, 56, 235)'
+                    borderColor: 'rgb(54, 56, 235)'
                   }, {
                     type: 'line',
                     label: '颗粒度通道2',
                     data: particle_second_array,
                     fill: false,
                     borderWidth: 1,
-                    borderColor: 'rgb(80, 162, 235)',
-                    backgroundColor: 'rgb(80, 162, 235)'
+                    borderColor: 'rgb(80, 162, 235)'
                   }, {
                     type: 'line',
                     label: '颗粒度通道3',
                     data: particle_third_array,
                     fill: false,
                     borderWidth: 1,
-                    borderColor: 'rgb(54, 162, 55)',
-                    backgroundColor: 'rgb(54, 162, 55)'
+                    borderColor: 'rgb(54, 162, 55)'
                   }, {
                     type: 'line',
                     label: '颗粒度通道4',
                     data: particle_fourth_array,
                     fill: false,
                     borderWidth: 1,
-                    borderColor: 'rgb(54, 128, 55)',
-                    backgroundColor: 'rgb(54, 128, 55)'
+                    borderColor: 'rgb(54, 128, 55)'
                   }, {
                     type: 'line',
                     label: '颗粒度通道5',
                     data: particle_fifth_array,
                     fill: false,
                     borderWidth: 1,
-                    borderColor: 'rgb(128, 162, 55)',
-                    backgroundColor: 'rgb(128, 162, 55)'
+                    borderColor: 'rgb(128, 162, 55)'
                   }, {
                     type: 'line',
                     label: '颗粒度通道6',
                     data: particle_sixth_array,
                     fill: false,
                     borderWidth: 1,
-                    borderColor: 'rgb(54, 162, 128)',
-                    backgroundColor: 'rgb(54, 162, 128)'
+                    borderColor: 'rgb(54, 162, 128)'
                   }, {
                     type: 'line',
                     label: '颗粒度通道7',
                     data: particle_seventh_array,
                     fill: false,
                     borderWidth: 1,
-                    borderColor: 'rgb(150, 162, 55)',
-                    backgroundColor: 'rgb(150, 162, 55)'
+                    borderColor: 'rgb(150, 162, 55)'
                   }, {
                     type: 'line',
                     label: '颗粒度通道8',
                     data: particle_eighth_array,
                     fill: false,
                     borderWidth: 1,
-                    borderColor: 'rgb(54, 162, 150)',
-                    backgroundColor: 'rgb(54, 162, 150)'
+                    borderColor: 'rgb(54, 162, 150)'
                   }, {
                     type: 'line',
                     label: '辐射度通道1',
                     data: laser_first_array,
                     fill: false,
                     borderWidth: 1,
-                    borderColor: 'rgb(54, 162, 150)',
-                    backgroundColor: 'rgb(54, 162, 150)'
+                    borderColor: 'rgb(54, 162, 150)'
                   }, {
                     type: 'line',
                     label: '辐射度通道2',
                     data: laser_second_array,
                     fill: false,
                     borderWidth: 1,
-                    borderColor: 'rgb(54, 162, 150)',
-                    backgroundColor: 'rgb(54, 162, 150)'
+                    borderColor: 'rgb(54, 162, 150)'
                   }, {
                     type: 'bar',
                     label: '掉电情况',
@@ -780,25 +649,14 @@ funs["su"] = function() {
                       y: {
                         beginAtZero: true
                       }
-                    },
-                    plugins: {
-                      htmlLegend: {
-                        // ID of the container to put the legend in
-                        containerID: 'legend-container',
-                      },
-                      legend: {
-                        display: false,
-                      }
                     }
-                  },
-                  plugins: [htmlLegendPlugin],
+                  }
                 };
                 // chart.js:6756 Uncaught Error: Canvas is already in use.
                 // 每次绘图前删除之前的canvas，然后再重新添加一个canvas.
                 $('#myChart').remove();
-                $('#Chart_Div').append('<canvas id="myChart" width="400" height="500" style="float:left;"></canvas>');
+                $('#Chart_Div').append('<canvas id="myChart" width="400" height="500"></canvas>');
 
-                const ctxElement = document.getElementById('myChart');
                 const ctx = document.getElementById('myChart').getContext('2d');
                 const myChart = new Chart(ctx, record_diagram_config);
             });
