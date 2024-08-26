@@ -194,7 +194,7 @@ char* initProc()
     cJSON_AddStringToObject(ret_data, "version", info_str);
 
     memset(info_str, 0x00, INFO_STR_LEN);
-    pVal = get_last_modify_time("/root/sdcard/app/app.sab", info_str);
+    pVal = get_last_modify_time("/root/app/app.sab", info_str);
     if(pVal)
         cJSON_AddStringToObject(ret_data, "buildtime", info_str);
     else
@@ -219,7 +219,7 @@ char* initProc()
     char machine_name[APP_PATH_LEN] = "";
 
     get_cmd_printf("cat /etc/VERSION", version_string, APP_PATH_LEN);
-    pVal = get_last_modify_time("/root/sdcard/app/app.sab", filetime_string);
+    pVal = get_last_modify_time("/root/app/app.sab", filetime_string);
     get_cmd_printf("ps | grep 'app.scode' | grep -v grep", status_string, APP_PATH_LEN);
     if(strlen(status_string) >= strlen("app.scode"))
     {
@@ -295,7 +295,7 @@ void statusProc(Webs *wp)
         {
             memcpy(info_first_str, pValue, pSeq - pValue);
             memcpy(info_second_str, pSeq + 1, pValue + strlen(pValue) - pSeq - 1);
-                sprintf(info_str, "/root/sdcard/app/www/change_two_ip_address.sh %s %s &", 
+                sprintf(info_str, "/root/app/www/change_two_ip_address.sh %s %s &", 
                     info_first_str, info_second_str);
             system(info_str);
         }
@@ -311,10 +311,10 @@ void statusProc(Webs *wp)
         if(pSeq)
         {
             memcpy(info_first_str, pValue, pSeq - pValue);
-            sprintf(info_str, "/root/sdcard/app/www/change_first_mac_address.sh %s &", info_first_str);
             system(info_str);
             memcpy(info_second_str, pSeq + 1, pValue + strlen(pValue) - pSeq - 1);
-            sprintf(info_str, "/root/sdcard/app/www/change_second_mac_address.sh %s &", info_second_str);
+            sprintf(info_str, "/root/app/www/change_two_mac_address.sh %s %s &", 
+                    info_first_str, info_second_str);
             system(info_str);
         }
         // change_ip_address.sh would restart goahead, so we need not return websDone
@@ -326,7 +326,7 @@ void statusProc(Webs *wp)
         websDone(wp);
         // Secona would change the RTC device,
         // so we have to stop svm and use /etc/rc.d/rc.svm to sync /dev/rtc0.
-        sprintf(info_str, "/root/sdcard/app/www/change_datetime.sh %s &", pValue);
+        sprintf(info_str, "/root/app/www/change_datetime.sh %s &", pValue);
         system(info_str);
     }
     else if(strcmp(pMode, "get_ipconfig") == 0)
@@ -349,7 +349,7 @@ void statusProc(Webs *wp)
     else if(strcmp(pMode, "get_macconfig") == 0)
     {
         // MAC地址如果没有设定。给出默认值。不能留空。
-        // get_cmd_printf("cat /root/sdcard/app/current_mac", info_str, 1024);
+        // get_cmd_printf("cat /root/app/current_mac", info_str, 1024);
         get_cmd_printf("ifconfig eth0 | grep HWaddr | sed 's/.*HWaddr //'", info_first_str, 64);
         get_cmd_printf("ifconfig eth1 | grep HWaddr | sed 's/.*HWaddr //'", info_second_str, 64);
         sprintf(info_str, "%s;%s", info_first_str, info_second_str);
@@ -831,11 +831,11 @@ int check_uploadfile(Webs *wp)
     if(stat(app_sab_str, &stat_buf)==0)
     {
         memset(app_sab_str, 0x00, APP_PATH_LEN);
-        sprintf(app_sab_str, "mv %s/app.sab /root/sdcard/app/", pPathVal);
+        sprintf(app_sab_str, "mv %s/app.sab /root/app/", pPathVal);
         system(app_sab_str);
-        system("chmod 664 /root/sdcard/app/app.sab");
+        system("chmod 664 /root/app/app.sab");
         // Stop svm and watch dog would restart svm
-        system("/root/sdcard/app/www/stop_svm.sh &");
+        system("/root/app/www/stop_svm.sh &");
         // system("/etc/rc.d/rc.svm &");
         trace(2, "[%s:%s:%d] uploadProc :: update by %s",
                         __FILE__, __FUNCTION__, __LINE__, app_sab_str);
@@ -843,11 +843,11 @@ int check_uploadfile(Webs *wp)
     else if(stat(app_scode_str, &stat_buf)==0)
     {
         memset(app_scode_str, 0x00, APP_PATH_LEN);
-        sprintf(app_scode_str, "mv %s/app.scode /root/sdcard/app/", pPathVal);
+        sprintf(app_scode_str, "mv %s/app.scode /root/app/", pPathVal);
         system(app_scode_str);
-        system("chmod 664 /root/sdcard/app/app.scode");
+        system("chmod 664 /root/app/app.scode");
         // Stop svm and watch dog would restart svm
-        system("/root/sdcard/app/www/stop_svm.sh &");
+        system("/root/app/www/stop_svm.sh &");
         // system("/etc/rc.d/rc.svm &");
         trace(2, "[%s:%s:%d] uploadProc :: update by %s",
                             __FILE__, __FUNCTION__, __LINE__, app_scode_str);

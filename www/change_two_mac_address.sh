@@ -2,8 +2,8 @@
 
 # ps | grep svm | grep -v "grep" | awk '{print $1}' | sed "s/^/kill -9 /" 
 if [ $# == 2 ] ; then
-	echo -n $1 > /root/sdcard/app/current_first_mac
-	echo -n $2 > /root/sdcard/app/current_second_mac
+	echo -n $1 > /root/app/current_first_mac
+	echo -n $2 > /root/app/current_second_mac
 	/usr/bin/killall5 udhcpc
 	# Set eth0
 	/sbin/ifconfig eth0 down
@@ -21,7 +21,7 @@ if [ $# == 2 ] ; then
 	/etc/rc.d/rc.boot
 	# kill goahead
 	ps | grep "goahead" | grep -v "grep" | awk '{print $1}' | sed "s/^/kill -9 /" | sh
-	/bin/goahead --verbose --home /www > /root/sdcard/app/goahead_output.log &
+        /root/app/goahead --verbose --home /root/app/www  > /root/sdcard/app/goahead_output.log &
 	sleep 1
 else
     echo "NG"
