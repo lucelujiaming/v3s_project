@@ -4,11 +4,12 @@
     <title>实时数据可视化图表</title>  
 </head>  
 <body>
-<script type="text/javascript" src="chart.js"></script>
+
+<script type="text/javascript" src="../js/chart.js"></script>
 
 <div id="legend-container"></div>
 <div id="Chart_Div">
-<canvas id="myChart" width="400" height="500"></canvas>
+<canvas id="myChart" width="200" height="100"></canvas>
 </div>
 
 <script type="text/javascript">
@@ -81,7 +82,6 @@ const htmlLegendPlugin = {
 
     // Reuse the built-in legendItems generator
     const items = chart.options.plugins.legend.labels.generateLabels(chart);
-
     items.forEach(item => {
       const li = document.createElement('li');
       li.style.alignItems = 'center';
@@ -90,17 +90,31 @@ const htmlLegendPlugin = {
       li.style.flexDirection = 'row';
       li.style.marginLeft = '10px';
 
-      li.onclick = () => {
-        const {type} = chart.config;
-        if (type === 'pie' || type === 'doughnut') {
-          // Pie and doughnut charts only have a single dataset and visibility is per item
-          chart.toggleDataVisibility(item.index);
-        } else {
-          chart.setDatasetVisibility(item.datasetIndex, !chart.isDatasetVisible(item.datasetIndex));
-        }
-        chart.update();
-      };
-
+      // Color box
+      const boxCheckBox = document.createElement('input');
+      var check_id = "input_check_flag" + item.datasetIndex;
+      boxCheckBox.id = boxCheckBox.name = check_id;
+      boxCheckBox.type="checkbox";
+      // boxCheckBox.setAttribute("checked",true);
+      if(chart.isDatasetVisible(item.datasetIndex))
+      {
+          boxCheckBox.checked = true;
+          //boxCheckBox.setAttribute('checked',true);
+      }
+      else 
+      {
+          boxCheckBox.checked = false;
+          //boxCheckBox.setAttribute('checked',false);
+      }
+      boxCheckBox.style.background = item.fillStyle;
+      boxCheckBox.style.borderColor = item.strokeStyle;
+      boxCheckBox.style.borderWidth = item.lineWidth + 'px';
+      boxCheckBox.style.display = 'inline-block';
+      boxCheckBox.style.flexShrink = 0;
+      boxCheckBox.style.height = '20px';
+      boxCheckBox.style.marginRight = '10px';
+      boxCheckBox.style.width = '20px';
+      
       // Color box
       const boxSpan = document.createElement('span');
       boxSpan.style.background = item.fillStyle;
@@ -108,9 +122,9 @@ const htmlLegendPlugin = {
       boxSpan.style.borderWidth = item.lineWidth + 'px';
       boxSpan.style.display = 'inline-block';
       boxSpan.style.flexShrink = 0;
-      boxSpan.style.height = '20px';
+      boxSpan.style.height = '15px';
       boxSpan.style.marginRight = '10px';
-      boxSpan.style.width = '20px';
+      boxSpan.style.width = '25px';
 
       // Text
       const textContainer = document.createElement('p');
@@ -122,9 +136,36 @@ const htmlLegendPlugin = {
       const text = document.createTextNode(item.text);
       textContainer.appendChild(text);
 
+      li.appendChild(boxCheckBox);
       li.appendChild(boxSpan);
       li.appendChild(textContainer);
       ul.appendChild(li);
+      
+      
+      li.onclick = () => {
+        const {type} = chart.config;
+        if (type === 'pie' || type === 'doughnut') {
+          // Pie and doughnut charts only have a single dataset and visibility is per item
+          chart.toggleDataVisibility(item.index);
+        } else {
+          chart.setDatasetVisibility(item.datasetIndex, !chart.isDatasetVisible(item.datasetIndex));
+        }
+        chart.update();
+        
+        var checkboxBox = document.getElementById(check_id);
+        if(chart.isDatasetVisible(item.datasetIndex))
+        {
+            // alert("1111  " + check_id);
+            checkboxBox.checked = true;
+            //checkboxBox.setAttribute('checked',true);
+        }
+        else 
+        {
+            // alert("2222  " + check_id);
+            checkboxBox.checked = false;
+            //checkboxBox.setAttribute('checked',false);
+        }
+      };
     });
   }
 };
@@ -171,6 +212,55 @@ const config = {
 
 const ctx = document.getElementById('myChart');
 const myChart = new Chart(ctx, config);
+
+var startPoint, endPoint;
+var isSelecting = false;
+ 
+// 鼠标按下事件
+myChart.canvas.onmousedown = function(e) {
+    isSelecting = true;
+    startPoint = { x: e.offsetX, y: e.offsetY };
+};
+ 
+// 鼠标移动事件
+myChart.canvas.onmousemove = function(e) {
+    if (isSelecting) {
+        // 绘制圈选区域
+        var ctx = myChart.canvas.getContext('2d');
+        ctx.beginPath();
+        ctx.clearRect(0, 0, myChart.width, myChart.height);
+        myChart.draw();
+        endPoint = { x: e.offsetX, y: e.offsetY };
+        // ctx.rect(Math.min(startPoint.x, endPoint.x), Math.min(startPoint.y, endPoint.y),
+        //     Math.abs(endPoint.x - startPoint.x), Math.abs(endPoint.y - startPoint.y));
+        ctx.rect(Math.min(startPoint.x, endPoint.x), 0, // Math.min(startPoint.y, endPoint.y),
+            Math.abs(endPoint.x - startPoint.x), myChart.height // Math.abs(endPoint.y - startPoint.y)
+            );
+        ctx.strokeStyle = 'rgba(255,0,0,0.5)';
+        ctx.stroke();
+    }
+};
+ 
+// 鼠标抬起事件
+myChart.canvas.onmouseup = function(e) {
+    if (isSelecting) {
+        isSelecting = false;
+        // 在这里处理圈选的逻辑
+        // 例如: 过滤显示在选区内的数据项
+        // 绘制圈选区域
+        var chartArea = {
+          left: Math.min(startPoint.x, endPoint.x),
+          top: 0,
+          right: Math.max(startPoint.x, endPoint.x),
+          bottom: myChart.height,
+          height: myChart.height,
+          width: Math.abs(endPoint.x - startPoint.x)
+        };
+        
+        myChart.draw(chartArea);
+        
+    }
+};
 </script>
 
 
