@@ -25,129 +25,6 @@ var second_mac_address_status = 1;
 
 var current_subpage = "";
 
-// 自定义
-const instrument_color_custom = new Array(
-            "rgb(54, 56, 235)", "rgb(80, 162, 235)", "rgb(54, 162, 55)", 
-            "rgb(54, 128, 55)", "rgb(128, 162, 55)", "rgb(54, 162, 128)", 
-            "rgb(150, 162, 55)", "rgb(54, 162, 150)", "rgb(54, 162, 150)",
-            "rgb(54, 162, 150)");
-
-// 复古
-const instrument_color_retro = new Array(
-            "rgb(7,128,207)", "rgb(118,80,5)", "rgb(250,109,29)", 
-            "rgb(14,44,130)", "rgb(182,181,31)", "rgb(218,31,24)", 
-            "rgb(112,24,102)", "rgb(244,122,117)", "rgb(0,157,178)",
-            "rgb(118,80,5)");
-// 新特性
-const instrument_color_new_feature = new Array(
-            "rgb(99,178,238)", "rgb(118,218,145)", "rgb(248,203,127)", 
-            "rgb(248,149,136)", "rgb(124,214,207)", "rgb(145,146,171)", 
-            "rgb(120,152,225)", "rgb(239,166,102)", "rgb(153,135,206)", 
-            "rgb(118,218,145)");
-// 清新
-const instrument_color_fresh = new Array(
-            "rgb(0,168,225)", "rgb(153,204,0)", "rgb(227,0,57)", 
-            "rgb(252,211,0)", "rgb(128,0,128)", "rgb(0,153,78)", 
-            "rgb(255,102,0)", "rgb(128,128,0)", "rgb(219,0,194)", 
-            "rgb(200,204,0)");
-// 怀旧
-const instrument_color_nostalgic = new Array(
-            "rgb(59,98,145)", "rgb(148,60,57)", "rgb(119,144,67)", 
-            "rgb(98,76,124)", "rgb(56,132,152)", "rgb(191,115,52)", 
-            "rgb(63,104,153)", "rgb(156,64,61)", "rgb(125,152,71)", 
-            "rgb(103,80,131)");
-// 商务
-const instrument_color_business      = new Array(
-            "rgb(25,79,151)", "rgb(85,85,85)", "rgb(189,107,8)", 
-            "rgb(0,104,107)", "rgb(200,45,49)", "rgb(98,91,161)", 
-            "rgb(137,137,137)", "rgb(156,152,0)", "rgb(0,127,84)", 
-            "rgb(241,146,114)");
-// 明亮
-const instrument_color_bright        = new Array(
-            "rgb(14,114,204)", "rgb(108,163,15)", "rgb(245,147,17)", 
-            "rgb(250,67,67)", "rgb(22,175,204)", "rgb(133,192,33)", 
-            "rgb(209,42,106)", "rgb(14,114,204)", "rgb(108,163,15)" , 
-            "rgb(22,175,204)");
-// 雅致
-const instrument_color_elegant       = new Array(
-            "rgb(54,130,190)", "rgb(69,167,118)", "rgb(240,83,38)", 
-            "rgb(238,215,119)", "rgb(51,79,101)", "rgb(179,151,78)", 
-            "rgb(56,203,125)", "rgb(221,174,51)", "rgb(132,75,179)" , 
-            "rgb(223,56,129)");
-// 柔和
-const instrument_color_soft          = new Array(
-            "rgb(91,155,213)", "rgb(237,125,49)", "rgb(112,173,71)", 
-            "rgb(255,192,0)", "rgb(68,114,196)", "rgb(145,208,36)", 
-            "rgb(178,53,230)", "rgb(2,174,117)", "rgb(91,155,213)", 
-            "rgb(237,125,49)");
-// 淡雅
-const instrument_color_light         = new Array(
-            "rgb(149,162,255)", "rgb(250,128,128)", "rgb(255,192,118)", 
-            "rgb(250,231,104)", "rgb(135,232,133)", "rgb(60,185,252)", 
-            "rgb(115,171,245)", "rgb(203,155,255)", "rgb(144,237,125)", 
-            "rgb(128,133,233)");
-// 经典
-const instrument_color_classic       = new Array(
-            "rgb(0,44,83)", "rgb(255,165,16)", "rgb(12,132,198)", 
-            "rgb(255,189,102)", "rgb(247,77,77)", "rgb(36,85,164)", 
-            "rgb(65,183,172)", "rgb(0,44,83)", "rgb(255,165,16)", 
-            "rgb(12,132,198)");
-// 艳丽
-const instrument_color_showy         = new Array(
-            "rgb(250,44,123)", "rgb(255,56,224)", "rgb(255,162,53)", 
-            "rgb(4,197,243)", "rgb(0,102,254)", "rgb(137,50,165)", 
-            "rgb(201,4,68)", "rgb(203,155,255)", "rgb(67,67,72)" , 
-            "rgb(247,163,92)");
-// 科技
-const instrument_color_hi_tech       = new Array(
-            "rgb(5,248,214)", "rgb(0,130,252)", "rgb(253,216,69)", 
-            "rgb(34,237,124)", "rgb(9,176,211)", "rgb(29,39,201)", 
-            "rgb(249,226,100)", "rgb(244,122,117)", "rgb(0,157,178)", 
-            "rgb(118,80,5)");
-// 炫彩冷色
-const instrument_color_cool_glitzy   = new Array(
-            "rgb(231,88,64)", "rgb(165,101,239)", "rgb(98,140,238)", 
-            "rgb(235,147,88)", "rgb(208,92,124)", "rgb(187,96,178)", 
-            "rgb(67,62,124)", "rgb(244,122,117)", "rgb(0,157,178)",
-            "rgb(7,128,207)");
-// 炫彩暖色
-const instrument_color_warm_glitzy   = new Array(
-            "rgb(239,68,100)", "rgb(250,210,89)", "rgb(210,46,141)", 
-            "rgb(3,222,224)", "rgb(208,92,124)", "rgb(187,96,178)", 
-            "rgb(67,62,124)", "rgb(244,122,117)", "rgb(0,157,178)", 
-            "rgb(2,75,81)");
-// 简洁冷色
-const instrument_color_cool_terse    = new Array(
-            "rgb(146,159,255)", "rgb(157,224,255)", "rgb(255,168,151)", 
-            "rgb(175,135,254)", "rgb(125,195,254)", "rgb(187,96,178)", 
-            "rgb(67,62,124)", "rgb(244,122,117)", "rgb(2,75,81)", 
-            "rgb(7,128,207)");
-// 简洁暖色
-const instrument_color_warm_terse    = new Array(
-            "rgb(80,196,143)", "rgb(38,204,216)", "rgb(54,133,254)", 
-            "rgb(153,119,239)", "rgb(245,97,111)", "rgb(247,177,63)", 
-            "rgb(249,226,100)", "rgb(244,122,117)", "rgb(0,157,178", 
-            "rgb(2,75,81)");
-// 蓝紫冷色
-const instrument_color_blue_tone     = new Array(
-            "rgb(191,25,255)", "rgb(133,76,255)", "rgb(95,69,255)", 
-            "rgb(2,205,255)", "rgb(0,144,255)", "rgb(49,73,118)", 
-            "rgb(249,226,100)", "rgb(244,122,117)", "rgb(0,157,178)", 
-            "rgb(7,128,207)");
-// 青灰冷色
-const instrument_color_gray_tone     = new Array(
-            "rgb(69,200,220)", "rgb(133,76,255)", "rgb(95,69,255)", 
-            "rgb(71,174,227)", "rgb(213,214,216)", "rgb(150,215,249)", 
-            "rgb(249,226,100)", "rgb(244,122,117)", "rgb(2,75,81)", 
-            "rgb(7,128,207)");
-// 暖色
-const instrument_color_warm_tone     = new Array(
-            "rgb(148,137,250)", "rgb(240,100,100)", "rgb(247,175,89)", 
-            "rgb(240,218,73)", "rgb(113,193,111)", "rgb(42,170,239)", 
-            "rgb(86,144,221)", "rgb(189,136,245)", "rgb(2,75,81)", 
-            "rgb(7,128,207)");
-
-
 var checkApplicationFileName = function() {
     var fname = $("#application_filename")[0].innerText;
     if (!fname || fname.length == 0) {
@@ -579,140 +456,6 @@ funs["su"] = function() {
                 var laser_first_array     = new Array();
                 var laser_second_array    = new Array();
                 
-                var lines_border_color_array     = new Array();
-                // var instrument_color_info = $("#instrument_color_info")[0].value;
-                var instrument_color_info = document.getElementById('instrument_color_info');
-                if(instrument_color_info == null)
-                {
-                    for (let i = 0; i <= 9; i++) {
-                        lines_border_color_array[i] = instrument_color_custom[i];
-                    }
-                }
-                else {
-                    var instrument_color_info_value = $("#instrument_color_info")[0].value;
-                    alert("instrument_color_info = " + instrument_color_info_value);
-                    if(instrument_color_info_value == "retro")
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_retro[i];
-                        }
-                    }
-                    else if(instrument_color_info_value == "new_feature")
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_new_feature[i];
-                        }
-                    }
-                    else if(instrument_color_info_value == "fresh")
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_fresh[i];
-                        }
-                    }
-                    else if(instrument_color_info_value == "nostalgic")
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_nostalgic[i];
-                        }
-                    }
-                    else if(instrument_color_info_value == "business")
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_business[i];
-                        }
-                    }
-                    else if(instrument_color_info_value == "bright")
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_bright[i];
-                        }
-                    }
-                    else if(instrument_color_info_value == "elegant")
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_elegant[i];
-                        }
-                    }
-                    else if(instrument_color_info_value == "soft")
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_soft[i];
-                        }
-                    }
-                    else if(instrument_color_info_value == "light")
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_light[i];
-                        }
-                    }
-                    else if(instrument_color_info_value == "classic")
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_classic[i];
-                        }
-                    }
-                    else if(instrument_color_info_value == "showy")
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_showy[i];
-                        }
-                    }
-                    else if(instrument_color_info_value == "hi_tech")
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_hi_tech[i];
-                        }
-                    }
-                    else if(instrument_color_info_value == "cool_glitzy")
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_cool_glitzy[i];
-                        }
-                    }
-                    else if(instrument_color_info_value == "warm_glitzy")
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_warm_glitzy[i];
-                        }
-                    }
-                    else if(instrument_color_info_value == "cool_terse")
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_cool_terse[i];
-                        }
-                    }
-                    else if(instrument_color_info_value == "warm_terse")
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_warm_terse[i];
-                        }
-                    }
-                    else if(instrument_color_info_value == "blue_tone")
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_blue_tone[i];
-                        }
-                    }
-                    else if(instrument_color_info_value == "gray_tone")
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_gray_tone[i];
-                        }
-                    }
-                    else if(instrument_color_info_value == "warm_tone")
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_warm_tone[i];
-                        }
-                    }
-                    else  // Use retro
-                    {
-                        for (let i = 0; i <= 9; i++) {
-                            lines_border_color_array[i] = instrument_color_retro[i];
-                        }
-                    }
-                    // return;
-                }
                 var time_span = 0; //   15mins
                 var time_result = 0;
                 var time_hours = 0;
@@ -960,100 +703,80 @@ funs["su"] = function() {
                     data: particle_first_array,
                     fill: false,
                     borderWidth: 1,
-                    // borderColor: 'rgb(54, 56, 235)',
-                    // backgroundColor: 'rgb(54, 56, 235)'
-                    borderColor: lines_border_color_array[0],
-                    backgroundColor: lines_border_color_array[0]
+                    borderColor: 'rgb(54, 56, 235)',
+                    backgroundColor: 'rgb(54, 56, 235)'
                   }, {
                     type: 'line',
                     label: '颗粒度通道2',
                     data: particle_second_array,
                     fill: false,
                     borderWidth: 1,
-                    // borderColor: 'rgb(80, 162, 235)',
-                    // backgroundColor: 'rgb(80, 162, 235)'
-                    borderColor: lines_border_color_array[1],
-                    backgroundColor: lines_border_color_array[1]
+                    borderColor: 'rgb(80, 162, 235)',
+                    backgroundColor: 'rgb(80, 162, 235)'
                   }, {
                     type: 'line',
                     label: '颗粒度通道3',
                     data: particle_third_array,
                     fill: false,
                     borderWidth: 1,
-                    // borderColor: 'rgb(54, 162, 55)',
-                    // backgroundColor: 'rgb(54, 162, 55)'
-                    borderColor: lines_border_color_array[2], 
-                    backgroundColor: lines_border_color_array[2]
+                    borderColor: 'rgb(54, 162, 55)',
+                    backgroundColor: 'rgb(54, 162, 55)'
                   }, {
                     type: 'line',
                     label: '颗粒度通道4',
                     data: particle_fourth_array,
                     fill: false,
                     borderWidth: 1,
-                    // borderColor: 'rgb(54, 128, 55)',
-                    // backgroundColor: 'rgb(54, 128, 55)'
-                    borderColor: lines_border_color_array[3],
-                    backgroundColor: lines_border_color_array[3]
+                    borderColor: 'rgb(54, 128, 55)',
+                    backgroundColor: 'rgb(54, 128, 55)'
                   }, {
                     type: 'line',
                     label: '颗粒度通道5',
                     data: particle_fifth_array,
                     fill: false,
                     borderWidth: 1,
-                    // borderColor: 'rgb(128, 162, 55)',
-                    // backgroundColor: 'rgb(128, 162, 55)'
-                    borderColor: lines_border_color_array[4],
-                    backgroundColor: lines_border_color_array[4]
+                    borderColor: 'rgb(128, 162, 55)',
+                    backgroundColor: 'rgb(128, 162, 55)'
                   }, {
                     type: 'line',
                     label: '颗粒度通道6',
                     data: particle_sixth_array,
                     fill: false,
                     borderWidth: 1,
-                    // borderColor: 'rgb(54, 162, 128)',
-                    // backgroundColor: 'rgb(54, 162, 128)'
-                    borderColor: lines_border_color_array[5],
-                    backgroundColor: lines_border_color_array[5]
+                    borderColor: 'rgb(54, 162, 128)',
+                    backgroundColor: 'rgb(54, 162, 128)'
                   }, {
                     type: 'line',
                     label: '颗粒度通道7',
                     data: particle_seventh_array,
                     fill: false,
                     borderWidth: 1,
-                    // borderColor: 'rgb(150, 162, 55)',
-                    // backgroundColor: 'rgb(150, 162, 55)'
-                    borderColor: lines_border_color_array[6],
-                    backgroundColor: lines_border_color_array[6]
+                    borderColor: 'rgb(150, 162, 55)',
+                    backgroundColor: 'rgb(150, 162, 55)'
                   }, {
                     type: 'line',
                     label: '颗粒度通道8',
                     data: particle_eighth_array,
                     fill: false,
                     borderWidth: 1,
-                    // borderColor: 'rgb(54, 162, 150)',
-                    // backgroundColor: 'rgb(54, 162, 150)'
-                    borderColor: lines_border_color_array[7],
-                    backgroundColor: lines_border_color_array[7]
+                    borderColor: 'rgb(54, 162, 150)',
+                    backgroundColor: 'rgb(54, 162, 150)'
                   }, {
                     type: 'line',
                     label: '辐射度通道1',
                     data: laser_first_array,
                     fill: false,
                     borderWidth: 1,
-                    // borderColor: 'rgb(54, 162, 150)',
-                    // backgroundColor: 'rgb(54, 162, 150)'
-                    borderColor: lines_border_color_array[8],
-                    backgroundColor: lines_border_color_array[8]
+                    borderColor: 'rgb(54, 162, 150)',
+                    backgroundColor: 'rgb(54, 162, 150)'
                   }, {
                     type: 'line',
                     label: '辐射度通道2',
                     data: laser_second_array,
                     fill: false,
                     borderWidth: 1,
-                    // borderColor: 'rgb(54, 162, 150)',
-                    // backgroundColor: 'rgb(54, 162, 150)'
-                    borderColor: lines_border_color_array[9],
-                    backgroundColor: lines_border_color_array[9]
+                    borderColor: 'rgb(54, 162, 150)',
+                    backgroundColor: 'rgb(54, 162, 150)'
                   }, {
                     type: 'bar',
                     label: '掉电情况',
