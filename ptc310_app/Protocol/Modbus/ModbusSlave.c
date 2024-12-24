@@ -1,4 +1,6 @@
 //modbus_slave.c
+#include <stdio.h>
+
 #include "modbus.h"
 #include "ModbusSlave.h"
 #include "MBVarDef.h"
@@ -24,6 +26,7 @@ bool check_crc(uint16_t frm_len)
 		return true;
 	}
 
+    printf("check_crc error\n");
 	return false;
 }
 
@@ -62,6 +65,7 @@ uint8_t read_input_reg(uint16_t frm_len)
 	
 	if(frm_len!= 8)
 	{
+		printf("read_input_reg ILLEGAL_DATA_VALUE\n");
 		return ILLEGAL_DATA_VALUE;
 	}
 	
@@ -72,6 +76,7 @@ uint8_t read_input_reg(uint16_t frm_len)
 
 	if(bytes + 5 > 256)
 	{
+		printf("read_input_reg ILLEGAL_DATA_ADDR\n");
 		return ILLEGAL_DATA_ADDR;
 	}
 
@@ -102,16 +107,19 @@ uint8_t read_holding_reg(uint16_t frm_len)
 	
 	if(frm_len!= 8)
 	{
+		printf("read_holding_reg ILLEGAL_DATA_VALUE\n");
 		return ILLEGAL_DATA_VALUE;
 	}
 	
 	reg_addr= _get_int16_int8_big_endian(&mb_data_buf[2]);
 	points= _get_int16_int8_big_endian(&mb_data_buf[4]);
-
+	
+	// printf("read_holding_reg reg_addr=%d and points=%d\n", reg_addr, points);
 	bytes= points*2;
 
 	if(bytes + 5 > 256)
 	{
+		printf("read_holding_reg ILLEGAL_DATA_ADDR\n");
 		return ILLEGAL_DATA_ADDR;
 	}
 
@@ -122,15 +130,25 @@ uint8_t read_holding_reg(uint16_t frm_len)
 		{
 			mb_data_buf[3+i*2]= HReg[reg_addr+i]>>8;
 			mb_data_buf[4+i*2]= HReg[reg_addr+i]&0x00FF;
+			// printf("read_holding_reg set %d to mb_data_buf\n", HReg[reg_addr+i]);
 		}
 		else
 		{
 			mb_data_buf[3+i*2]= 0;
 			mb_data_buf[4+i*2]= 0;	
+			// printf("read_holding_reg mb_data_buf=0\n");
 		}
 	}
+	// 
 	mb_frame_size= bytes+3;
+
 		
+	// printf("read_holding_reg mb_frame_size=%d\n", mb_frame_size);
+	// for(int i = 0; i < mb_frame_size; i++)
+	// {
+	//  	printf("<%02X>", mb_data_buf[i]);
+	// }
+	// printf("\nData over\n");
 	return 0;
 }
 
@@ -139,20 +157,24 @@ uint8_t preset_single_reg(uint16_t frm_len)
 	uint16_t reg_addr,value;
 	
 	reg_addr= _get_int16_int8_big_endian(&mb_data_buf[2]);
+	printf("preset_single_reg reg_addr=%d\n", reg_addr);
 	
 	if(frm_len!= 8)
 	{
+		printf("preset_single_reg ILLEGAL_DATA_VALUE\n");
 		return ILLEGAL_DATA_VALUE;
 	}
 
 	if(reg_addr < HREG_MAX)
 	{
 		value= _get_int16_int8_big_endian(&mb_data_buf[4]);
+	    printf("preset_single_reg value=%d and HReg[reg_addr] = %d\n", value, HReg[reg_addr]);
 		if(HReg[reg_addr]!= value)
 		{
 			HReg[reg_addr]= value;
 			if(reg_addr >= CP_EEP_BASE && reg_addr <= CP_EEP_BASE + CP_EEP_MAX)
 			{
+	    		printf("preset_single_reg PARAM_Save value=%d and HReg[reg_addr] = %d\n", value, HReg[reg_addr]);
 				PARAM_Save(reg_addr - CP_EEP_BASE, value); 
 			}
 		}
@@ -173,6 +195,7 @@ uint8_t preset_multi_reg(uint16_t frm_len)
 	
 	if(frm_len - 9!= (uint8_t)points*2)
 	{
+		printf("preset_multi_reg ILLEGAL_DATA_VALUE\n");
 		return ILLEGAL_DATA_VALUE;
 	}
 
@@ -210,39 +233,60 @@ uint16_t Modbus_FrameAnalysis(int16_t frm_len)
 			switch(mb_data_buf[1])
 			{
 			case CMD_READ_INPUT_REGISTER:
+		    	printf("Modbus_FrameAnalysis CMD_READ_INPUT_REGISTER frm_len=%d\n", frm_len);
 				exceptCode= read_input_reg(frm_len);
 				break;
 			case CMD_READ_HOLDING_REGISTER:
+		    	// printf("Modbus_FrameAnalysis CMD_READ_HOLDING_REGISTER frm_len=%d\n", frm_len);
 				exceptCode= read_holding_reg(frm_len);
 				break;
 			case CMD_PRESET_SINGLE_REGISTER:
+		    	printf("Modbus_FrameAnalysis CMD_PRESET_SINGLE_REGISTER frm_len=%d\n", frm_len);
 				exceptCode= preset_single_reg(frm_len);
 				break;
 			case CMD_PRESET_MULTIPLE_REGISTERS:
+		    	printf("Modbus_FrameAnalysis CMD_PRESET_MULTIPLE_REGISTERS frm_len=%d\n", frm_len);
 				exceptCode= preset_multi_reg(frm_len);
 				break;
 			default:
+				printf("Modbus_FrameAnalysis ILLEGAL_FUNCTION\n");
 				exceptCode= ILLEGAL_FUNCTION;
 				break;
 			}
 	
 			if(exceptCode)
 			{
+		    	printf("Modbus_FrameAnalysis frame_except exceptCode=%d\n", exceptCode);
 				frame_except(exceptCode);
 			}
 			
 			if(mb_data_buf[0]== MODBUS_BROADCAST_ADDR)
 			{
+		    	printf("Modbus_FrameAnalysis mb_frame_size=0\n");
 				mb_frame_size= 0;
 			}
 
 			if(mb_frame_size)
 			{
+		    	// printf("Modbus_FrameAnalysis construc_frame_and_crc mb_frame_size=%d\n", mb_frame_size);
 				construc_frame_and_crc();
 			}
 		}
 	}
+	else 
+	{
+		printf("Error: mb_data_buf[0] check failed and mb_data_buf[0] is %d\n", mb_data_buf[0]);
+		
+		printf("Start of Modbus_FrameAnalysis recv and frm_len is %d\n", frm_len);
+		for(int i = 0 ; i < frm_len; i++)
+		{
+			printf("<%02X> ", mb_data_buf[i]);
+		}
+		printf("\nEnd of Modbus_FrameAnalysis recv and frm_len is %d\n", frm_len);
+		// usleep(2000);
+	}
 	
+	// printf("Modbus_FrameAnalysis return %d\n", mb_frame_size);
 	return mb_frame_size;
 }
 
