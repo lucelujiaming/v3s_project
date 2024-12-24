@@ -2,8 +2,8 @@
 
 // rcp uart root@192.168.1.1:/usr/
 
-#define BAUDRATE        B115200
-#define UART_DEVICE     "/dev/ttyS1"
+// #define BAUDRATE        B115200
+// #define UART_DEVICE     "/dev/ttyS1"
  
 /**
 *@brief  设置串口通信速率

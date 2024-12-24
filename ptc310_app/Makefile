@@ -9,6 +9,6 @@ ptc310_app:
                 -Wall -O2 -I$(LIBMODBUS_PATH)/ -I. \
                 -IProtocol/ \
                 -IProtocol/Modbus/ \
-                -L$(LIBMODBUS_PATH)/ -lmodbus -lpthread -lm -o ptc310_app 
+                -L$(LIBMODBUS_PATH)/ -lpthread -lm -o ptc310_app 
 clean:
 	rm ptc310_app 

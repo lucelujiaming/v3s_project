@@ -2,6 +2,7 @@
 #define __USART_TYPE_H__
 
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef enum
 {
@@ -29,7 +30,8 @@ typedef struct
 	uint16_t data_len;
 }USART_RCV_DEF;
 
-void USART_SetRcvMode(USART_RCV_DEF* rcv_set, USART_RCM_T mode, uint16_t par1, uint16_t par2);
-void Convert_USART_SetRcvMode(USART_RCM_T mode, uint16_t par1, uint16_t par2);
+void Instrument_USART_SetRcvMode(USART_RCM_T mode, uint16_t par1, uint16_t par2);
+
+
 #endif
 
