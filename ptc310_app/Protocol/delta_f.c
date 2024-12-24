@@ -40,7 +40,7 @@ uint8_t deltaf_check_sum(uint8_t len)
 void DELTAF_Init(int fd, uint16_t addr)
 {
 //	USART3_SetRcvMode(USART_RCV_DELAY,50,10);
-    Convert_USART_SetRcvMode(USART_RCV_DELAY,50,10);
+    Instrument_USART_SetRcvMode(USART_RCV_DELAY,50,10);
 //	USART3_Configuration(USART_BAUD(9600), PARITY_NONE, STB_1);
     set_speed(fd, 9600);
 	if (set_parity(fd, 8, 1, 'N') == SERIAL_FALSE)  {

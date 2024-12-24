@@ -13,7 +13,7 @@
 void HCTM_Init(int fd, uint16_t addr)
 {
 //	USART3_SetRcvMode(USART_RCV_CHAR, 0x02, 0x03);
-	Convert_USART_SetRcvMode(USART_RCV_CHAR, 0x02, 0x03);
+	Instrument_USART_SetRcvMode(USART_RCV_CHAR, 0x02, 0x03);
 //	USART3_Configuration(USART_BAUD(9600), PARITY_NONE, STB_1);
     set_speed(fd, 9600);
 	if (set_parity(fd, 8, 1, 'N') == SERIAL_FALSE)  {

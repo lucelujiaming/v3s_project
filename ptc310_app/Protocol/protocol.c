@@ -16,6 +16,7 @@
 #include "protocol.h"
 #include "usart_operate.h"
 
+
 #include "pms.h"
 #include "meeco.h"
 #include "jag.h"
@@ -86,8 +87,10 @@ PROTOCOL_DEF *ProtocolConvert;
 
 uint8_t comm_err_cnt;
 
-static volatile MTIMER tm_FrmReq= {0,false,false,0,2000};
-static volatile MTIMER tm_FrmAckTo= {0,false,false,0,1000};
+// 初始化为非循环定时器，未使能，超时时间为2秒。
+static volatile MTIMER tm_FrmReq= {0,false,false,{0, 0},2000};
+// 初始化为非循环定时器，未使能，超时时间为1秒。
+static volatile MTIMER tm_FrmAckTo= {0,false,false,{0, 0},1000};
 
 void record_uart_ptc_status(int status);
 
@@ -108,6 +111,7 @@ void Protocol_Init(int fd)
 	
 	if(prot_id >= PROTOCOL_MAX)
 	{
+    	printf("prot_id(%d) >= PROTOCOL_MAX...\n", prot_id);
 		return;
 	}
 	//////////////////////////////////////////////////////////
@@ -146,10 +150,13 @@ void Protocol_Init(int fd)
 	
 	protocol_buff= IReg;
 	// serial_buff= USART3_GetBuf();
-    serial_buff= Convert_USART_GetBuf();
+    serial_buff= Instrument_USART_GetBuf();
 	little_endian= HReg[CP_32BIT_LE];
 	
 	uart_ptc_status = UART_PTC_STATUS_OK;
+	
+	// Init Timer
+	Instrument_USART_Init();
 }
 
 void Protocol_Proc(int fd)
@@ -158,9 +165,11 @@ void Protocol_Proc(int fd)
 	uint8_t err;
 	
 	// len= USART3_FrameReceived();
-	len= Convert_USART_FrameReceived(fd);
+	len= Instrument_USART_FrameReceived(fd);
+	// printf("Instrument_USART_FrameReceived read %d\n", len);
 	if(len > 0)
 	{
+		printf("Protocol_Proc analysis_proc %d\n", len);
 		if(uart_ptc_status == UART_PTC_STATUS_NG)
 		{
 			uart_ptc_status = UART_PTC_STATUS_OK;
@@ -174,20 +183,23 @@ void Protocol_Proc(int fd)
 						
 			if(ProtocolConvert->request_proc)
 			{
+				printf("Timer_Stop tm_FrmAckTo err=%d\n", err);
 				Timer_Stop((MTIMER*)&tm_FrmAckTo);
 			}
 			else
 			{
+				printf("Timer_Restart tm_FrmAckTo err=%d\n", err);
 				Timer_Restart((MTIMER*)&tm_FrmAckTo);
 			}
 		}
 	}
 	else if(len == 0)
 	{
-		printf("Nothing read");
+		// printf("Nothing read\n");
 	}
 	else if(len < 0)
 	{
+		printf("Protocol_Proc read error %d\n", len);
 		if(uart_ptc_status == UART_PTC_STATUS_OK)
 		{
 			uart_ptc_status = UART_PTC_STATUS_NG;
@@ -196,27 +208,30 @@ void Protocol_Proc(int fd)
 	}
 	
 	//Time to Request
+	// printf("Timer_Expires request_proc\n");
 	if(Timer_Expires((MTIMER*)&tm_FrmReq))
 	{
+		// printf("Protocol_Proc request_proc %d\n", len);
 		len= (*ProtocolConvert->request_proc)();
 		
 		if(len)
 		{
+		    // printf("Instrument_USART_Send request_proc %d\n", len);
 			// USART3_Send(len);
-            Convert_USART_Send(fd, len);
+            Instrument_USART_Send(fd, len);
 		}
 	}
 	
 	//Request Send Complete
 	// if(USART3_SendComplete())
-    if(Convert_USART_SendComplete(fd))
+    if(Instrument_USART_SendComplete(fd))
 	{
 		Timer_Restart((MTIMER*)&tm_FrmAckTo);
 	}
-	
 	//Ack Timeout
 	if(Timer_Expires((MTIMER*)&tm_FrmAckTo))
 	{
+		printf("Timer_Expires((MTIMER*)&tm_FrmAckTo)\n");
 		if(++comm_err_cnt > HReg[CP_FAULT_TIMES])
 		{
 			comm_err_cnt= HReg[CP_FAULT_TIMES];
@@ -249,15 +264,17 @@ void Protocol_Proc(int fd)
 void record_uart_ptc_status(int status)
 {
 	char cTemp[128];
-    int   fd; // , send_res;
+    int   uart_ptc_status_fd; // , send_res;
     // 2. 打开PTC私有协议对应的串口
-    fd = open("./uart_ptc_status_record", O_RDWR|O_NOCTTY/*|O_NDELAY*/);
-    if (fd < 0) {
+    uart_ptc_status_fd = open("./uart_ptc_status_record", O_RDWR|O_NOCTTY/*|O_NDELAY*/);
+	printf("record_uart_ptc_status: open return %d\n", uart_ptc_status_fd);
+    if (uart_ptc_status_fd < 0) {
+	    printf("record_uart_ptc_status: open failed %d\n", uart_ptc_status_fd);
         return;
     }
 	sprintf(cTemp, "%ld\t%d\r\n", time(NULL), status);
-	write(fd, cTemp, strlen(cTemp));
-	close(fd);
+	write(uart_ptc_status_fd, cTemp, strlen(cTemp));
+	close(uart_ptc_status_fd);
 	
 }
 
