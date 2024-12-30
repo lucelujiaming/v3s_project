@@ -88,9 +88,9 @@ PROTOCOL_DEF *ProtocolConvert;
 uint8_t comm_err_cnt;
 
 // 初始化为非循环定时器，未使能，超时时间为2秒。
-static volatile MTIMER tm_FrmReq= {0,false,false,{0, 0},2000};
+static volatile MTIMER tm_FrmReq= {"FrmReq", 0,false,false,{0, 0},2000};
 // 初始化为非循环定时器，未使能，超时时间为1秒。
-static volatile MTIMER tm_FrmAckTo= {0,false,false,{0, 0},1000};
+static volatile MTIMER tm_FrmAckTo= {"FrmAckTo", 0,false,false,{0, 0},1000};
 
 void record_uart_ptc_status(int status);
 

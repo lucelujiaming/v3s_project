@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include <termios.h>
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -19,9 +21,9 @@ static uint8_t InstrumentDataBuff[DATA_LENGTH];
 static volatile uint8_t send_ret;
 
 // 初始化为非循环定时器，未使能，超时时间为3毫秒。
-static volatile MTIMER tm_ByteOvr     = {0, false, false, {0, 0}, 3};
+static volatile MTIMER tm_ByteOvr     = {"ByteOvr", 0, false, false, {0, 0}, 3};
 // 初始化为非循环定时器，未使能，超时时间为5毫秒。
-static volatile MTIMER tm_FrmRcvDelay = {0, false, false, {0, 0}, 5};
+static volatile MTIMER tm_FrmRcvDelay = {"FrmRcvDelay", 0, false, false, {0, 0}, 5};
 static volatile USART_RCV_DEF RecvSet;
 
 void Instrument_USART_Init()
@@ -35,6 +37,8 @@ void Instrument_USART_Init()
 void Instrument_USART_Send(int fd, uint16_t len)
 {
     send_ret = write(fd, InstrumentDataBuff, len);
+	// 等待数据发送完成
+	tcdrain(fd);
 }
 uint16_t Instrument_USART_FrameReceived(int fd)
 {
@@ -61,7 +65,7 @@ uint8_t *Instrument_USART_GetBuf()
 
 uint8_t Instrument_USART_SendComplete(int fd)
 {
-    return send_ret;
+    return 1;
 }
 
 void USART_SetRcvMode(USART_RCV_DEF * rcv_set, USART_RCM_T mode, uint16_t par1, uint16_t par2)

@@ -9,6 +9,7 @@
 // 自定义定时器结构体
 typedef struct
 {
+	char * name;
  	uint8_t timer_pos;         // 定时器序号
  	bool timer_repeat;         // 是否为循环定时器。
  	                           // true  - 循环定时器。
