@@ -208,15 +208,15 @@ void Protocol_Proc(int fd)
 	}
 	
 	//Time to Request
-	// printf("Timer_Expires request_proc\n");
+	// printf("Timer_Expires tm_FrmReq\n");
 	if(Timer_Expires((MTIMER*)&tm_FrmReq))
 	{
-		// printf("Protocol_Proc request_proc %d\n", len);
 		len= (*ProtocolConvert->request_proc)();
+		printf("Protocol_Proc request_proc %d\n", len);
 		
 		if(len)
 		{
-		    // printf("Instrument_USART_Send request_proc %d\n", len);
+		    printf("Instrument_USART_Send request_proc %d\n", len);
 			// USART3_Send(len);
             Instrument_USART_Send(fd, len);
 		}
@@ -229,6 +229,7 @@ void Protocol_Proc(int fd)
 		Timer_Restart((MTIMER*)&tm_FrmAckTo);
 	}
 	//Ack Timeout
+	// printf("Timer_Expires tm_FrmAckTo\n");
 	if(Timer_Expires((MTIMER*)&tm_FrmAckTo))
 	{
 		printf("Timer_Expires((MTIMER*)&tm_FrmAckTo)\n");

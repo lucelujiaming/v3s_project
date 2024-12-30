@@ -49,6 +49,13 @@
 
 char modbus_uart_device[20];
 char instrument_uart_device[20];
+// int  modbus_uart_response_interval = 20000;
+
+// localtime()函数返回的是一个静态变量的指针，这个指针指向的内存是由C标准库管理的，属于静态存储区。
+// 每次调用localtime()时，它都会返回一个指向同一个静态区域内存的指针，
+// 这意味着多次调用localtime()会返回相同的指针，并且这个指针指向的内存会在程序结束时由系统自动释放‌。
+struct tm    log_record_tm;
+
 
 // 数据格式参见《PTC310_V2.7.3用户手册》
 const uint16_t CP_DefaultValue[CP_EEP_MAX]= 
@@ -66,7 +73,7 @@ const uint16_t CP_DefaultValue[CP_EEP_MAX]=
 
 // output_mix_history_trend ends
 static int get_cmd_printf(char *cmd, char *buf, int bufSize);
-int append_file(char * cFileName, char * cFileContent);
+int append_logcontent_to_file(char * cFileName, char * cFileContent);
 
 
 int open_and_new_rtu_slave(struct termios* old_tios)
@@ -167,7 +174,7 @@ void out_instrument_history_record(
 
     sprintf(cFileName, "instrument_history_record_%04d_%02d_%02d.txt", 
             tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
-    append_file(cFileName, cFileContent);
+    append_logcontent_to_file(cFileName, cFileContent);
 	
     struct tm*     tmToday  = localtime(&timeNow);
     tmToday->tm_hour = tmToday->tm_min = tmToday->tm_sec = 0;
@@ -182,9 +189,9 @@ void out_instrument_history_record(
 
     sprintf(cFileName, "instrument_history_info_record_unixtime_%04d_%02d_%02d.txt", 
             tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
-    printf("We output the instrument_history_info_record_unixtime_%04d_%02d_%02d.txt at %ld.\r\n",
-            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, timeNow);
-    append_file(cFileName, cFileContent);
+    // printf("We output the instrument_history_info_record_unixtime_%04d_%02d_%02d.txt at %ld.\r\n",
+    //         tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, timeNow);
+    append_logcontent_to_file(cFileName, cFileContent);
 
 }
 
@@ -211,7 +218,7 @@ void out_battery_info_record(int iOfflineStatus, time_t iFakeTimeStamp)
 
     sprintf(cFileName, "battery_info_record_%04d_%02d_%02d.txt", 
             tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
-    append_file(cFileName, cFileContent);
+    append_logcontent_to_file(cFileName, cFileContent);
     
     if(iLastOfflineStatus != iOfflineStatus)
     {
@@ -219,7 +226,7 @@ void out_battery_info_record(int iOfflineStatus, time_t iFakeTimeStamp)
         
         sprintf(cFileName, "battery_info_switch_record_%04d_%02d_%02d.txt", 
                 tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
-        append_file(cFileName, cFileContent);
+        append_logcontent_to_file(cFileName, cFileContent);
     }
 	
     struct tm*     tmToday  = localtime(&timeNow);
@@ -232,9 +239,9 @@ void out_battery_info_record(int iOfflineStatus, time_t iFakeTimeStamp)
 
     sprintf(cFileName, "battery_info_record_unixtime_%04d_%02d_%02d.txt", 
             tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
-    printf("We output the battery_info_record_unixtime_%04d_%02d_%02d.txt at %ld.\r\n",
-            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, timeNow);
-    append_file(cFileName, cFileContent);
+    // printf("We output the battery_info_record_unixtime_%04d_%02d_%02d.txt at %ld.\r\n",
+    //         tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, timeNow);
+    append_logcontent_to_file(cFileName, cFileContent);
 }
 
 void out_usart_info_record(int iOfflineStatus, time_t iFakeTimeStamp)
@@ -260,7 +267,7 @@ void out_usart_info_record(int iOfflineStatus, time_t iFakeTimeStamp)
 
     sprintf(cFileName, "usart_info_record_%04d_%02d_%02d.txt", 
             tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
-    append_file(cFileName, cFileContent);
+    append_logcontent_to_file(cFileName, cFileContent);
 	
     if(iLastOfflineStatus != iOfflineStatus)
     {
@@ -268,7 +275,7 @@ void out_usart_info_record(int iOfflineStatus, time_t iFakeTimeStamp)
         
         sprintf(cFileName, "usart_info_switch_record_%04d_%02d_%02d.txt", 
                 tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
-        append_file(cFileName, cFileContent);
+        append_logcontent_to_file(cFileName, cFileContent);
     }
     
     struct tm*     tmToday  = localtime(&timeNow);
@@ -283,7 +290,7 @@ void out_usart_info_record(int iOfflineStatus, time_t iFakeTimeStamp)
             tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
     // printf("We output the usart_info_record_unixtime_%04d_%02d_%02d.txt at %ld.\r\n",
     //         tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, timeNow);
-    append_file(cFileName, cFileContent);
+    append_logcontent_to_file(cFileName, cFileContent);
 }
 
 // #define BATTERY_UART_DEVICE_TO        5
@@ -398,10 +405,9 @@ int get_battery_status()
 
 int append_file(char * cFileName, char * cFileContent)
 {
-	// int iRetryCount = 0;
-	// int iRet = 0;
+	int iRet = 0;
     char cMkdirOutput[256];
-    // char cRemountOutput[256];
+    char cRemountOutput[256];
 	
     char cFilePathWithName[128];
     char cFilePathMkdirCommand[128];
@@ -414,29 +420,18 @@ int append_file(char * cFileName, char * cFileContent)
     // 2. 打开PTC私有协议对应的串口
     append_fd = open(cFilePathWithName, O_RDWR | O_APPEND);
     if (append_fd < 0) {
-		// iRetryCount = 0;
-		while(1)
+		// 这里的2>&1表示将标准错误（文件描述符2）重定向到标准输出（文件描述符1）。
+	    sprintf(cFilePathMkdirCommand, "mkdir -p /root/sdcard/app/instrument_info/%d_%02d_%02d/ 2>&1",
+	            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
+		memset(cMkdirOutput, 0x00, 256);
+	    iRet = get_cmd_printf(cFilePathMkdirCommand, cMkdirOutput, 256);
+	    printf("get_cmd_printf(%s) return %d\n",cFilePathMkdirCommand, iRet);
+		if(strlen(cMkdirOutput) > 0)
 		{
-			// 这里的2>&1表示将标准错误（文件描述符2）重定向到标准输出（文件描述符1）。
-		    sprintf(cFilePathMkdirCommand, "mkdir -p /root/sdcard/app/instrument_info/%d_%02d_%02d/ 2>&1",
-		            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
-			memset(cMkdirOutput, 0x00, 256);
- 	        // iRet = 
-			get_cmd_printf(cFilePathMkdirCommand, cMkdirOutput, 256);
-		    // printf("get_cmd_printf(%s) return %d\n",cFilePathMkdirCommand, iRet);
-			if(strlen(cMkdirOutput) > 0)
-			{
-		        // printf("Command <%s> error: errorInfo is %s\n", cFilePathMkdirCommand, cMkdirOutput);
-				// memset(cRemountOutput, 0x00, 256);
-    			// get_cmd_printf("/root/app/remount_sdcard.sh", cRemountOutput, 256);
-		        // printf("remount_sdcard return %s\n", cRemountOutput);
-		        return -1;
-			}
-			else 
-			{
-		        // printf("mkdir error: errorInfo is empty with <%s>\n", cMkdirOutput);
-				break;
-			}
+	        printf("Command <%s> error: errorInfo is %s\n", cFilePathMkdirCommand, cMkdirOutput);
+			memset(cRemountOutput, 0x00, 256);
+			get_cmd_printf("/root/app/www/remount_sdcard.sh", cRemountOutput, 256);
+	        printf("remount_sdcard return %s\n", cRemountOutput);
 		}
 		
         append_fd = open(cFilePathWithName, O_RDWR | O_CREAT);
@@ -451,8 +446,94 @@ int append_file(char * cFileName, char * cFileContent)
     return 0;
 }
 
+
+#define   PRINT_MKDIR_OUTPUT_ON   1
+#define   PRINT_MKDIR_OUTPUT_OFF  0
+int append_logcontent_to_file(char * cFileName, char * cFileContent)
+{
+	static int isPrintMkdirOutput = PRINT_MKDIR_OUTPUT_ON;
+	// int iRet = 0;
+    char cMkdirOutput[256];
+    // char cRemountOutput[256];
+	
+    char cFilePathWithName[128];
+    char cFilePathCommand[128];
+    int   append_fd; // , send_res;
+    time_t timeNow = time(NULL);
+    struct tm*     tmNow    = localtime(&timeNow);
+
+	return append_file(cFileName, cFileContent);
+	
+	/********************************************************************
+	 * 经过测试发现，在SD卡上频繁写入会导致SD卡无法创建目录。
+	 * 为了规避这个问题，需要构造一套逻辑来解决。
+	 * 方法是当天的日志写在内部存储上，每当日期变化，把之前的日志移动到SD卡上。
+	 ********************************************************************/
+	if((tmNow->tm_year != log_record_tm.tm_year)
+		|| (tmNow->tm_mon != log_record_tm.tm_mon)
+		|| (tmNow->tm_mday != log_record_tm.tm_mday))
+	{
+		// 这里的2>&1表示将标准错误（文件描述符2）重定向到标准输出（文件描述符1）。
+	    sprintf(cFilePathCommand, "mkdir -p /root/sdcard/app/instrument_info/%d_%02d_%02d/ 2>&1",
+	            log_record_tm.tm_year + 1900, log_record_tm.tm_mon + 1, log_record_tm.tm_mday);
+		memset(cMkdirOutput, 0x00, 256);
+	    // iRet = 
+		get_cmd_printf(cFilePathCommand, cMkdirOutput, 256);
+		if(strlen(cMkdirOutput) > 0)
+		{
+			if(isPrintMkdirOutput == PRINT_MKDIR_OUTPUT_ON)
+			{
+				printf("Command <%s> error: errorInfo is %s\n", cFilePathCommand, cMkdirOutput);
+				isPrintMkdirOutput = PRINT_MKDIR_OUTPUT_OFF;
+				
+		        memset(cMkdirOutput, 0x00, 256);
+                get_cmd_printf("/root/app/www/remount_sdcard.sh", cMkdirOutput, 256);
+				if(strlen(cMkdirOutput) > 0)
+				{
+				   printf("Command remount_sdcard.sh error: errorInfo is %s\n", cMkdirOutput);
+			    }
+				else 
+				{
+				   printf("Command remount_sdcard.sh OK.\n");
+			    }
+			}
+    	    memcpy(&log_record_tm, localtime(&timeNow), sizeof(struct tm));
+	        return -1;
+		}
+		else 
+		{
+	        printf("get_cmd_printf(%s) return OK.\n",cFilePathCommand);
+			isPrintMkdirOutput = PRINT_MKDIR_OUTPUT_ON;
+		    sprintf(cFilePathCommand, 
+				"mv /root/app/instrument_info/* /root/sdcard/app/instrument_info/%d_%02d_%02d/ 2>&1",
+		        log_record_tm.tm_year + 1900, log_record_tm.tm_mon + 1, log_record_tm.tm_mday);
+			get_cmd_printf(cFilePathCommand, cMkdirOutput, 256);
+		}
+    	memcpy(&log_record_tm, localtime(&timeNow), sizeof(struct tm));
+	}
+
+		
+    sprintf(cFilePathWithName, "/root/app/instrument_info/%s", cFileName);
+    append_fd = open(cFilePathWithName, O_RDWR | O_APPEND);
+    if (append_fd < 0) {
+	    sprintf(cFilePathCommand, "mkdir -p /root/app/instrument_info/ 2>&1");
+		get_cmd_printf(cFilePathCommand, cMkdirOutput, 256);
+	
+        append_fd = open(cFilePathWithName, O_RDWR | O_CREAT);
+        if (append_fd < 0) {
+	        // printf("append_file: open failed return %d\n", append_fd);
+            return -1;
+        }
+    }
+	// printf("append_file: write %s return %d\n", cFileContent, append_fd);
+	write(append_fd, cFileContent, strlen(cFileContent));
+	close(append_fd);
+    return 0;
+}
+
 static void* thread_instrument_Protocol(void *arg)
 {
+    time_t timeNow = time(NULL);
     int   convert_protocol_fd = 0; // , send_res;
 	convert_protocol_fd = open_ptc_port();
     // printf("uart Open...\n");
@@ -462,18 +543,25 @@ static void* thread_instrument_Protocol(void *arg)
 	while (1)
 	{
 		Protocol_Proc(convert_protocol_fd);
+		if(time(NULL) - timeNow >= 1)
+		{
+			timeNow = time(NULL);
+			out_instrument_history_record(
+				IReg[0], IReg[1], IReg[2], IReg[3], IReg[4], IReg[5], 
+				IReg[6], IReg[7], IReg[8], IReg[9], timeNow);
+		}
 	}
     close(convert_protocol_fd);
     return (void*)NULL;
 }
 
+
 #define   SYS_CONFIG_FILE_NAME    "sys_config.ini"
-
-
 void SysConfig_Init() {
     if(access(SYS_CONFIG_FILE_NAME, F_OK) != 0) 
 	{
 		create_keyvalue_in_inifile("System", "ServiceID", "15", SYS_CONFIG_FILE_NAME);
+		append_keyvalue_in_inifile("ModusUartRspInterval", "20", SYS_CONFIG_FILE_NAME);
 	}
 }
 
@@ -494,9 +582,18 @@ static void* thread_modbus_operation(void *arg)
     {
 		iServerID = atoi(value);
     }
+	// iRet = get_ini_key_string("System", "ModusUartRspInterval", value, SYS_CONFIG_FILE_NAME);
+	// printf("get_ini_key_string get %s and return %d\n", value, iRet);
+    // if(iRet == 0)
+    // {
+	//  	modbus_uart_response_interval = atoi(value) * 1000;
+    // }
+	 
 	modbus_fd = open_and_new_rtu_slave(&old_tios);
 	printf("open_and_new_rtu_slave return %d\n", modbus_fd);
 	Modbus_Init(iServerID, query);
+	// printf("Modbus_Init set iServerID = %d and modbus_uart_response_interval = %d\n", 
+	// 	iServerID, modbus_uart_response_interval);
 	printf("Modbus_Init set iServerID = %d\n", iServerID);
 	// TimerInit();
 	V3S_GPIO_SetPin(V3S_PB, 2, 0);
@@ -522,7 +619,7 @@ static void* thread_modbus_operation(void *arg)
 			}
 		}
 		
-		if (ret > 0)
+		if (ret >= 8)
 		{
 			// printf("read ends with ctx_modbus_uart = %d and return %d\n", 
 			//					modbus_fd, ret);
@@ -534,19 +631,39 @@ static void* thread_modbus_operation(void *arg)
 			// 		printf("<%02X> ", query[i]);
 			// }
 			// printf("\nEnd of Modbus_FrameAnalysis return %d\n", ret);
+			// 下面的三个延时时间3000, 500, 100都是根据逻辑分析仪的分析结果得到的。
+			// 1. 其中收到数据以后，可以多等一会。也就是3ms。
+			// 2. DE翻转以后，需要稍微等待一下，以便于获取数据总线，也就是0.5ms。
+			// 3. 发送完成以后，需要尽快翻转回去。
+			//    用于接收PC端在收到响应以后再次发出的数据。也就是0.1ms。
+			// 当PC端发送时间间隔为20ms的时候，数据收发没有错误。
+			// 当然如果PC端发送时间间隔过短，例如小于10ms还是会出现非常低概率的错误。
+			usleep(3000);
 			V3S_GPIO_SetPin(V3S_PB, 2, 1);
 		    // 做一点延时，避免发的太快，导致电脑时序混乱。
-			usleep(1000);
+			usleep(500);
 			write(modbus_fd, query, ret);
 			// 等待数据发送完成
 			tcdrain(modbus_fd);
-			// 55chars need 5729 us 
+			usleep(100);
 	        V3S_GPIO_SetPin(V3S_PB, 2, 0);
 			
 			// printf("write socket_id %d and select for %d\n", ret, iSpanCount);
 			iSpanCount = 0;
 		}
-		else
+		else if (ret > 0) {
+			printf("Wrong Length: mb_data_buf[0] check failed and mb_data_buf[0] is %d\n", query[0]);
+			printf("Start of recv and frm_len is %d\n", ret);
+			for(int i = 0 ; i < ret; i++)
+			{
+				printf("<%02X> ", query[i]);
+			}
+			printf("\nEnd of recv and frm_len is %d\n", ret);
+		}
+		// We do not receive any data
+		// else if (ret == 0) 
+		// USART_OFFLINE
+		else if (ret < 0)
 		{
 			timeNow = time(NULL);
 			// printf("start out_usart_info_record USART_OFFLINE because modbus_receive returns %d\n", ret);
@@ -584,6 +701,8 @@ int main(int argc, char ** argv)
     // int iUsartOfflineStatus   = INSTRUMENT_ONLINE;
     int iBatteryOfflineStatus = INSTRUMENT_ONLINE;
     time_t timeNow = time(NULL);
+	// log_record_tm =  = localtime(&timeNow);
+    memcpy(&log_record_tm, localtime(&timeNow), sizeof(struct tm));
 
 	memset(modbus_uart_device, 0x00, 20);
 	memset(instrument_uart_device, 0x00, 20);

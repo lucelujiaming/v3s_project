@@ -38,6 +38,7 @@ void Instrument_USART_Send(int fd, uint16_t len)
 }
 uint16_t Instrument_USART_FrameReceived(int fd)
 {
+	// printf("Timer_Expires tm_FrmRcvDelay\n");
 	if(Timer_Expires((MTIMER*)&tm_FrmRcvDelay))
 	{
 	//	RecvSet.data_len= recv_count;

@@ -275,15 +275,30 @@ uint16_t Modbus_FrameAnalysis(int16_t frm_len)
 	}
 	else 
 	{
-		printf("Error: mb_data_buf[0] check failed and mb_data_buf[0] is %d\n", mb_data_buf[0]);
-		
-		printf("Start of Modbus_FrameAnalysis recv and frm_len is %d\n", frm_len);
-		for(int i = 0 ; i < frm_len; i++)
-		{
-			printf("<%02X> ", mb_data_buf[i]);
-		}
-		printf("\nEnd of Modbus_FrameAnalysis recv and frm_len is %d\n", frm_len);
+		// printf("Error: mb_data_buf[0] check failed and mb_data_buf[0] is %d\n", mb_data_buf[0]);
+		// printf("Start of Modbus_FrameAnalysis recv and frm_len is %d\n", frm_len);
+		// for(int i = 0 ; i < frm_len; i++)
+		// {
+		//  	printf("<%02X> ", mb_data_buf[i]);
+		// }
+		// printf("\nEnd of Modbus_FrameAnalysis recv and frm_len is %d\n", frm_len);
 		// usleep(2000);
+		
+		if((mb_data_buf[0] == 0xFE) && (frm_len > 1))
+		{
+			printf("We need jump over 0xFE and mb_data_buf[1] = %d\n", mb_data_buf[1]);
+			if((mb_data_buf[1]== mb_addr || mb_data_buf[1]== MODBUS_BROADCAST_ADDR))
+			{
+				printf("Jump over 0xFE and mb_data_buf[1] = %d\n", mb_data_buf[1]);
+				for(int i = 0; i < frm_len - 1; i++)
+				{
+					mb_data_buf[i] = mb_data_buf[i + 1];
+				}
+				printf("Call Modbus_FrameAnalysis and mb_data_buf[1] = %d\n", mb_data_buf[1]);
+				return Modbus_FrameAnalysis(frm_len - 1);
+			}
+			printf("We need jump over 0xFE and mb_data_buf[1] = %d\n", mb_data_buf[1]);
+		}
 	}
 	
 	// printf("Modbus_FrameAnalysis return %d\n", mb_frame_size);

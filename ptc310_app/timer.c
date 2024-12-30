@@ -91,13 +91,14 @@ bool Timer_Expires(MTIMER *timer)
 			// printf("Timer_Expires continues and timer->ticks_limit = %d\n", timer->ticks_limit);
 		}
 		// timer->ticks_ms= time(NULL);
-		// printf("Timer_Expires returns true \n");
+		printf("Timer_Expires returns true and timer->ticks_limit = %d\n", timer->ticks_limit);
 		return true;
 	}
 	// 否则认为定时器没有超时。
 	else
 	{
-		// printf("Timer_Expires returns false and timer->ticks_limit = %d\n", timer->ticks_limit);
+		printf("Timer_Expires returns false and timer->ticks_limit = %d, ticks_ms_result= %d, diff_ms_timespec = %d\n"
+			, timer->ticks_limit, ticks_ms_result, diff_ms_timespec);
 		return false;
 	}
 	return false;
