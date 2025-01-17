@@ -284,3 +284,57 @@ uint8_t JAG_Analysis(uint16_t len)
 
 	return err;
 }
+
+/*
+    JAG：MX1A，MXNY
+    寄存器	    类型	功能描述	    数值
+    30001	    Int	    Communication   Fault	0：Normal；1：Fault
+    30002	    Int	    STATUS	        0：STOP；1：MEA-；2：ST1；3：ST2
+    30003	    Int	    S_WATER	        1：OK；2：Low
+    30004	    Real	Measured Value	Unit: ppb
+    30006	    Int	    MFC1	        0-244CCM
+    30007	    Int	    MFC2	        0-244CCM
+    30008	    Real	C_TEMP	
+ */
+uint16_t JAG_DataOutput(char* strOutput)
+{
+	char cMeasuredValueBuffer[4] = {0};
+	char cC_TEMPBuffer[4] = {0};
+	float * floatMeasuredValue  = (float *)cMeasuredValueBuffer;
+	float * floatC_TEMP = (float *)cC_TEMPBuffer;
+    
+	if(little_endian)
+	{
+		cMeasuredValueBuffer[3] = protocol_buff[4]>>8;
+		cMeasuredValueBuffer[2] = protocol_buff[4]&0x00FF;
+		cMeasuredValueBuffer[1] = protocol_buff[3]>>8;
+		cMeasuredValueBuffer[0] = protocol_buff[3]&0x00FF;
+		
+		cC_TEMPBuffer[3] = protocol_buff[8]>>8;
+		cC_TEMPBuffer[2] = protocol_buff[8]&0x00FF;
+		cC_TEMPBuffer[1] = protocol_buff[7]>>8;
+		cC_TEMPBuffer[0] = protocol_buff[7]&0x00FF;
+				printf("DELTAF_DataOutput::little_endian\r\n");
+	}
+	else
+	{
+		cMeasuredValueBuffer[3] = protocol_buff[3]>>8;
+		cMeasuredValueBuffer[2] = protocol_buff[3]&0x00FF;
+		cMeasuredValueBuffer[1] = protocol_buff[4]>>8;
+		cMeasuredValueBuffer[0] = protocol_buff[4]&0x00FF;
+		                                       
+		cC_TEMPBuffer[3] = protocol_buff[7]>>8;
+		cC_TEMPBuffer[2] = protocol_buff[7]&0x00FF;
+		cC_TEMPBuffer[1] = protocol_buff[8]>>8;
+		cC_TEMPBuffer[0] = protocol_buff[8]&0x00FF;
+				printf("DELTAF_DataOutput::big_endian\r\n");
+	}
+    sprintf(strOutput, "%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f",      
+            *floatMeasuredValue, // 30004	    Real	Measured Value	
+            *floatC_TEMP,        // 30006       Real    Flow Setpoint
+            0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0);
+    
+	return 0;
+}
+

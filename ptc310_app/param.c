@@ -23,8 +23,8 @@ void PARAM_Init(void)
 		PARAM_Save(2, 20);
 		PARAM_Save(3, 5);
 		PARAM_Save(5, 3);
-		
 	}
+	EE_Init();
 }
 
 void PARAM_Reload(uint16_t addr, uint16_t* buff, uint16_t len)

@@ -9,6 +9,8 @@ void TIGER_Init(int fd, uint16_t addr);
 //////////////////////////////////////////////////////
 uint16_t TIGER_Request(void);
 uint8_t TIGER_Analysis(uint16_t len);
+uint16_t TIGER_DataOutput(char* strOutput);
+
 #endif
 
 

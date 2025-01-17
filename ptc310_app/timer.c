@@ -97,8 +97,8 @@ bool Timer_Expires(MTIMER *timer)
 	// 否则认为定时器没有超时。
 	else
 	{
-		printf("Timer_Expires(%s) returns false and timer->ticks_limit = %d, ticks_ms_result= %d, diff_ms_timespec = %d\n",
-			timer->name, timer->ticks_limit, ticks_ms_result, diff_ms_timespec);
+		// printf("Timer_Expires(%s) returns false and timer->ticks_limit = %d, ticks_ms_result= %d, diff_ms_timespec = %d\n",
+		//  	timer->name, timer->ticks_limit, ticks_ms_result, diff_ms_timespec);
 		return false;
 	}
 	return false;

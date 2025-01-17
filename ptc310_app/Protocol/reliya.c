@@ -93,3 +93,87 @@ uint8_t RELIYA_HGPC_100_Analysis(uint16_t len)
 err_exit:
 	return 1;
 }
+
+/*
+	RELIYA：HGPC-100
+	寄存器	类型	功能描述	数值
+	30001	Int	Communication Fault	0：Normal；1：Fault
+	30002	Real	Counter 0.1 / Probe 1	
+	30004	Real	Counter 0.2 / Probe 1	
+	30006	Real	Counter 0.3 / Probe 1	
+	30008	Real	Counter 0.5 / Probe 1		
+ */
+uint16_t RELIYA_HGPC_100_DataOutput(char* strOutput)
+{
+    char cCounterZeroPointOneBuffer[4] = {0};
+    char cCounterZeroPointTwoBuffer[4] = {0};
+    char cCounterZeroPointThreeBuffer[4] = {0};
+    char cCounterZeroPointFiveBuffer[4] = {0};
+	
+	float * floatCounterZeroPointOneBuffer   = (float *)(cCounterZeroPointOneBuffer);
+	float * floatCounterZeroPointTwoBuffer   = (float *)(cCounterZeroPointTwoBuffer);
+	float * floatCounterZeroPointThreeBuffer = (float *)(cCounterZeroPointThreeBuffer);
+	float * floatCounterZeroPointFiveBuffer  = (float *)(cCounterZeroPointFiveBuffer);
+		
+	if(little_endian)
+	{
+		cCounterZeroPointOneBuffer[3] = protocol_buff[2]>>8;
+		cCounterZeroPointOneBuffer[2] = protocol_buff[2]&0x00FF;
+		cCounterZeroPointOneBuffer[1] = protocol_buff[1]>>8;
+		cCounterZeroPointOneBuffer[0] = protocol_buff[1]&0x00FF;
+		
+		cCounterZeroPointTwoBuffer[3] = protocol_buff[4]>>8;
+		cCounterZeroPointTwoBuffer[2] = protocol_buff[4]&0x00FF;
+		cCounterZeroPointTwoBuffer[1] = protocol_buff[3]>>8;
+		cCounterZeroPointTwoBuffer[0] = protocol_buff[3]&0x00FF;
+        
+		cCounterZeroPointThreeBuffer[3] = protocol_buff[6]>>8;
+		cCounterZeroPointThreeBuffer[2] = protocol_buff[6]&0x00FF;
+		cCounterZeroPointThreeBuffer[1] = protocol_buff[5]>>8;
+		cCounterZeroPointThreeBuffer[0] = protocol_buff[5]&0x00FF;
+        
+		cCounterZeroPointFiveBuffer[3] = protocol_buff[8]>>8;
+		cCounterZeroPointFiveBuffer[2] = protocol_buff[8]&0x00FF;
+		cCounterZeroPointFiveBuffer[1] = protocol_buff[7]>>8;
+		cCounterZeroPointFiveBuffer[0] = protocol_buff[7]&0x00FF;
+				printf("DELTAF_DataOutput::little_endian\r\n");
+	}
+	else
+	{
+		cCounterZeroPointOneBuffer[3] = protocol_buff[1]>>8;
+		cCounterZeroPointOneBuffer[2] = protocol_buff[1]&0x00FF;
+		cCounterZeroPointOneBuffer[1] = protocol_buff[2]>>8;
+		cCounterZeroPointOneBuffer[0] = protocol_buff[2]&0x00FF;
+		
+		cCounterZeroPointTwoBuffer[3] = protocol_buff[3]>>8;
+		cCounterZeroPointTwoBuffer[2] = protocol_buff[3]&0x00FF;
+		cCounterZeroPointTwoBuffer[1] = protocol_buff[4]>>8;
+		cCounterZeroPointTwoBuffer[0] = protocol_buff[4]&0x00FF;
+        
+		cCounterZeroPointThreeBuffer[3] = protocol_buff[5]>>8;
+		cCounterZeroPointThreeBuffer[2] = protocol_buff[5]&0x00FF;
+		cCounterZeroPointThreeBuffer[1] = protocol_buff[6]>>8;
+		cCounterZeroPointThreeBuffer[0] = protocol_buff[6]&0x00FF;
+        
+		cCounterZeroPointFiveBuffer[3] = protocol_buff[7]>>8;
+		cCounterZeroPointFiveBuffer[2] = protocol_buff[7]&0x00FF;
+		cCounterZeroPointFiveBuffer[1] = protocol_buff[8]>>8;
+		cCounterZeroPointFiveBuffer[0] = protocol_buff[8]&0x00FF;
+				printf("DELTAF_DataOutput::big_endian\r\n");
+	}
+
+	// printf("DELTAF_DataOutput::cO2ppbBuffer = [%02X, %02X, %02X, %02X]\r\n", 
+	// 	cO2ppbBuffer[0], cO2ppbBuffer[1], cO2ppbBuffer[2], cO2ppbBuffer[3]);
+	// printf("DELTAF_DataOutput::cHO2ppbBuffer = [%02X, %02X, %02X, %02X]\r\n", 
+	// 	cHO2ppbBuffer[0], cHO2ppbBuffer[1], cHO2ppbBuffer[2], cHO2ppbBuffer[3]);
+	
+    sprintf(strOutput, "%f,%f,%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f",
+          *floatCounterZeroPointOneBuffer,     // 30002	Real	Counter 0.1 / Probe 1
+          *floatCounterZeroPointTwoBuffer,     // 30004	Real	Counter 0.2 / Probe 1
+          *floatCounterZeroPointThreeBuffer,   // 30006	Real	Counter 0.3 / Probe 1
+          *floatCounterZeroPointFiveBuffer,    // 30008	Real	Counter 0.5 / Probe 1
+          0.0, 0.0, 0.0, 
+          0.0, 0.0, 0.0);
+	return 0;
+}
+

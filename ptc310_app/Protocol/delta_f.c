@@ -83,12 +83,14 @@ uint8_t DELTAF_Analysis(uint16_t len)
 			if(little_endian)
 			{
 				protocol_buff[5]= _get_int16_int8_big_endian(serial_buff+4);
-				protocol_buff[4]= _get_int16_int8_big_endian(serial_buff+6); 
+				protocol_buff[4]= _get_int16_int8_big_endian(serial_buff+6);
+				printf("DELTAF_Analysis::little_endian\r\n");
 			}
 			else
 			{
 				protocol_buff[4]= _get_int16_int8_big_endian(serial_buff+4);
 				protocol_buff[5]= _get_int16_int8_big_endian(serial_buff+6); 
+				printf("DELTAF_Analysis::big_endian\r\n");
 			}
 			break;
 		case 0x66:
@@ -111,3 +113,83 @@ uint8_t DELTAF_Analysis(uint16_t len)
 
 	return err;
 }
+
+/*
+   Delta F：DF310E，DF550E，DF560，DF745，DF750
+   寄存器      类型      功能描述	            数值
+     30001	Int	    Communication Fault	0：Normal；1：Fault
+     30002	Int	    STATUS 0	
+     30003	Int	    STATUS 1	
+     30004	Int	    STATUS 2	
+     30005	Real	O2 ppb	
+     30007	Real	H2O ppb	            (760E才有）
+ */
+uint16_t DELTAF_DataOutput(char* strOutput)
+{
+	char cO2ppbBuffer[4] = {0};
+	char cHO2ppbBuffer[4] = {0};
+	float * floatO2ppb  = (float *)cO2ppbBuffer;
+	float * floatHO2ppb = (float *)cHO2ppbBuffer;
+	
+	if(little_endian)
+	{
+		cO2ppbBuffer[3] = protocol_buff[5]>>8;
+		cO2ppbBuffer[2] = protocol_buff[5]&0x00FF;
+		cO2ppbBuffer[1] = protocol_buff[4]>>8;
+		cO2ppbBuffer[0] = protocol_buff[4]&0x00FF;
+		
+		cHO2ppbBuffer[3] = protocol_buff[7]>>8;
+		cHO2ppbBuffer[2] = protocol_buff[7]&0x00FF;
+		cHO2ppbBuffer[1] = protocol_buff[6]>>8;
+		cHO2ppbBuffer[0] = protocol_buff[6]&0x00FF;
+				printf("DELTAF_DataOutput::little_endian\r\n");
+	}
+	else
+	{
+		cO2ppbBuffer[3] = protocol_buff[4]>>8;
+		cO2ppbBuffer[2] = protocol_buff[4]&0x00FF;
+		cO2ppbBuffer[1] = protocol_buff[5]>>8;
+		cO2ppbBuffer[0] = protocol_buff[5]&0x00FF;
+		
+		cHO2ppbBuffer[3] = protocol_buff[6]>>8;
+		cHO2ppbBuffer[2] = protocol_buff[6]&0x00FF;
+		cHO2ppbBuffer[1] = protocol_buff[7]>>8;
+		cHO2ppbBuffer[0] = protocol_buff[7]&0x00FF;
+				printf("DELTAF_DataOutput::big_endian\r\n");
+	}
+	
+//	// PPM -> PPB
+//	if(*floatO2ppb < 0.001)
+//	{
+//		*floatO2ppb = *floatO2ppb * 1000;
+//	}
+//	// PPB -> PPT
+//	if(*floatO2ppb < 0.001)
+//	{
+//		*floatO2ppb = *floatO2ppb * 1000;
+//	}
+//	
+//	// PPM -> PPB
+//	if(*floatHO2ppb < 0.001)
+//	{
+//		*floatHO2ppb = *floatHO2ppb * 1000;
+//	}
+//	// PPB -> PPT
+//	if(*floatHO2ppb < 0.001)
+//	{
+//		*floatHO2ppb = *floatHO2ppb * 1000;
+//	}
+
+	printf("DELTAF_DataOutput::cO2ppbBuffer = [%02X, %02X, %02X, %02X]\r\n", 
+		cO2ppbBuffer[0], cO2ppbBuffer[1], cO2ppbBuffer[2], cO2ppbBuffer[3]);
+	printf("DELTAF_DataOutput::cHO2ppbBuffer = [%02X, %02X, %02X, %02X]\r\n", 
+		cHO2ppbBuffer[0], cHO2ppbBuffer[1], cHO2ppbBuffer[2], cHO2ppbBuffer[3]);
+	
+    sprintf(strOutput, "%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f",
+            *floatO2ppb,       // 30005	Real	O2 ppb	
+            *floatHO2ppb,      // 30007	Real	H2O ppb	  
+            0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0);
+	return 0;
+}
+

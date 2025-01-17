@@ -39,7 +39,8 @@
 #define INSTRUMENT_UART_DEVICE   "/dev/ttyS1"
 
 // output_mix_history_trend
-#define    TIME_SPAN               900 //   15mins   600   // 10 minutes
+#define    INSTRUMENT_HISTORY_TIME_SPAN      10 //   15mins   600   // 10 minutes
+#define    INSTRUMENT_HISTORY_TIME_SCALE    (24 * 60 * 60 / INSTRUMENT_HISTORY_TIME_SPAN)
 // #define    NEW_YEAR_DAY_2024    1704038400
 
 #define  INSTRUMENT_ONLINE             0
@@ -144,15 +145,11 @@ int open_ptc_port()
 	return instrument_fd;
 }
 
-void out_instrument_history_record(
-        int iParticleFirst,   int iParticleSecond, 
-        int iParticleThird,   int iParticleFourth, 
-        int iParticleFifth,   int iParticleSixth,  
-        int iParticleSeventh, int iParticleEighth, 
-        int iLaserRefFirst,  int iLaserRefSecond, time_t iFakeTimeStamp)
+void out_instrument_history_record(time_t iFakeTimeStamp)
 {
     char cFileName[128];
     char cFileContent[1024];
+    char cProtocolDataOutput[1024];
 
     time_t timeNow;
     if(iFakeTimeStamp == 0)
@@ -165,12 +162,13 @@ void out_instrument_history_record(
     }
     struct tm*     tmNow    = localtime(&timeNow);
 
-    sprintf(cFileContent, "\"%04d-%02d-%02d %02d:%02d:%02d\",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\r\n",
+	Protocol_DataOutput(cProtocolDataOutput);
+	printf("cProtocolDataOutput = [%s]\r\n", cProtocolDataOutput);
+
+    sprintf(cFileContent, "\"%04d-%02d-%02d %02d:%02d:%02d\",%s\r\n",
             tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, 
             tmNow->tm_hour, tmNow->tm_min, tmNow->tm_sec,
-            iParticleFirst, iParticleSecond, iParticleThird, iParticleFourth, 
-            iParticleFifth, iParticleSixth, iParticleSeventh, iParticleEighth, 
-            iLaserRefFirst, iLaserRefSecond);
+            cProtocolDataOutput);
 
     sprintf(cFileName, "instrument_history_record_%04d_%02d_%02d.txt", 
             tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
@@ -181,11 +179,9 @@ void out_instrument_history_record(
     // time_t timeToday = mktime(tmToday);
     
     // sprintf(cFileContent, "[%ld,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d],\r\n",
-    sprintf(cFileContent, "[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d],\r\n",
+    sprintf(cFileContent, "[%s],\r\n",
             // timeNow - timeToday,
-            iParticleFirst, iParticleSecond, iParticleThird, iParticleFourth, 
-            iParticleFifth, iParticleSixth, iParticleSeventh, iParticleEighth, 
-            iLaserRefFirst, iLaserRefSecond);
+            cProtocolDataOutput);
 
     sprintf(cFileName, "instrument_history_info_record_unixtime_%04d_%02d_%02d.txt", 
             tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
@@ -446,6 +442,15 @@ int append_file(char * cFileName, char * cFileContent)
     return 0;
 }
 
+int dir_exists(const char *path) {
+    struct stat st;
+    if (stat(path, &st) == 0) {
+        return 1; // 目录存在
+    } else {
+        return 0; // 目录不存在
+    }
+}
+
 
 #define   PRINT_MKDIR_OUTPUT_ON   1
 #define   PRINT_MKDIR_OUTPUT_OFF  0
@@ -453,26 +458,28 @@ int append_logcontent_to_file(char * cFileName, char * cFileContent)
 {
 	static int isPrintMkdirOutput = PRINT_MKDIR_OUTPUT_ON;
 	// int iRet = 0;
-    char cMkdirOutput[256];
+    char cMkdirOutput[256] = {0};
     // char cRemountOutput[256];
 	
-    char cFilePathWithName[128];
-    char cFilePathCommand[128];
+    char cFilePathWithName[128] = {0};
+    char cFilePathCommand[128] = {0};
     int   append_fd; // , send_res;
     time_t timeNow = time(NULL);
     struct tm*     tmNow    = localtime(&timeNow);
 
-	return append_file(cFileName, cFileContent);
+	// return append_file(cFileName, cFileContent);
 	
 	/********************************************************************
 	 * 经过测试发现，在SD卡上频繁写入会导致SD卡无法创建目录。
 	 * 为了规避这个问题，需要构造一套逻辑来解决。
 	 * 方法是当天的日志写在内部存储上，每当日期变化，把之前的日志移动到SD卡上。
+	 * 这里首先把目标目录创建好。
 	 ********************************************************************/
-	if((tmNow->tm_year != log_record_tm.tm_year)
-		|| (tmNow->tm_mon != log_record_tm.tm_mon)
-		|| (tmNow->tm_mday != log_record_tm.tm_mday))
+	sprintf(cFilePathCommand, "/root/sdcard/app/instrument_info/%d_%02d_%02d/",
+	            log_record_tm.tm_year + 1900, log_record_tm.tm_mon + 1, log_record_tm.tm_mday);
+	if(dir_exists(cFilePathCommand) == 0)
 	{
+		memset(cFilePathCommand, 0x00, 128);
 		// 这里的2>&1表示将标准错误（文件描述符2）重定向到标准输出（文件描述符1）。
 	    sprintf(cFilePathCommand, "mkdir -p /root/sdcard/app/instrument_info/%d_%02d_%02d/ 2>&1",
 	            log_record_tm.tm_year + 1900, log_record_tm.tm_mon + 1, log_record_tm.tm_mday);
@@ -500,16 +507,19 @@ int append_logcontent_to_file(char * cFileName, char * cFileContent)
     	    memcpy(&log_record_tm, localtime(&timeNow), sizeof(struct tm));
 	        return -1;
 		}
-		else 
-		{
-	        printf("get_cmd_printf(%s) return OK.\n",cFilePathCommand);
-			isPrintMkdirOutput = PRINT_MKDIR_OUTPUT_ON;
-		    sprintf(cFilePathCommand, 
-				"mv /root/app/instrument_info/* /root/sdcard/app/instrument_info/%d_%02d_%02d/ 2>&1",
-		        log_record_tm.tm_year + 1900, log_record_tm.tm_mon + 1, log_record_tm.tm_mday);
-			get_cmd_printf(cFilePathCommand, cMkdirOutput, 256);
-		}
-    	memcpy(&log_record_tm, localtime(&timeNow), sizeof(struct tm));
+	}
+	
+	if((tmNow->tm_year != log_record_tm.tm_year)
+		|| (tmNow->tm_mon != log_record_tm.tm_mon)
+		|| (tmNow->tm_mday != log_record_tm.tm_mday))
+	{
+		printf("get_cmd_printf(%s) return OK.\n",cFilePathCommand);
+		isPrintMkdirOutput = PRINT_MKDIR_OUTPUT_ON;
+		sprintf(cFilePathCommand, 
+			"mv /root/app/instrument_info/* /root/sdcard/app/instrument_info/%d_%02d_%02d/ 2>&1",
+			log_record_tm.tm_year + 1900, log_record_tm.tm_mon + 1, log_record_tm.tm_mday);
+		get_cmd_printf(cFilePathCommand, cMkdirOutput, 256);
+		memcpy(&log_record_tm, localtime(&timeNow), sizeof(struct tm));
 	}
 
 		
@@ -521,7 +531,7 @@ int append_logcontent_to_file(char * cFileName, char * cFileContent)
 	
         append_fd = open(cFilePathWithName, O_RDWR | O_CREAT);
         if (append_fd < 0) {
-	        // printf("append_file: open failed return %d\n", append_fd);
+	        printf("append_file: O_CREAT failed return %d\n", append_fd);
             return -1;
         }
     }
@@ -538,17 +548,16 @@ static void* thread_instrument_Protocol(void *arg)
 	convert_protocol_fd = open_ptc_port();
     // printf("uart Open...\n");
  
+	memset(IReg, 0x00, sizeof(int16_t) * IREG_MAX);
     // 2.1 设置串口参数
 	Protocol_Init(convert_protocol_fd);
 	while (1)
 	{
 		Protocol_Proc(convert_protocol_fd);
-		if(time(NULL) - timeNow >= 1)
+		if(time(NULL) - timeNow >= INSTRUMENT_HISTORY_TIME_SPAN)
 		{
 			timeNow = time(NULL);
-			out_instrument_history_record(
-				IReg[0], IReg[1], IReg[2], IReg[3], IReg[4], IReg[5], 
-				IReg[6], IReg[7], IReg[8], IReg[9], timeNow);
+			out_instrument_history_record(timeNow);
 		}
 	}
     close(convert_protocol_fd);
@@ -624,13 +633,13 @@ static void* thread_modbus_operation(void *arg)
 			// printf("read ends with ctx_modbus_uart = %d and return %d\n", 
 			//					modbus_fd, ret);
 			ret = Modbus_FrameAnalysis(ret);
-			
 			// printf("Start of Modbus_FrameAnalysis return %d\n", ret);
 			// for(int i = 0 ; i < ret; i++)
 			// {
 			// 		printf("<%02X> ", query[i]);
 			// }
 			// printf("\nEnd of Modbus_FrameAnalysis return %d\n", ret);
+			
 			// 下面的三个延时时间3000, 500, 100都是根据逻辑分析仪的分析结果得到的。
 			// 1. 其中收到数据以后，可以多等一会。也就是3ms。
 			// 2. DE翻转以后，需要稍微等待一下，以便于获取数据总线，也就是0.5ms。
@@ -666,9 +675,9 @@ static void* thread_modbus_operation(void *arg)
 		else if (ret < 0)
 		{
 			timeNow = time(NULL);
-			// printf("start out_usart_info_record USART_OFFLINE because modbus_receive returns %d\n", ret);
+			printf("start out_usart_info_record USART_OFFLINE because modbus_receive returns %d\n", ret);
 			out_usart_info_record(USART_OFFLINE, timeNow);
-			// printf("end out_usart_info_record USART_OFFLINE because modbus_receive returns %d\n", ret);
+			printf("end out_usart_info_record USART_OFFLINE because modbus_receive returns %d\n", ret);
 		}
 		// Unit Reset
 	    // printf("Unit Reset with iSpanCount = %d\n", iSpanCount);
@@ -720,6 +729,7 @@ int main(int argc, char ** argv)
 		}
 	}
 
+	// Init_All_Periph
 	PARAM_Init();
 	SysConfig_Init();
 	memcpy(&HReg[CP_EEP_BASE], &CP_DefaultValue[0], sizeof(uint16_t) * CP_EEP_MAX);

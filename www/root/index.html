@@ -1110,6 +1110,23 @@ funs["su"] = function() {
                           },
                           mode: 'x',
                         }
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                // JavaScript的Intl对象可以方便地进行各种国际化处理，包括货币、日期、时间和数字格式化
+                                // minimumFractionDigits(Number): 指定最少小数位数
+                                label += new Intl.NumberFormat(
+                                   'en-US', {minimumFractionDigits: 6}).format(context.parsed.y) ;
+                            }
+                            return label;
+                          }
+                        }
                       }
                     }
                   },

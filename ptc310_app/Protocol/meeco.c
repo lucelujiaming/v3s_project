@@ -237,3 +237,54 @@ uint8_t MEECO_Analysis(uint16_t len)
 
 	return err;
 }
+
+/*
+   MEECO：Tracer2 ，Aquavolt
+   寄存器     类型      功能描述    
+   30001   Int     Communication Fault
+   30002   Int     Operation Mode  
+   30003   Int     Alarm Message   
+   30004   Real    Display Value   
+   30006   Real    Flow Setpoint
+ */
+uint16_t MEECO_DataOutput(char* strOutput)
+{
+	char cDisplayValueBuffer[4] = {0};
+	char cFlowSetpointBuffer[4] = {0};
+	float * floatDisplayValue  = (float *)cDisplayValueBuffer;
+	float * floatFlowSetpoint = (float *)cFlowSetpointBuffer;
+    
+	if(little_endian)
+	{
+		cDisplayValueBuffer[3] = protocol_buff[4]>>8;
+		cDisplayValueBuffer[2] = protocol_buff[4]&0x00FF;
+		cDisplayValueBuffer[1] = protocol_buff[3]>>8;
+		cDisplayValueBuffer[0] = protocol_buff[3]&0x00FF;
+		
+		cFlowSetpointBuffer[3] = protocol_buff[6]>>8;
+		cFlowSetpointBuffer[2] = protocol_buff[6]&0x00FF;
+		cFlowSetpointBuffer[1] = protocol_buff[5]>>8;
+		cFlowSetpointBuffer[0] = protocol_buff[5]&0x00FF;
+				printf("DELTAF_DataOutput::little_endian\r\n");
+	}
+	else
+	{
+		cDisplayValueBuffer[3] = protocol_buff[3]>>8;
+		cDisplayValueBuffer[2] = protocol_buff[3]&0x00FF;
+		cDisplayValueBuffer[1] = protocol_buff[4]>>8;
+		cDisplayValueBuffer[0] = protocol_buff[4]&0x00FF;
+		                                       
+		cFlowSetpointBuffer[3] = protocol_buff[5]>>8;
+		cFlowSetpointBuffer[2] = protocol_buff[5]&0x00FF;
+		cFlowSetpointBuffer[1] = protocol_buff[6]>>8;
+		cFlowSetpointBuffer[0] = protocol_buff[6]&0x00FF;
+				printf("DELTAF_DataOutput::big_endian\r\n");
+	}
+    sprintf(strOutput, "%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f",
+            *floatDisplayValue,  // 30004   Real    Display Value   
+            *floatFlowSetpoint,  // 30006   Real    Flow Setpoint
+            0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0);
+	return 0;
+}
+

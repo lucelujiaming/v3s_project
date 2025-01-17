@@ -27,7 +27,10 @@ static volatile MTIMER tm_FrmRcvDelay = {"FrmRcvDelay", 0, false, false, {0, 0},
 static volatile USART_RCV_DEF RecvSet;
 
 void Instrument_USART_Init()
-{
+{	
+	Timer_Init((MTIMER*)&tm_ByteOvr);
+	Timer_Init((MTIMER*)&tm_FrmRcvDelay);
+	
 	Timer_SetParam((MTIMER*)&tm_ByteOvr, true, 3);
 	Timer_Restart((MTIMER*)&tm_ByteOvr);
 	Timer_SetParam((MTIMER*)&tm_FrmRcvDelay, true, 5);

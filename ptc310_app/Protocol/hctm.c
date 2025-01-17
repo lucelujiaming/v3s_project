@@ -86,3 +86,66 @@ uint8_t HCTM_WCPC0703E_Analysis(uint16_t len)
 	return 0;
 }
 
+/*
+    HCTM：WCPC-0703E
+	寄存器	类型	功能描述
+	30001	Int Communication Fault
+	30002	Real	Particle / SEC
+	30004	Real	Particle / cm3
+	30006	Real	Total Particle
+
+ */
+uint16_t HCTM_WCPC0703E_DataOutput(char* strOutput)
+{
+	char cParticleSECBuffer[4] = {0};
+	char cParticleCM3Buffer[4] = {0};
+	char cTotalParticleBuffer[4] = {0};
+	float * floatParticleSEC    = (float *)cParticleSECBuffer;
+	float * floatParticleCM3    = (float *)cParticleCM3Buffer;
+	float * floatTotalParticle  = (float *)cTotalParticleBuffer;
+	
+	if(little_endian)
+	{
+		cParticleSECBuffer[3] = protocol_buff[2]>>8;
+		cParticleSECBuffer[2] = protocol_buff[2]&0x00FF;
+		cParticleSECBuffer[1] = protocol_buff[1]>>8;
+		cParticleSECBuffer[0] = protocol_buff[1]&0x00FF;
+        
+		cParticleCM3Buffer[3] = protocol_buff[4]>>8;
+		cParticleCM3Buffer[2] = protocol_buff[4]&0x00FF;
+		cParticleCM3Buffer[1] = protocol_buff[3]>>8;
+		cParticleCM3Buffer[0] = protocol_buff[3]&0x00FF;
+        
+		cTotalParticleBuffer[3] = protocol_buff[6]>>8;
+		cTotalParticleBuffer[2] = protocol_buff[6]&0x00FF;
+		cTotalParticleBuffer[1] = protocol_buff[5]>>8;
+		cTotalParticleBuffer[0] = protocol_buff[5]&0x00FF;
+				printf("DELTAF_DataOutput::little_endian\r\n");
+	}
+	else
+	{
+		cParticleSECBuffer[3] = protocol_buff[1]>>8;
+		cParticleSECBuffer[2] = protocol_buff[1]&0x00FF;
+		cParticleSECBuffer[1] = protocol_buff[2]>>8;
+		cParticleSECBuffer[0] = protocol_buff[2]&0x00FF;
+        
+		cParticleCM3Buffer[3] = protocol_buff[3]>>8;
+		cParticleCM3Buffer[2] = protocol_buff[3]&0x00FF;
+		cParticleCM3Buffer[1] = protocol_buff[4]>>8;
+		cParticleCM3Buffer[0] = protocol_buff[4]&0x00FF;
+        
+		cTotalParticleBuffer[3] = protocol_buff[5]>>8;
+		cTotalParticleBuffer[2] = protocol_buff[5]&0x00FF;
+		cTotalParticleBuffer[1] = protocol_buff[6]>>8;
+		cTotalParticleBuffer[0] = protocol_buff[6]&0x00FF;
+				printf("DELTAF_DataOutput::big_endian\r\n");
+	}
+    sprintf(strOutput, "%f,%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f",
+            *floatParticleSEC,     // 30002	Real	Particle / SEC
+            *floatParticleCM3,     // 30004	Real	Particle / cm3
+            *floatTotalParticle,   // 30006	Real	Total Particle
+            0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0);
+	return 0;
+}
+

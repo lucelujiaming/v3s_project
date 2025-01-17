@@ -9,6 +9,8 @@ void DELTAF_Init(int fd, uint16_t addr);
 //////////////////////////////////////////////////////
 uint16_t DELTAF_Request(void);
 uint8_t DELTAF_Analysis(uint16_t len);
+uint16_t DELTAF_DataOutput(char* strOutput);
+
 #endif
 
 

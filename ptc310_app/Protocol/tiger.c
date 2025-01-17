@@ -12,7 +12,7 @@
 
 static uint8_t cmd_cnt;
 
-char TIGER_Cmd[TIGER_CMD_MAX][10]= 
+char TIGER_Cmd[TIGER_CMD_MAX][10]=
 {
 	{'C','O','N','C',0x0D,0X0A},
 	{'O','P','M','O','D','E',0x0D,0X0A},
@@ -34,15 +34,15 @@ void TIGER_Init(int fd, uint16_t addr)
 uint16_t TIGER_Request(void)
 {
 	uint8_t len;
-	
+
 	if(++cmd_cnt>= TIGER_CMD_MAX)
 	{
 		cmd_cnt= 0;
 	}
-	
+
 	len= strlen(TIGER_Cmd[cmd_cnt]);
 	memmove(serial_buff,(const char*)TIGER_Cmd[cmd_cnt],len);
-	
+
 	return len;
 }
 
@@ -52,9 +52,9 @@ uint8_t TIGER_Analysis(uint16_t len)
 	uint8_t err;
 	float f_value;
 	uint32_t u32_value;
-	
+
 	err= 1;
-	
+
 	switch(cmd_cnt)
 	{
 	case 0:
@@ -72,15 +72,15 @@ uint8_t TIGER_Analysis(uint16_t len)
 				break;
 			}
 		}
-		
+
 		if(str_size)
 		{
 			memset(data_temp,0,20);
 			strncpy((char*)data_temp,(const char*)serial_buff,str_size);
-			
+
 			f_value= atof(data_temp);
 			u32_value= real_to_u32(f_value);
-			
+
 			if(little_endian)
 			{
 				protocol_buff[6]= _low_word_int32(u32_value);
@@ -91,7 +91,7 @@ uint8_t TIGER_Analysis(uint16_t len)
 				protocol_buff[6]= _high_word_int32(u32_value);
 				protocol_buff[7]= _low_word_int32(u32_value);
 			}
-			
+
 			err= 0;
 		}
 		break;
@@ -112,7 +112,7 @@ uint8_t TIGER_Analysis(uint16_t len)
 			}
 			str_size++;
 		}
-		
+
 		if(str_size)
 		{
 			strncpy((char*)&protocol_buff[1],(const char*)(serial_buff),str_size);
@@ -125,3 +125,41 @@ uint8_t TIGER_Analysis(uint16_t len)
 
 	return err;
 }
+
+
+/*
+    TIGER： HALO，HALO 3Q，SPARK
+    Register   Type    Description
+    30001      Int     Communication Fault
+    30002      Int     Name
+    30006      Int     Operating Mode
+    30007      Real    Concertration(ppb)
+ */
+uint16_t TIGER_DataOutput(char* strOutput)
+{
+	char cConcertrationBuffer[4] = {0};
+	float * floatConcertration  = (float *)cConcertrationBuffer;
+
+	if(little_endian)
+	{
+		cConcertrationBuffer[3] = protocol_buff[7]>>8;
+		cConcertrationBuffer[2] = protocol_buff[7]&0x00FF;
+		cConcertrationBuffer[1] = protocol_buff[6]>>8;
+		cConcertrationBuffer[0] = protocol_buff[6]&0x00FF;
+				printf("DELTAF_DataOutput::little_endian\r\n");
+	}
+	else
+	{
+		cConcertrationBuffer[3] = protocol_buff[6]>>8;
+		cConcertrationBuffer[2] = protocol_buff[6]&0x00FF;
+		cConcertrationBuffer[1] = protocol_buff[7]>>8;
+		cConcertrationBuffer[0] = protocol_buff[7]&0x00FF;
+				printf("DELTAF_DataOutput::big_endian\r\n");
+	}
+    sprintf(strOutput, "%f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f",
+            *floatConcertration, // Real    Concertration(ppb)
+            0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0);
+	return 0;
+}
+

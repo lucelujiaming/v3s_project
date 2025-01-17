@@ -225,3 +225,188 @@ uint8_t SERVOMEX_K1000A_Analysis(uint16_t len)
 ERROR_EXIT:	
 	return 1;
 }
+
+/*
+    Register    Type    Description
+    30001       Int     Communication Fault
+    30002       Int     Status
+    30003       Real    Concentration_0
+    30005       Int     Unit_0
+    30006       Int     Peak_Valid_0
+    30007       Real    Concentration_1
+    30009       Int     Unit_1
+    30010       Int     Peak_Valid_1
+    30011       Real    Concentration_2
+    30013       Int     Unit_2
+    30014       Int     Peak_Valid_2
+    30015       Real    Concentration_3
+    30017       Int     Unit_3
+    30018       Int     Peak_Valid_3
+    30019       Real    Concentration_4
+    30021       Int     Unit_4
+    30022       Int     Peak_Valid_4
+    30023       Real    Concentration_5
+    30025       Int     Unit_5
+    30026       Int     Peak_Valid_5
+    30027       Real    Concentration_6
+    30029       Int     Unit_6
+    30030       Int     Peak_Valid_6
+    30031       Real    Concentration_7
+    30033       Int     Unit_7
+    30034       Int     Peak_Valid_7
+    30035       Real    Concentration_8
+    30037       Int     Unit_8
+    30038       Int     Peak_Valid_8
+    30039       Real    Concentration_9
+    30041       Int     Unit_9
+    30042       Int     Peak_Valid_9
+ */
+
+uint16_t SERVOMEX_K1000A_DataOutput(char* strOutput)
+{
+    char cConcentrationBuffer[4] = {0};
+	float * floatConcentrationrationBufferPtr   = (float *)(cConcentrationBuffer);
+
+    float  floatConcentration[10];
+
+	if(little_endian)
+	{
+        // Concentration_0
+		cConcentrationBuffer[3] = protocol_buff[3]>>8;
+		cConcentrationBuffer[2] = protocol_buff[3]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[2]>>8;
+		cConcentrationBuffer[0] = protocol_buff[2]&0x00FF;
+        floatConcentration[0] = *floatConcentrationrationBufferPtr;
+        // Concentration_1
+		cConcentrationBuffer[3] = protocol_buff[7]>>8;
+		cConcentrationBuffer[2] = protocol_buff[7]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[6]>>8;
+		cConcentrationBuffer[0] = protocol_buff[6]&0x00FF;
+        floatConcentration[1] = *floatConcentrationrationBufferPtr;
+        // Concentration_2
+		cConcentrationBuffer[3] = protocol_buff[11]>>8;
+		cConcentrationBuffer[2] = protocol_buff[11]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[10]>>8;
+		cConcentrationBuffer[0] = protocol_buff[10]&0x00FF;
+        floatConcentration[2] = *floatConcentrationrationBufferPtr;
+        // Concentration_3
+		cConcentrationBuffer[3] = protocol_buff[15]>>8;
+		cConcentrationBuffer[2] = protocol_buff[15]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[14]>>8;
+		cConcentrationBuffer[0] = protocol_buff[14]&0x00FF;
+        floatConcentration[3] = *floatConcentrationrationBufferPtr;
+        // Concentration_4
+		cConcentrationBuffer[3] = protocol_buff[19]>>8;
+		cConcentrationBuffer[2] = protocol_buff[19]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[18]>>8;
+		cConcentrationBuffer[0] = protocol_buff[18]&0x00FF;
+        floatConcentration[4] = *floatConcentrationrationBufferPtr;
+        // Concentration_5
+		cConcentrationBuffer[3] = protocol_buff[23]>>8;
+		cConcentrationBuffer[2] = protocol_buff[23]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[22]>>8;
+		cConcentrationBuffer[0] = protocol_buff[22]&0x00FF;
+        floatConcentration[5] = *floatConcentrationrationBufferPtr;
+        // Concentration_6
+		cConcentrationBuffer[3] = protocol_buff[27]>>8;
+		cConcentrationBuffer[2] = protocol_buff[27]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[26]>>8;
+		cConcentrationBuffer[0] = protocol_buff[26]&0x00FF;
+        floatConcentration[6] = *floatConcentrationrationBufferPtr;
+        // Concentration_7
+		cConcentrationBuffer[3] = protocol_buff[31]>>8;
+		cConcentrationBuffer[2] = protocol_buff[31]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[30]>>8;
+		cConcentrationBuffer[0] = protocol_buff[30]&0x00FF;
+        floatConcentration[7] = *floatConcentrationrationBufferPtr;
+        // Concentration_8
+		cConcentrationBuffer[3] = protocol_buff[35]>>8;
+		cConcentrationBuffer[2] = protocol_buff[35]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[34]>>8;
+		cConcentrationBuffer[0] = protocol_buff[34]&0x00FF;
+        floatConcentration[8] = *floatConcentrationrationBufferPtr;
+        // Concentration_9
+		cConcentrationBuffer[3] = protocol_buff[39]>>8;
+		cConcentrationBuffer[2] = protocol_buff[39]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[38]>>8;
+		cConcentrationBuffer[0] = protocol_buff[38]&0x00FF;
+        floatConcentration[9] = *floatConcentrationrationBufferPtr;
+    }
+    else
+	{
+        // Concentration_0
+		cConcentrationBuffer[3] = protocol_buff[2]>>8;
+		cConcentrationBuffer[2] = protocol_buff[2]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[3]>>8;
+		cConcentrationBuffer[0] = protocol_buff[3]&0x00FF;
+        floatConcentration[0] = *floatConcentrationrationBufferPtr;
+        // Concentration_1
+		cConcentrationBuffer[3] = protocol_buff[6]>>8;
+		cConcentrationBuffer[2] = protocol_buff[6]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[7]>>8;
+		cConcentrationBuffer[0] = protocol_buff[7]&0x00FF;
+        floatConcentration[1] = *floatConcentrationrationBufferPtr;
+        // Concentration_2
+		cConcentrationBuffer[3] = protocol_buff[10]>>8;
+		cConcentrationBuffer[2] = protocol_buff[10]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[11]>>8;
+		cConcentrationBuffer[0] = protocol_buff[11]&0x00FF;
+        floatConcentration[2] = *floatConcentrationrationBufferPtr;
+        // Concentration_3
+		cConcentrationBuffer[3] = protocol_buff[14]>>8;
+		cConcentrationBuffer[2] = protocol_buff[14]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[15]>>8;
+		cConcentrationBuffer[0] = protocol_buff[15]&0x00FF;
+        floatConcentration[3] = *floatConcentrationrationBufferPtr;
+        // Concentration_4
+		cConcentrationBuffer[3] = protocol_buff[18]>>8;
+		cConcentrationBuffer[2] = protocol_buff[18]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[19]>>8;
+		cConcentrationBuffer[0] = protocol_buff[19]&0x00FF;
+        floatConcentration[4] = *floatConcentrationrationBufferPtr;
+        // Concentration_5
+		cConcentrationBuffer[3] = protocol_buff[22]>>8;
+		cConcentrationBuffer[2] = protocol_buff[22]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[23]>>8;
+		cConcentrationBuffer[0] = protocol_buff[23]&0x00FF;
+        floatConcentration[5] = *floatConcentrationrationBufferPtr;
+        // Concentration_6
+		cConcentrationBuffer[3] = protocol_buff[26]>>8;
+		cConcentrationBuffer[2] = protocol_buff[26]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[27]>>8;
+		cConcentrationBuffer[0] = protocol_buff[27]&0x00FF;
+        floatConcentration[6] = *floatConcentrationrationBufferPtr;
+        // Concentration_7
+		cConcentrationBuffer[3] = protocol_buff[30]>>8;
+		cConcentrationBuffer[2] = protocol_buff[30]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[31]>>8;
+		cConcentrationBuffer[0] = protocol_buff[31]&0x00FF;
+        floatConcentration[7] = *floatConcentrationrationBufferPtr;
+        // Concentration_8
+		cConcentrationBuffer[3] = protocol_buff[34]>>8;
+		cConcentrationBuffer[2] = protocol_buff[34]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[35]>>8;
+		cConcentrationBuffer[0] = protocol_buff[35]&0x00FF;
+        floatConcentration[8] = *floatConcentrationrationBufferPtr;
+        // Concentration_9
+		cConcentrationBuffer[3] = protocol_buff[38]>>8;
+		cConcentrationBuffer[2] = protocol_buff[38]&0x00FF;
+		cConcentrationBuffer[1] = protocol_buff[39]>>8;
+		cConcentrationBuffer[0] = protocol_buff[39]&0x00FF;
+        floatConcentration[9] = *floatConcentrationrationBufferPtr;
+    }
+    sprintf(strOutput, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f",
+          floatConcentration[0],    // Real    Concentration_0
+          floatConcentration[1],    // Real    Concentration_1
+          floatConcentration[2],    // Real    Concentration_2
+          floatConcentration[3],    // Real    Concentration_3
+          floatConcentration[4],    // Real    Concentration_4
+          floatConcentration[5],    // Real    Concentration_5
+          floatConcentration[6],    // Real    Concentration_6
+          floatConcentration[7],    // Real    Concentration_7
+          floatConcentration[8],    // Real    Concentration_8
+          floatConcentration[9]     // Real    Concentration_9
+          );
+    return 0;
+}
+

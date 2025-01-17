@@ -68,8 +68,9 @@ uint8_t read_input_reg(uint16_t frm_len)
 		printf("read_input_reg ILLEGAL_DATA_VALUE\n");
 		return ILLEGAL_DATA_VALUE;
 	}
-	
+	// 起始地址
 	reg_addr= _get_int16_int8_big_endian(&mb_data_buf[2]);
+	// 寄存器数量
 	points= _get_int16_int8_big_endian(&mb_data_buf[4]);
 
 	bytes= points*2;

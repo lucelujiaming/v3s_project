@@ -228,3 +228,155 @@ uint8_t PEAK_Analysis(uint16_t len)
 
 	return err;
 }
+
+/*
+    PEAKS/P9000: RCP, FID, HDID
+    寄存器     类型   功能描述
+    30001       Int	    Communication Fault
+    30002       Int	    Alarm	
+    30003       Int	    Stream Number / GAS1	
+    30004       Int	    Name / GAS1	
+    30008       Real    Area / GAS1	
+    30010       Real    Concent / GAS1	
+    30012       Int	    Name / GAS2	
+    30016       Real    Area / GAS2	
+    30018       Real    Concent / GAS2	
+    30020       Int	    Name / GAS3	
+    30024       Real    Area / GAS3	
+    30026       Real    Concent / GAS3	
+    30028       Int	    Name / GAS4	
+    30032       Real    Area / GAS4	
+    30034       Real    Concent / GAS4	
+ */
+uint16_t PEAK_DataOutput(char* strOutput)
+{
+    char cAreaBuffer[4] = {0};
+    char cConcentBuffer[4] = {0};
+    
+	float * floatAreaBufferPtr      = (float *)(cAreaBuffer);
+	float * floatConcentBufferPtr   = (float *)(cConcentBuffer);
+    
+    float  floatArea[4], floatConcent[4];
+    
+	if(little_endian)
+	{
+        // Area / GAS1	
+		cAreaBuffer[3] = protocol_buff[8]>>8;
+		cAreaBuffer[2] = protocol_buff[8]&0x00FF;
+		cAreaBuffer[1] = protocol_buff[7]>>8;
+		cAreaBuffer[0] = protocol_buff[7]&0x00FF;
+        floatArea[0] = *floatAreaBufferPtr;
+        // Concent / GAS1
+		cConcentBuffer[3] = protocol_buff[10]>>8;
+		cConcentBuffer[2] = protocol_buff[10]&0x00FF;
+		cConcentBuffer[1] = protocol_buff[9]>>8;
+		cConcentBuffer[0] = protocol_buff[9]&0x00FF;
+        floatConcent[0] = *floatConcentBufferPtr;
+        
+        // Area / GAS2
+		cAreaBuffer[3] = protocol_buff[16]>>8;
+		cAreaBuffer[2] = protocol_buff[16]&0x00FF;
+		cAreaBuffer[1] = protocol_buff[15]>>8;
+		cAreaBuffer[0] = protocol_buff[15]&0x00FF;
+        floatArea[1] = *floatAreaBufferPtr;
+        // Concent / GAS2
+		cConcentBuffer[3] = protocol_buff[18]>>8;
+		cConcentBuffer[2] = protocol_buff[18]&0x00FF;
+		cConcentBuffer[1] = protocol_buff[17]>>8;
+		cConcentBuffer[0] = protocol_buff[17]&0x00FF;
+        floatConcent[1] = *floatConcentBufferPtr;
+        
+        // Area / GAS3
+		cAreaBuffer[3] = protocol_buff[24]>>8;
+		cAreaBuffer[2] = protocol_buff[24]&0x00FF;
+		cAreaBuffer[1] = protocol_buff[23]>>8;
+		cAreaBuffer[0] = protocol_buff[23]&0x00FF;
+        floatArea[2] = *floatAreaBufferPtr;
+        // Concent / GAS3
+		cConcentBuffer[3] = protocol_buff[26]>>8;
+		cConcentBuffer[2] = protocol_buff[26]&0x00FF;
+		cConcentBuffer[1] = protocol_buff[25]>>8;
+		cConcentBuffer[0] = protocol_buff[25]&0x00FF;
+        floatConcent[2] = *floatConcentBufferPtr;
+        
+        // Area / GAS4
+		cAreaBuffer[3] = protocol_buff[32]>>8;
+		cAreaBuffer[2] = protocol_buff[32]&0x00FF;
+		cAreaBuffer[1] = protocol_buff[31]>>8;
+		cAreaBuffer[0] = protocol_buff[31]&0x00FF;
+        floatArea[3] = *floatAreaBufferPtr;
+        // Concent / GAS4
+		cConcentBuffer[3] = protocol_buff[34]>>8;
+		cConcentBuffer[2] = protocol_buff[34]&0x00FF;
+		cConcentBuffer[1] = protocol_buff[33]>>8;
+		cConcentBuffer[0] = protocol_buff[33]&0x00FF;
+        floatConcent[3] = *floatConcentBufferPtr;
+    }
+    else
+	{
+        // Area / GAS1	
+		cAreaBuffer[3] = protocol_buff[7]>>8;
+		cAreaBuffer[2] = protocol_buff[7]&0x00FF;
+		cAreaBuffer[1] = protocol_buff[8]>>8;
+		cAreaBuffer[0] = protocol_buff[8]&0x00FF;
+        floatArea[0] = *floatAreaBufferPtr;
+        // Concent / GAS1
+		cConcentBuffer[3] = protocol_buff[9]>>8;
+		cConcentBuffer[2] = protocol_buff[9]&0x00FF;
+		cConcentBuffer[1] = protocol_buff[10]>>8;
+		cConcentBuffer[0] = protocol_buff[10]&0x00FF;
+        floatConcent[0] = *floatConcentBufferPtr;
+        
+        // Area / GAS2
+		cAreaBuffer[3] = protocol_buff[15]>>8;
+		cAreaBuffer[2] = protocol_buff[15]&0x00FF;
+		cAreaBuffer[1] = protocol_buff[16]>>8;
+		cAreaBuffer[0] = protocol_buff[16]&0x00FF;
+        floatArea[1] = *floatAreaBufferPtr;
+        // Concent / GAS2
+		cConcentBuffer[3] = protocol_buff[17]>>8;
+		cConcentBuffer[2] = protocol_buff[17]&0x00FF;
+		cConcentBuffer[1] = protocol_buff[18]>>8;
+		cConcentBuffer[0] = protocol_buff[18]&0x00FF;
+        floatConcent[1] = *floatConcentBufferPtr;
+        
+        // Area / GAS3
+		cAreaBuffer[3] = protocol_buff[23]>>8;
+		cAreaBuffer[2] = protocol_buff[23]&0x00FF;
+		cAreaBuffer[1] = protocol_buff[24]>>8;
+		cAreaBuffer[0] = protocol_buff[24]&0x00FF;
+        floatArea[2] = *floatAreaBufferPtr;
+        // Concent / GAS3
+		cConcentBuffer[3] = protocol_buff[25]>>8;
+		cConcentBuffer[2] = protocol_buff[25]&0x00FF;
+		cConcentBuffer[1] = protocol_buff[26]>>8;
+		cConcentBuffer[0] = protocol_buff[26]&0x00FF;
+        floatConcent[2] = *floatConcentBufferPtr;
+        
+        // Area / GAS4
+		cAreaBuffer[3] = protocol_buff[31]>>8;
+		cAreaBuffer[2] = protocol_buff[31]&0x00FF;
+		cAreaBuffer[1] = protocol_buff[32]>>8;
+		cAreaBuffer[0] = protocol_buff[32]&0x00FF;
+        floatArea[3] = *floatAreaBufferPtr;
+        // Concent / GAS4
+		cConcentBuffer[3] = protocol_buff[33]>>8;
+		cConcentBuffer[2] = protocol_buff[33]&0x00FF;
+		cConcentBuffer[1] = protocol_buff[34]>>8;
+		cConcentBuffer[0] = protocol_buff[34]&0x00FF;
+        floatConcent[3] = *floatConcentBufferPtr;
+    }
+    sprintf(strOutput, "%f,%f,%f,%f,%f,%f,%f,%f,%.1f,%.1f",
+          floatArea[0],       // Real    Area / GAS1	
+          floatConcent[0],    // Real    Concent / GAS1	
+          floatArea[1],       // Real    Area / GAS2	
+          floatConcent[1],    // Real    Concent / GAS2	
+          floatArea[2],       // Real    Area / GAS3	
+          floatConcent[2],    // Real    Concent / GAS3	
+          floatArea[3],       // Real    Area / GAS4	
+          floatConcent[3],    // Real    Concent / GAS4	
+          0.0, 0.0);
+        
+	return 0;
+}
+

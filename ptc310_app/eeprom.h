@@ -13,6 +13,7 @@ uint16_t EE_Init(void);
 uint16_t EE_ReadVariable(uint16_t VirtAddress, uint16_t* Data);
 uint16_t EE_WriteVariable(uint16_t VirtAddress, uint16_t Data);
 
+extern uint16_t VirtAddVarTab[NumbOfVar];
 #endif /* __EEPROM_H */
 
 /******************* (C) COPYRIGHT 2009 STMicroelectronics *****END OF FILE****/

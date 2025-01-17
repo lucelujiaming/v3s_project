@@ -38,7 +38,9 @@
 #define PT_RELIYA_HGPC_100				17
 
 void Protocol_Init(int fd);
-// void Protocol_Proc(int fd);
+uint16_t Protocol_DataOutput(char * strOutput);
+
+void Protocol_Proc(int fd);
 
 extern int16_t HReg[HREG_MAX];
 extern int16_t IReg[IREG_MAX];

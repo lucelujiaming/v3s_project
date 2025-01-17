@@ -1,6 +1,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "eeprom.h"
 
+uint16_t VirtAddVarTab[NumbOfVar];
+
 uint16_t EE_Init(void)
 {
     return 1;

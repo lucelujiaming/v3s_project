@@ -24,11 +24,11 @@
 
 #include    "cJSON.h"
 
-#define INSTRUMENT_INFO_STR_LEN     4096
+#define INSTRUMENT_INFO_STR_LEN     8192
 #define BATTERY_INFO_STR_LEN        1024
 #define USART_INFO_STR_LEN          1024
 
-#define INFO_STR_LEN                5120
+#define INFO_STR_LEN                (INSTRUMENT_INFO_STR_LEN + BATTERY_INFO_STR_LEN + USART_INFO_STR_LEN) // 5120
 
 #define INFO_STR_LAST_COMMA         2
 
@@ -63,6 +63,22 @@ typedef struct {
     char btime[16];
 } FIRMWARE_T;
 // Fireware decode macro and struct end
+
+int is_current_date(char * recordDateTime) {
+    char strDate[128] = {0};	
+	time_t timeNow = time(NULL);
+	struct tm*	   tmNow	= localtime(&timeNow);
+	
+    sprintf(strDate, "%04d_%02d_%02d", 
+            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
+	if(strncmp(strDate, recordDateTime, strlen(strDate)) == 0)
+	{
+		return 1;   // recordDateTime is today.
+	}
+	else {
+		return 0;  // recordDateTime is not today.
+	}
+}
 
 static int get_cmd_printf(char *cmd, char *buf, int bufSize)
 {
@@ -391,11 +407,12 @@ void statusProc(Webs *wp)
     }
     else if(strcmp(pMode, "get_history_datelist") == 0)
     {
-        char datelist_string[APP_PATH_LEN] = "";
+		// 4096 / 15 = 273 days
+        char datelist_string[4096] = "";
         sprintf(info_first_str, 
            "ls -d /root/sdcard/app/instrument_info/2*_*_* | sed 's/\\\///' | sed 's/.*info\\\///' | sed 's/\\\(.*\\\)/ \\\"\\1\\\",/'");
         trace(2, "[%s:%s:%d] info_first_str = %s", __FILE__, __FUNCTION__, __LINE__, info_first_str);
-        get_cmd_printf(info_first_str, datelist_string, APP_PATH_LEN);
+        get_cmd_printf(info_first_str, datelist_string, 4096);
         // Remove last ","
         datelist_string[strlen(datelist_string) - 1] = '\0';
         sprintf(info_str, "{ \"date\": [ %s ] }", datelist_string);
@@ -417,6 +434,19 @@ void statusProc(Webs *wp)
         pRecordDateTime = websGetVar(wp, "record_time", "");
         if(strlen(pRecordDateTime) > 0)
         {
+			// The Directionary should always exists 
+			// because record_time comes from get_history_datelist command.
+			if(is_current_date(pRecordDateTime) == 1)
+			{
+		    	char cFilePathCommand[128] = {0};
+		    	char cCopyFileOutput[128] = {0};
+				// Copy current log to sdcard
+				sprintf(cFilePathCommand, 
+					"cp /root/app/instrument_info/* /root/sdcard/app/instrument_info/%s/ 2>&1",
+					pRecordDateTime);
+				get_cmd_printf(cFilePathCommand, cCopyFileOutput, 128);
+			}
+
             int iInstrumentInfoFileSize = 0;
             struct stat stInstrumentInfoFile;
             sprintf(info_first_str, 
@@ -456,31 +486,51 @@ void statusProc(Webs *wp)
                     __FILE__, __FUNCTION__, __LINE__, 
                     pRecordDateTime, pRecordDateTime, iBatteryInfoFileSize);
 			
-			if(((iInstrumentInfoFileSize + iUsartInfoFileSize + iBatteryInfoFileSize) < INFO_STR_LEN)
-                && (iInstrumentInfoFileSize > 0) && (iUsartInfoFileSize > 0) && (iBatteryInfoFileSize > 0))
+			if((iInstrumentInfoFileSize + iUsartInfoFileSize + iBatteryInfoFileSize) < INFO_STR_LEN)
 			{
-                sprintf(info_first_str, 
-                    "cat /root/sdcard/app/instrument_info/%s/instrument_history_info_record_unixtime_%s.txt", 
-                    pRecordDateTime, pRecordDateTime);
-	            get_cmd_printf(info_first_str, instrument_info_string_ptr, INSTRUMENT_INFO_STR_LEN);
-                // Remove last ",\r\n"
-                instrument_info_string_ptr[strlen(instrument_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
-                trace(2, "[%s:%s:%d] instrument_info_string_ptr = %s", __FILE__, __FUNCTION__, __LINE__, instrument_info_string_ptr);
+				if(iInstrumentInfoFileSize > 0)
+				{
+	                sprintf(info_first_str, 
+	                    "head -%d /root/sdcard/app/instrument_info/%s/instrument_history_info_record_unixtime_%s.txt", 
+	                    TIME_SCALE, pRecordDateTime, pRecordDateTime);
+		            get_cmd_printf(info_first_str, instrument_info_string_ptr, INSTRUMENT_INFO_STR_LEN);
+	                // Remove last ",\r\n"
+	                instrument_info_string_ptr[strlen(instrument_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
+	                trace(2, "[%s:%s:%d] instrument_info_string_ptr = %s", __FILE__, __FUNCTION__, __LINE__, instrument_info_string_ptr);
+				}
+				else 
+	            {
+	                sprintf(instrument_info_string_ptr, "[0,0,0,0,0,0,0,0,0,0]");
+	            }
 				
-                sprintf(info_first_str, 
-                    "cat /root/sdcard/app/instrument_info/%s/usart_info_record_unixtime_%s.txt", 
-                    pRecordDateTime, pRecordDateTime);
-	            get_cmd_printf(info_first_str, battery_info_string_ptr, BATTERY_INFO_STR_LEN);
-                // Remove last ",\r\n"
-                battery_info_string_ptr[strlen(battery_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
-                trace(2, "[%s:%s:%d] battery_info_string_ptr = %s", __FILE__, __FUNCTION__, __LINE__, battery_info_string_ptr);
+				if(iBatteryInfoFileSize > 0)
+				{
+	                sprintf(info_first_str, 
+	                    "head -%d /root/sdcard/app/instrument_info/%s/battery_info_record_unixtime_%s.txt", 
+	                    TIME_SCALE, pRecordDateTime, pRecordDateTime);
+		            get_cmd_printf(info_first_str, battery_info_string_ptr, BATTERY_INFO_STR_LEN);
+	                // Remove last ",\r\n"
+	                battery_info_string_ptr[strlen(battery_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
+	                trace(2, "[%s:%s:%d] battery_info_string_ptr = %s", __FILE__, __FUNCTION__, __LINE__, battery_info_string_ptr);
+				}
+				else 
+	            {
+                	sprintf(battery_info_string_ptr, "0");
+	            }
 				
-                sprintf(info_first_str, 
-                    "cat /root/sdcard/app/instrument_info/%s/battery_info_record_unixtime_%s.txt", 
-                    pRecordDateTime, pRecordDateTime);
-	            get_cmd_printf(info_first_str, usart_info_string_ptr, USART_INFO_STR_LEN);
-                // Remove last ",\r\n"
-                usart_info_string_ptr[strlen(usart_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
+				if(iUsartInfoFileSize > 0)
+				{
+	                sprintf(info_first_str, 
+	                    "head -%d /root/sdcard/app/instrument_info/%s/usart_info_record_unixtime_%s.txt", 
+	                    TIME_SCALE, pRecordDateTime, pRecordDateTime);
+		            get_cmd_printf(info_first_str, usart_info_string_ptr, USART_INFO_STR_LEN);
+	                // Remove last ",\r\n"
+	                usart_info_string_ptr[strlen(usart_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
+				}
+				else 
+	            {
+                	sprintf(usart_info_string_ptr, "0");
+	            }
 			}
             else
             {

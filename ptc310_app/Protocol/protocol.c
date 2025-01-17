@@ -43,11 +43,14 @@ typedef struct
 	
 	uint16_t (*request_proc)(void);
 	uint8_t (*analysis_proc)(uint16_t len);
+	// 
+	uint16_t (*data_output)(char* strOutput);
+	
 
 }PROTOCOL_DEF;
 
-int16_t HReg[HREG_MAX];
-int16_t IReg[IREG_MAX];
+int16_t HReg[HREG_MAX] = {0};
+int16_t IReg[IREG_MAX] = {0};
 
 char data_temp[100];
 int16_t* protocol_buff;
@@ -60,27 +63,27 @@ uint8_t uart_ptc_status = UART_PTC_STATUS_OK;
 
 PROTOCOL_DEF ProtocolProcList[PROTOCOL_MAX]=
 {
-	{PMS_Init_1, NULL, PMS_PDS_PA_Analysis},
-	{PMS_Init_1, NULL, PMS_HPGP_101_Analysis},
-	{PMS_Init_2, NULL, PMS_LASAIR_III_Analysis},
-	{MEECO_Init, MEECO_Request, MEECO_Analysis},	
-	{JAG_Init, JAG_Request, JAG_Analysis},
+	{PMS_Init_1, NULL, PMS_PDS_PA_Analysis, PMS_PDS_PA_DataOutput},
+	{PMS_Init_1, NULL, PMS_HPGP_101_Analysis, PMS_HPGP_101_DataOutput},
+	{PMS_Init_2, NULL, PMS_LASAIR_III_Analysis, PMS_LASAIR_III_DataOutput},
+	{MEECO_Init, MEECO_Request, MEECO_Analysis, MEECO_DataOutput},	
+	{JAG_Init, JAG_Request, JAG_Analysis, JAG_DataOutput},
 	
-	{PEAK_Init, NULL, PEAK_Analysis},
-	{DELTAF_Init, DELTAF_Request, DELTAF_Analysis},
-	{TIGER_Init, TIGER_Request, TIGER_Analysis},
-	{ORTHODYNE_Init, NULL, ORTHODYNE_Analysis},
-	{SAES_Init, NULL, SAES_Analysis},
+	{PEAK_Init, NULL, PEAK_Analysis, PEAK_DataOutput},
+	{DELTAF_Init, DELTAF_Request, DELTAF_Analysis, DELTAF_DataOutput},
+	{TIGER_Init, TIGER_Request, TIGER_Analysis, TIGER_DataOutput},
+	{ORTHODYNE_Init, NULL, ORTHODYNE_Analysis, ORTHODYNE_DataOutput},
+	{SAES_Init, NULL, SAES_Analysis, SAES_DataOutput},
 	
-	{AMETEK_Init, AMETEK_5000_Request, AMETEK_5000_Analysis},
-	{AMETEK_Init, AMETEK_2850_Request, AMETEK_2850_Analysis},
-	{TELEDYNE_Init, NULL, TELEDYNE_Analysis},
-	{SERVOMEX_NANO_Init, SERVOMEX_NANO_Request, SERVOMEX_NANO_Analysis},
-	{SERVOMEX_K1000A_Init, NULL, SERVOMEX_K1000A_Analysis},
+	{AMETEK_Init, AMETEK_5000_Request, AMETEK_5000_Analysis, AMETEK_5000_DataOutput},
+	{AMETEK_Init, AMETEK_2850_Request, AMETEK_2850_Analysis, AMETEK_2850_DataOutput},
+	{TELEDYNE_Init, NULL, TELEDYNE_Analysis, TELEDYNE_DataOutput},
+	{SERVOMEX_NANO_Init, SERVOMEX_NANO_Request, SERVOMEX_NANO_Analysis, SERVOMEX_NANO_DataOutput},
+	{SERVOMEX_K1000A_Init, NULL, SERVOMEX_K1000A_Analysis, SERVOMEX_K1000A_DataOutput},
 	
-	{HCTM_Init, NULL, HCTM_WCPC0703E_Analysis},
-	{PMS_Init_2, NULL, PMS_PDS_E_Analysis},
-	{RELIYA_Init, NULL, RELIYA_HGPC_100_Analysis}
+	{HCTM_Init, NULL, HCTM_WCPC0703E_Analysis, HCTM_WCPC0703E_DataOutput},
+	{PMS_Init_2, NULL, PMS_PDS_E_Analysis, PMS_PDS_E_DataOutput},
+	{RELIYA_Init, NULL, RELIYA_HGPC_100_Analysis, RELIYA_HGPC_100_DataOutput}
 };
 
 PROTOCOL_DEF *ProtocolConvert;
@@ -212,11 +215,11 @@ void Protocol_Proc(int fd)
 	if(Timer_Expires((MTIMER*)&tm_FrmReq))
 	{
 		len= (*ProtocolConvert->request_proc)();
-		printf("Protocol_Proc request_proc %d\n", len);
+		// printf("Protocol_Proc request_proc %d\n", len);
 		
 		if(len)
 		{
-		    printf("Instrument_USART_Send request_proc %d\n", len);
+		    // printf("Instrument_USART_Send request_proc %d\n", len);
 			// USART3_Send(len);
             Instrument_USART_Send(fd, len);
 		}
@@ -261,6 +264,19 @@ void Protocol_Proc(int fd)
 		HReg[CP_PROTOCOL_ID]= PROTOCOL_MAX;
 	}
 }
+
+// 根据《PTC310_V2.7.3用户手册》为每一个仪表编写数据解析函数。用于图标打印。
+// 只支持两种类型。分别是16比特的Int类型和32比特的Real类型。
+// 也就是说一个Real类型占用两个IReg元素。
+uint16_t Protocol_DataOutput(char * strOutput)
+{
+	if(ProtocolConvert->data_output)
+	{
+		return (*ProtocolConvert->data_output)(strOutput);
+	}
+	return 0;
+}
+
 
 void record_uart_ptc_status(int status)
 {
