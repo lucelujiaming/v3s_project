@@ -206,11 +206,16 @@ const config = {
         display: false,
       },
       tooltip: {
-            backgroundColor: 'rgb(191,191,255)',
-            titleColor: 'rgb(0,0,127)',
-            bodyColor: 'rgb(0,0,0)',
-            footerColor: 'rgb(0,0,0)',
-            cornerRadius: '10',
+            enabled: true,
+            backgroundColor: "#9cbba1",
+            titleColor: "#042a0b",
+            bodyColor: "#042a0b",
+            titleFont: { weight: 'bold' },
+            padding: 10,
+            cornerRadius: 10,
+            borderColor: "#042a0b",
+            borderWidth: "2",
+            xAlign: "left",
             callbacks: {
                 // title: function(tooltipItems, data) {
                 //     return ' MonthMonthMonthMonth';

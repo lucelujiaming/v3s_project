@@ -590,7 +590,7 @@ funs["su"] = function() {
                 }
                 else {
                     var instrument_color_info_value = $("#instrument_color_info")[0].value;
-                    alert("instrument_color_info = " + instrument_color_info_value);
+                    // alert("instrument_color_info = " + instrument_color_info_value);
                     if(instrument_color_info_value == "retro")
                     {
                         for (let i = 0; i <= 9; i++) {
@@ -1112,19 +1112,25 @@ funs["su"] = function() {
                         }
                       },
                       tooltip: {
+                        backgroundColor: 'rgb(191,191,255)',
+                        titleColor: 'rgb(0,0,127)',
+                        bodyColor: 'rgb(0,0,0)',
+                        footerColor: 'rgb(0,0,0)',
+                        cornerRadius: '10',
                         callbacks: {
                           label: function(context) {
-                            let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
-                            if (context.parsed.y !== null) {
-                                // JavaScript的Intl对象可以方便地进行各种国际化处理，包括货币、日期、时间和数字格式化
-                                // minimumFractionDigits(Number): 指定最少小数位数
-                                label += new Intl.NumberFormat(
-                                   'en-US', {minimumFractionDigits: 6}).format(context.parsed.y) ;
-                            }
-                            return label;
+                            let label = context.dataset.label.toString();
+                            // JavaScript的Intl对象可以方便地进行各种国际化处理，包括货币、日期、时间和数字格式化
+                            // minimumFractionDigits(Number): 指定最少小数位数
+                            const value = new Intl.NumberFormat(
+                                   'en-US', {minimumFractionDigits: 6}).format(context.dataset.data[context.dataIndex]);
+                                   
+                            const absValue    = Math.abs(context.dataset.data[context.dataIndex]
+                                                       - myChart.scales['y'].min);
+                            const scalesRange = Math.abs(myChart.scales['y'].max - myChart.scales['y'].min);
+                            const percentageY = ((absValue / scalesRange) * 100).toFixed(2) + "%";
+                            // return `${label}: ${value} (${percentageY})`;
+                            return `${label} : ${value}`;
                           }
                         }
                       }

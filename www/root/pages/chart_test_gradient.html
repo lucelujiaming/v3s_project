@@ -170,6 +170,24 @@ const htmlLegendPlugin = {
   }
 };
 
+let width, height, gradient;
+function getGradient(ctx, chartArea) {
+  const chartWidth = chartArea.right - chartArea.left;
+  const chartHeight = chartArea.bottom - chartArea.top;
+  if (!gradient || width !== chartWidth || height !== chartHeight) {
+    // Create the gradient because this is either the first render
+    // or the size of the chart has changed
+    width = chartWidth;
+    height = chartHeight;
+    gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+    gradient.addColorStop(0, CHART_COLORS.blue);
+    gradient.addColorStop(0.5, CHART_COLORS.yellow);
+    gradient.addColorStop(1, CHART_COLORS.red);
+  }
+
+  return gradient;
+}
+
 const NUM_DATA = 7;
 const NUM_CFG = {count: NUM_DATA, min: 0, max: 100};
 const data = {
@@ -178,14 +196,32 @@ const data = {
     {
       label: 'Dataset<1>',
       data: [7, 3, 19, 15, 3, 32, 32, 32, 3, 3, 3, 3],
-      borderColor: CHART_COLORS.red,
+      borderColor:  function(context) {
+        const chart = context.chart;
+        const {ctx, chartArea} = chart;
+
+        if (!chartArea) {
+          // This case happens on initial chart load
+          return;
+        }
+        return getGradient(ctx, chartArea);
+      },
       backgroundColor: CHART_COLORS.orange,
       fill: false,
     },
     {
       label: 'Dataset<2>',
       data: [12, 19, 3, 5, 2, 3, 3, 3, 3, 3, 3, 3],
-      borderColor: CHART_COLORS.blue,
+      borderColor:  function(context) {
+        const chart = context.chart;
+        const {ctx, chartArea} = chart;
+
+        if (!chartArea) {
+          // This case happens on initial chart load
+          return;
+        }
+        return getGradient(ctx, chartArea);
+      },
       backgroundColor: CHART_COLORS.purple,
       fill: false,
     },
@@ -223,7 +259,7 @@ const config = {
                 // },
                 label: function(context) {
                         let label = context.dataset.label || '';
-
+                        
                         if (label) {
                             label += ': ';
                         }

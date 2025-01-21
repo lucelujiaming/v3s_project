@@ -222,16 +222,21 @@ const config = {
                 //     return data + ' Month';
                 // },
                 label: function(context) {
-                        let label = context.dataset.label || '';
-
-                        if (label) {
-                            label += ': ';
-                        }
-                        if (context.parsed.y !== null) {
-                            label += new Intl.NumberFormat(
-                               'en-US', {minimumFractionDigits: 6}).format(context.parsed.y) ;
-                        }
-                        return label;
+                        const labels = context.dataset.label.toString();
+                        const values =
+                          context.dataset.data[context.dataIndex];
+                        // Sum of all data.
+                        const result = 
+                              context.dataset.data.reduce(
+                            (var1, var2) => var1 + var2,
+                            0
+                        );
+                        const percentageX = 
+                              ((values / result) * 100).toFixed(2) + "%";
+                        const percentageY = 
+                              ((values / myChart.scales['y'].max) * 100).toFixed(2) + "%";
+                        
+                        return `${labels}: ${values} (${percentageX} in X and ${percentageY} in Y)`;
                 }
                 // afterLabel: function(tooltipItem, data) {
                 //     return "AAAAAAAAAAAAAAAAAAAAAAAAAAA";

@@ -1,0 +1,70 @@
+﻿<!DOCTYPE html>  
+<html>  
+<head>  
+    <title>实时数据可视化图表</title>  
+</head>  
+<body>
+
+<script type="text/javascript" src="../js/chart.js"></script>
+
+<div id="legend-container"></div>
+<div id="Chart_Div">
+<canvas id="myChart" width="200" height="100"></canvas>
+</div>
+
+<script>
+        const chart =
+              document.getElementById("myChart");
+        new Chart(chart, {
+            type: "line",
+            data: {
+                labels: ["January", "February", 
+                         "March", "April", "May"],
+                datasets: [
+                    {
+                        label: "Sales",
+                        data: [20, 10, 40, 50, 30],
+                        borderWidth: 2, // width of the line border
+                        borderColor: "green", // color of the line border
+                    },
+                ],
+            },
+            options: {
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (tooltipData) {
+                                const labels = 
+                                      tooltipData.dataset.label.toString();
+                                const values =
+                                  tooltipData.dataset.data[tooltipData.dataIndex];
+                                const result = 
+                                      tooltipData.dataset.data.reduce(
+                                    (var1, var2) => var1 + var2,
+                                    0
+                                );
+                                const percentage = 
+                                      ((values / result) * 100).toFixed(2) + "%";
+
+                                return `${labels}: ${values} (${percentage})`;
+                            },
+                        },
+                        backgroundColor: "#9cbba1",
+                        titleColor: "#042a0b",
+                        bodyColor: "#042a0b",
+                        titleFont: { weight: "bold" },
+                        padding: 10,
+                        cornerRadius: 10,
+                        borderColor: "#042a0b",
+                        borderWidth: "2",
+                    },
+                },
+            },
+        });
+    </script>
+
+<br>
+
+</body>  
+</html>
