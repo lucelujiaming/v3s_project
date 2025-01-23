@@ -193,3 +193,8 @@ uint16_t DELTAF_DataOutput(char* strOutput)
 	return 0;
 }
 
+uint16_t DELTAF_DataColumnsNumber()
+{
+	return 2;
+}
+

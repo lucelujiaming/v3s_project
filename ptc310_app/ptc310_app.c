@@ -41,6 +41,7 @@
 // output_mix_history_trend
 #define    INSTRUMENT_HISTORY_TIME_SPAN      10 //   15mins   600   // 10 minutes
 #define    INSTRUMENT_HISTORY_TIME_SCALE    (24 * 60 * 60 / INSTRUMENT_HISTORY_TIME_SPAN)
+#define    INSTRUMENT_HISTORY_HOUR_SCALE    (60 * 60 / INSTRUMENT_HISTORY_TIME_SPAN)
 // #define    NEW_YEAR_DAY_2024    1704038400
 
 #define  INSTRUMENT_ONLINE             0

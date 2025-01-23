@@ -149,3 +149,8 @@ uint16_t HCTM_WCPC0703E_DataOutput(char* strOutput)
 	return 0;
 }
 
+uint16_t HCTM_WCPC0703E_DataColumnsNumber()
+{
+	return 3;
+}
+

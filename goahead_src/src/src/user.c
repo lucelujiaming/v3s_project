@@ -24,7 +24,7 @@
 
 #include    "cJSON.h"
 
-#define INSTRUMENT_INFO_STR_LEN     8192
+#define INSTRUMENT_INFO_STR_LEN     0xC000
 #define BATTERY_INFO_STR_LEN        1024
 #define USART_INFO_STR_LEN          1024
 
@@ -32,8 +32,9 @@
 
 #define INFO_STR_LAST_COMMA         2
 
-#define    TIME_SPAN               900 //   15mins  120       // 2 minutes
-#define    TIME_SCALE              (24 * 60 * 60 / TIME_SPAN)
+#define    TIME_SPAN               10 //   15mins  120       // 2 minutes
+// #define    TIME_SCALE              (24 * 60 * 60 / TIME_SPAN)
+#define    HOUR_SCALE              (60 * 60 / TIME_SPAN)
 
 // Fireware decode macro and struct
 #define FIRMWARE_MAGIC 0x55005678
@@ -281,7 +282,7 @@ void statusProc(Webs *wp)
     char * pSeq = NULL;
 
     // char *pStartDateTime, *pEndDateTime;
-    char *pRecordDateTime;
+    char *pRecordDate, *pRecordTime;
 
     pMode = websGetVar(wp, "mode", "");
     trace(2, "[%s:%s:%d] statusProc::pVal = %s", __FILE__, __FUNCTION__, __LINE__, pMode);
@@ -431,19 +432,20 @@ void statusProc(Webs *wp)
         char *battery_info_string_ptr = (char *)malloc(BATTERY_INFO_STR_LEN);
         char *usart_info_string_ptr = (char *)malloc(USART_INFO_STR_LEN);
 
-        pRecordDateTime = websGetVar(wp, "record_time", "");
-        if(strlen(pRecordDateTime) > 0)
+        pRecordDate = websGetVar(wp, "record_date", "");
+		pRecordTime = websGetVar(wp, "record_time", "");
+        if(strlen(pRecordDate) > 0)
         {
 			// The Directionary should always exists 
 			// because record_time comes from get_history_datelist command.
-			if(is_current_date(pRecordDateTime) == 1)
+			if(is_current_date(pRecordDate) == 1)
 			{
 		    	char cFilePathCommand[128] = {0};
 		    	char cCopyFileOutput[128] = {0};
 				// Copy current log to sdcard
 				sprintf(cFilePathCommand, 
 					"cp /root/app/instrument_info/* /root/sdcard/app/instrument_info/%s/ 2>&1",
-					pRecordDateTime);
+					pRecordDate);
 				get_cmd_printf(cFilePathCommand, cCopyFileOutput, 128);
 			}
 
@@ -451,98 +453,135 @@ void statusProc(Webs *wp)
             struct stat stInstrumentInfoFile;
             sprintf(info_first_str, 
                 "/root/sdcard/app/instrument_info/%s/instrument_history_info_record_unixtime_%s.txt", 
-                pRecordDateTime, pRecordDateTime);
+                pRecordDate, pRecordDate);
             if(stat(info_first_str, &stInstrumentInfoFile) == 0)
 			{
                 iInstrumentInfoFileSize = stInstrumentInfoFile.st_size;
             }
-            trace(2, "[%s:%s:%d] /root/sdcard/app/instrument_info/%s/instrument_history_info_record_unixtime_%s.txt = %d", 
-                    __FILE__, __FUNCTION__, __LINE__, 
-                    pRecordDateTime, pRecordDateTime, iInstrumentInfoFileSize);
+            // trace(2, "[%s:%s:%d] /root/sdcard/app/instrument_info/%s/instrument_history_info_record_unixtime_%s.txt = %d", 
+            //         __FILE__, __FUNCTION__, __LINE__, 
+            //         pRecordDate, pRecordDate, iInstrumentInfoFileSize);
 			
             int iUsartInfoFileSize = 0;
             struct stat stUsartInfoFile;
             sprintf(info_first_str, 
                 "/root/sdcard/app/instrument_info/%s/usart_info_record_unixtime_%s.txt", 
-                pRecordDateTime, pRecordDateTime);
+                pRecordDate, pRecordDate);
             if(stat(info_first_str, &stUsartInfoFile) == 0)
 			{
                 iUsartInfoFileSize = stUsartInfoFile.st_size;
             }
-            trace(2, "[%s:%s:%d] /root/sdcard/app/instrument_info/%s/usart_info_record_unixtime_%s.txt = %d", 
-                    __FILE__, __FUNCTION__, __LINE__, 
-                    pRecordDateTime, pRecordDateTime, iUsartInfoFileSize);
+            // trace(2, "[%s:%s:%d] /root/sdcard/app/instrument_info/%s/usart_info_record_unixtime_%s.txt = %d", 
+            //         __FILE__, __FUNCTION__, __LINE__, 
+            //         pRecordDate, pRecordDate, iUsartInfoFileSize);
 			
             int iBatteryInfoFileSize = 0;
             struct stat stBatteryInfoFile;
             sprintf(info_first_str, 
                 "/root/sdcard/app/instrument_info/%s/battery_info_record_unixtime_%s.txt", 
-                pRecordDateTime, pRecordDateTime);
+                pRecordDate, pRecordDate);
             if(stat(info_first_str, &stBatteryInfoFile) == 0)
 			{
                 iBatteryInfoFileSize = stBatteryInfoFile.st_size;
             }
-            trace(2, "[%s:%s:%d] /root/sdcard/app/instrument_info/%s/battery_info_record_unixtime_%s.txt = %d", 
-                    __FILE__, __FUNCTION__, __LINE__, 
-                    pRecordDateTime, pRecordDateTime, iBatteryInfoFileSize);
-			
-			if((iInstrumentInfoFileSize + iUsartInfoFileSize + iBatteryInfoFileSize) < INFO_STR_LEN)
+            // trace(2, "[%s:%s:%d] /root/sdcard/app/instrument_info/%s/battery_info_record_unixtime_%s.txt = %d", 
+            //        __FILE__, __FUNCTION__, __LINE__, 
+            //         pRecordDate, pRecordDate, iBatteryInfoFileSize);
+
+			int iRecordTime = atoi(pRecordTime);
+			if((iInstrumentInfoFileSize > 0) && (iRecordTime > 0))
 			{
-				if(iInstrumentInfoFileSize > 0)
+				// More than one hours
+				if(iRecordTime > 1)
 				{
+					char instrument_info_lines[10];
+	                sprintf(info_first_str, 
+	                    "cat /root/sdcard/app/instrument_info/%s/instrument_history_info_record_unixtime_%s.txt | wc -l", 
+	                     pRecordDate, pRecordDate);
+		            get_cmd_printf(info_first_str, instrument_info_lines, 10);
+				    int iInstrumentInfoFileLines = atoi(instrument_info_lines);
+					
+				    trace(2, "[%s:%s:%d] iInstrumentInfoFileLines = %d and iRecordTime = %d", 
+				                    __FILE__, __FUNCTION__, __LINE__, iInstrumentInfoFileLines, iRecordTime);
+					// Recode time is longer than iRecordTime, we  can return the whole hour's log.
+					if(iInstrumentInfoFileLines > HOUR_SCALE * iRecordTime)
+					{
+		                sprintf(info_first_str, 
+		                    "head -%d /root/sdcard/app/instrument_info/%s/instrument_history_info_record_unixtime_%s.txt | tail -%d", 
+		                    HOUR_SCALE * iRecordTime, pRecordDate, pRecordDate, 
+		                    HOUR_SCALE * ( iRecordTime - 1));
+		                trace(2, "[%s:%s:%d] info_first_str = %s", __FILE__, __FUNCTION__, __LINE__, info_first_str);
+					}
+					// Recode time is longer than iRecordTime - 1, we  can only return log in last several minutes.
+					else if(iInstrumentInfoFileLines > HOUR_SCALE * (iRecordTime - 1))
+		            {
+		                sprintf(info_first_str, 
+		                    "head -%d /root/sdcard/app/instrument_info/%s/instrument_history_info_record_unixtime_%s.txt | tail -%d", 
+		                    HOUR_SCALE * iRecordTime, pRecordDate, pRecordDate, 
+		                    iInstrumentInfoFileLines - HOUR_SCALE * ( iRecordTime - 1));
+		                trace(2, "[%s:%s:%d] info_first_str = %s", __FILE__, __FUNCTION__, __LINE__, info_first_str);
+		            }
+					// Recode time is less than iRecordTime, we  can not return anything.
+					else 
+		            {
+		                sprintf(info_first_str, "echo '[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]  '");
+		                trace(2, "[%s:%s:%d] info_first_str = %s", __FILE__, __FUNCTION__, __LINE__, info_first_str);
+		            }
+				}
+				// Return log in the first hour
+				else {
 	                sprintf(info_first_str, 
 	                    "head -%d /root/sdcard/app/instrument_info/%s/instrument_history_info_record_unixtime_%s.txt", 
-	                    TIME_SCALE, pRecordDateTime, pRecordDateTime);
-		            get_cmd_printf(info_first_str, instrument_info_string_ptr, INSTRUMENT_INFO_STR_LEN);
-	                // Remove last ",\r\n"
-	                instrument_info_string_ptr[strlen(instrument_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
-	                trace(2, "[%s:%s:%d] instrument_info_string_ptr = %s", __FILE__, __FUNCTION__, __LINE__, instrument_info_string_ptr);
+	                    HOUR_SCALE * iRecordTime, pRecordDate, pRecordDate);
+		            trace(2, "[%s:%s:%d] info_first_str = %s", __FILE__, __FUNCTION__, __LINE__, info_first_str);
 				}
-				else 
-	            {
-	                sprintf(instrument_info_string_ptr, "[0,0,0,0,0,0,0,0,0,0]");
-	            }
-				
-				if(iBatteryInfoFileSize > 0)
-				{
-	                sprintf(info_first_str, 
-	                    "head -%d /root/sdcard/app/instrument_info/%s/battery_info_record_unixtime_%s.txt", 
-	                    TIME_SCALE, pRecordDateTime, pRecordDateTime);
-		            get_cmd_printf(info_first_str, battery_info_string_ptr, BATTERY_INFO_STR_LEN);
-	                // Remove last ",\r\n"
-	                battery_info_string_ptr[strlen(battery_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
-	                trace(2, "[%s:%s:%d] battery_info_string_ptr = %s", __FILE__, __FUNCTION__, __LINE__, battery_info_string_ptr);
-				}
-				else 
-	            {
-                	sprintf(battery_info_string_ptr, "0");
-	            }
-				
-				if(iUsartInfoFileSize > 0)
-				{
-	                sprintf(info_first_str, 
-	                    "head -%d /root/sdcard/app/instrument_info/%s/usart_info_record_unixtime_%s.txt", 
-	                    TIME_SCALE, pRecordDateTime, pRecordDateTime);
-		            get_cmd_printf(info_first_str, usart_info_string_ptr, USART_INFO_STR_LEN);
-	                // Remove last ",\r\n"
-	                usart_info_string_ptr[strlen(usart_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
-				}
-				else 
-	            {
-                	sprintf(usart_info_string_ptr, "0");
-	            }
+	            get_cmd_printf(info_first_str, instrument_info_string_ptr, INSTRUMENT_INFO_STR_LEN);
+                // Remove last ",\r\n"
+                instrument_info_string_ptr[strlen(instrument_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
+                trace(2, "[%s:%s:%d] instrument_info_string_ptr = %s", __FILE__, __FUNCTION__, __LINE__, instrument_info_string_ptr);
 			}
-            else
+			else 
             {
-                sprintf(instrument_info_string_ptr, "[0,0,0,0,0,0,0,0,0,0]");
-                sprintf(battery_info_string_ptr, "0");
-                sprintf(usart_info_string_ptr, "0");
+				trace(2, "[%s:%s:%d] iInstrumentInfoFileSize = %d and iRecordTime = %d", 
+				                    __FILE__, __FUNCTION__, __LINE__, 
+				                    iInstrumentInfoFileSize, iRecordTime);
+                sprintf(instrument_info_string_ptr, "[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]");
             }
+			
+			if(iBatteryInfoFileSize > 0)
+			{
+                sprintf(info_first_str, 
+                    "head -%d /root/sdcard/app/instrument_info/%s/battery_info_record_unixtime_%s.txt", 
+                    HOUR_SCALE, pRecordDate, pRecordDate);
+	            get_cmd_printf(info_first_str, battery_info_string_ptr, BATTERY_INFO_STR_LEN);
+                // Remove last ",\r\n"
+                battery_info_string_ptr[strlen(battery_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
+                trace(2, "[%s:%s:%d] battery_info_string_ptr = %s", __FILE__, __FUNCTION__, __LINE__, battery_info_string_ptr);
+			}
+			else 
+            {
+            	sprintf(battery_info_string_ptr, "0");
+            }
+			
+			if(iUsartInfoFileSize > 0)
+			{
+                sprintf(info_first_str, 
+                    "head -%d /root/sdcard/app/instrument_info/%s/usart_info_record_unixtime_%s.txt", 
+                    HOUR_SCALE, pRecordDate, pRecordDate);
+	            get_cmd_printf(info_first_str, usart_info_string_ptr, USART_INFO_STR_LEN);
+                // Remove last ",\r\n"
+                usart_info_string_ptr[strlen(usart_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
+			}
+			else 
+            {
+            	sprintf(usart_info_string_ptr, "0");
+            }
+
             snprintf(info_str, INFO_STR_LEN, 
                 "{  \"Scale\": %d, \"InstrumentInfo\": [ %s ], \r\n\"BatteryInfo\": [ %s ], \r\n\"UsartInfo\": [ %s ] }", 
-                TIME_SCALE, instrument_info_string_ptr, battery_info_string_ptr, usart_info_string_ptr);
+                HOUR_SCALE, instrument_info_string_ptr, battery_info_string_ptr, usart_info_string_ptr);
             
-            trace(2, "[%s:%s:%d] info_str = %s", __FILE__, __FUNCTION__, __LINE__, info_str);
+            // trace(2, "[%s:%s:%d] info_str = %s", __FILE__, __FUNCTION__, __LINE__, info_str);
             websSetStatus(wp, 200);
             websWriteHeaders(wp, -1, 0);
             websWriteEndHeaders(wp);
@@ -557,29 +596,29 @@ void statusProc(Webs *wp)
     else if(strcmp(pMode, "get_battery_info") == 0)
     {
         char *battery_info_string_ptr = (char *)malloc(BATTERY_INFO_STR_LEN);
-        pRecordDateTime = websGetVar(wp, "record_time", "");
-        trace(2, "%ld - [%s:%s:%d] websWrite::pRecordDateTime = %s",
-                      time(NULL), __FILE__, __FUNCTION__, __LINE__, pRecordDateTime);
-        if(strlen(pRecordDateTime) > 0)
+        pRecordDate = websGetVar(wp, "record_date", "");
+        trace(2, "%ld - [%s:%s:%d] websWrite::pRecordDate = %s",
+                      time(NULL), __FILE__, __FUNCTION__, __LINE__, pRecordDate);
+        if(strlen(pRecordDate) > 0)
         {
             int iBatteryInfoFileSize = 0;
             struct stat stBatteryInfoFile;
             sprintf(info_first_str, 
                 "/root/sdcard/app/instrument_info/%s/battery_info_switch_record_%s.txt", 
-                pRecordDateTime, pRecordDateTime);
+                pRecordDate, pRecordDate);
             if(stat(info_first_str, &stBatteryInfoFile) == 0)
 			{
                 iBatteryInfoFileSize = stBatteryInfoFile.st_size;
             }
             trace(2, "[%s:%s:%d] /root/sdcard/app/instrument_info/%s/battery_info_switch_record_%s.txt = %d", 
                     __FILE__, __FUNCTION__, __LINE__, 
-                    pRecordDateTime, pRecordDateTime, iBatteryInfoFileSize);
+                    pRecordDate, pRecordDate, iBatteryInfoFileSize);
                     
             if((iBatteryInfoFileSize < INFO_STR_LEN) && (iBatteryInfoFileSize > 0))
 			{
                 sprintf(info_first_str, 
                     "cat /root/sdcard/app/instrument_info/%s/battery_info_switch_record_%s.txt", 
-                    pRecordDateTime, pRecordDateTime);
+                    pRecordDate, pRecordDate);
 	            get_cmd_printf(info_first_str, battery_info_string_ptr, USART_INFO_STR_LEN);
                 // Remove last ",\r\n"
                 battery_info_string_ptr[strlen(battery_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
@@ -588,7 +627,7 @@ void statusProc(Webs *wp)
 			}
             else
             {
-                sprintf(battery_info_string_ptr, "\"%s 00:00:00\",0", pRecordDateTime);
+                sprintf(battery_info_string_ptr, "\"%s 00:00:00\",0", pRecordDate);
                 // Change "2024_07_22 ..." into "2024-07-22 ..."
                 battery_info_string_ptr[5] = '-';
                 battery_info_string_ptr[8] = '-';
@@ -608,27 +647,27 @@ void statusProc(Webs *wp)
     else if(strcmp(pMode, "get_usart_info") == 0)
     {
         char *usart_info_string_ptr = (char *)malloc(USART_INFO_STR_LEN);
-        pRecordDateTime = websGetVar(wp, "record_time", "");
-        if(strlen(pRecordDateTime) > 0)
+        pRecordDate = websGetVar(wp, "record_date", "");
+        if(strlen(pRecordDate) > 0)
         {
             int iUsartInfoFileSize = 0;
             struct stat stUsartInfoFile;
             sprintf(info_first_str, 
                 "/root/sdcard/app/instrument_info/%s/usart_info_switch_record_%s.txt", 
-                pRecordDateTime, pRecordDateTime);
+                pRecordDate, pRecordDate);
             if(stat(info_first_str, &stUsartInfoFile) == 0)
 			{
                 iUsartInfoFileSize = stUsartInfoFile.st_size;
             }
             trace(2, "[%s:%s:%d] /root/sdcard/app/instrument_info/%s/usart_info_switch_record_%s.txt = %d", 
                     __FILE__, __FUNCTION__, __LINE__, 
-                    pRecordDateTime, pRecordDateTime, iUsartInfoFileSize);
+                    pRecordDate, pRecordDate, iUsartInfoFileSize);
                     
             if((iUsartInfoFileSize < INFO_STR_LEN) && (iUsartInfoFileSize > 0))
 			{
                 sprintf(info_first_str, 
                     "cat /root/sdcard/app/instrument_info/%s/usart_info_switch_record_%s.txt", 
-                    pRecordDateTime, pRecordDateTime);
+                    pRecordDate, pRecordDate);
 	            get_cmd_printf(info_first_str, usart_info_string_ptr, USART_INFO_STR_LEN);
                 // Remove last ",\r\n"
                 usart_info_string_ptr[strlen(usart_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
@@ -637,7 +676,7 @@ void statusProc(Webs *wp)
 			}
             else
             {
-                sprintf(usart_info_string_ptr, "\"%s 00:00:00\",0", pRecordDateTime);
+                sprintf(usart_info_string_ptr, "\"%s 00:00:00\",0", pRecordDate);
                 // Change "2024_07_22 ..." into "2024-07-22 ..."
                 usart_info_string_ptr[5] = '-';
                 usart_info_string_ptr[8] = '-';
@@ -658,8 +697,8 @@ void statusProc(Webs *wp)
     {
         websDone(wp);
     }
-    trace(2, "%ld - [%s:%s:%d] websWrite::info_str = %s",
-                      time(NULL), __FILE__, __FUNCTION__, __LINE__, info_str);
+    // trace(2, "%ld - [%s:%s:%d] websWrite::info_str = %s",
+    //                  time(NULL), __FILE__, __FUNCTION__, __LINE__, info_str);
 }
 
 void sumbitProc(Webs *wp)

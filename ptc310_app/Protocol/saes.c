@@ -385,3 +385,8 @@ uint16_t SAES_DataOutput(char* strOutput)
     return 0;
 }
 
+uint16_t SAES_DataColumnsNumber()
+{
+	return 6;
+}
+

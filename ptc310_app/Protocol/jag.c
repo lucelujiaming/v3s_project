@@ -338,3 +338,8 @@ uint16_t JAG_DataOutput(char* strOutput)
 	return 0;
 }
 
+uint16_t JAG_DataColumnsNumber()
+{
+	return 2;
+}
+

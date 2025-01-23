@@ -224,6 +224,11 @@ uint16_t AMETEK_2850_DataOutput(char* strOutput)
     return 0;
 }
 
+uint16_t AMETEK_2850_DataColumnsNumber()
+{
+	return 6;
+}
+
 /////////////////////////////////////////////
 uint16_t AMETEK_5000_Request(void)
 {
@@ -387,5 +392,10 @@ uint16_t AMETEK_5000_DataOutput(char* strOutput)
           floatConcentration[5],    // Real    Concentration / GAS6
           0.0, 0.0, 0.0, 0.0);
     return 0;
+}
+
+uint16_t AMETEK_5000_DataColumnsNumber()
+{
+	return 6;
 }
 

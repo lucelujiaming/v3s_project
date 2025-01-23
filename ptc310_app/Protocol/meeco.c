@@ -288,3 +288,8 @@ uint16_t MEECO_DataOutput(char* strOutput)
 	return 0;
 }
 
+uint16_t MEECO_DataColumnsNumber()
+{
+	return 2;
+}
+

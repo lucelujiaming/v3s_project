@@ -243,3 +243,8 @@ uint16_t ORTHODYNE_DataOutput(char* strOutput)
     return 0;
 }
 
+uint16_t ORTHODYNE_DataColumnsNumber()
+{
+	return 6;
+}
+

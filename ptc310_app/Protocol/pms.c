@@ -457,6 +457,12 @@ uint16_t PMS_PDS_PA_DataOutput(char* strOutput)
 	return 0;
 }
 
+uint16_t PMS_PDS_PA_DataColumnsNumber()
+{
+    return 9;
+}
+
+
 //////////////////////////////////////////////////////////////////
 uint8_t PMS_HPGP_101_Analysis(uint16_t len)
 {
@@ -539,6 +545,11 @@ uint8_t PMS_HPGP_101_Analysis(uint16_t len)
 uint16_t PMS_HPGP_101_DataOutput(char* strOutput)
 {
 	return PMS_PDS_PA_DataOutput(strOutput);
+}
+
+uint16_t PMS_HPGP_101_DataColumnsNumber()
+{
+	return PMS_PDS_PA_DataColumnsNumber();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -939,6 +950,11 @@ uint16_t PMS_LASAIR_III_DataOutput(char* strOutput)
 	return 0;
 }
 
+uint16_t PMS_LASAIR_III_DataColumnsNumber()
+{
+	return 7;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////
 uint8_t PMS_PDS_E_Analysis(uint16_t len)		//PMS Mode
 {
@@ -1208,5 +1224,10 @@ uint16_t PMS_PDS_E_DataOutput(char* strOutput)
           *floatLaserRefBuffer,                // 30018	Real	Laser Ref. / Probe 1
           0.0);
 	return 0;
+}
+
+uint16_t PMS_PDS_E_DataColumnsNumber()
+{
+	return 9;
 }
 

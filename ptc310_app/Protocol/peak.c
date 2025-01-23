@@ -380,3 +380,8 @@ uint16_t PEAK_DataOutput(char* strOutput)
 	return 0;
 }
 
+uint16_t PEAK_DataColumnsNumber()
+{
+	return 8;
+}
+

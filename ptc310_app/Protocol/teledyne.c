@@ -137,3 +137,8 @@ uint16_t TELEDYNE_DataOutput(char* strOutput)
     return 0;
 }
 
+uint16_t TELEDYNE_DataColumnsNumber()
+{
+	return 1;
+}
+

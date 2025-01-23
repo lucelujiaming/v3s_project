@@ -9,6 +9,7 @@ void JAG_Init(int fd, uint16_t addr);
 //////////////////////////////////////////////////////
 uint16_t JAG_Request(void);
 uint8_t JAG_Analysis(uint16_t len);
+uint16_t JAG_DataColumnsNumber();
 uint16_t JAG_DataOutput(char* strOutput);
 
 #endif

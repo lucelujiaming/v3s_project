@@ -410,3 +410,8 @@ uint16_t SERVOMEX_K1000A_DataOutput(char* strOutput)
     return 0;
 }
 
+uint16_t SERVOMEX_K1000A_DataColumnsNumber()
+{
+	return 10;
+}
+

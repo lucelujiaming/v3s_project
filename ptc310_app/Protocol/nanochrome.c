@@ -366,3 +366,8 @@ uint16_t SERVOMEX_NANO_DataOutput(char* strOutput)
     return 0;
 }
 
+uint16_t SERVOMEX_NANO_DataColumnsNumber()
+{
+	return 10;
+}
+

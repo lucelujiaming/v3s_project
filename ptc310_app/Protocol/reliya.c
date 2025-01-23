@@ -177,3 +177,8 @@ uint16_t RELIYA_HGPC_100_DataOutput(char* strOutput)
 	return 0;
 }
 
+uint16_t RELIYA_HGPC_100_DataColumnsNumber()
+{
+	return 4;
+}
+

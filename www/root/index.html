@@ -327,7 +327,7 @@ funs["su"] = function() {
         // 系统信息
         $.get("/action/status?mode=get_history_datelist", function(_data, _status){
             $("div.loading-container#loading-container").css("display", "none");
-            var select = document.getElementById('instrument_info_date_select');
+            var selectDate = document.getElementById('instrument_info_date_select');
             var data_json = JSON.parse(_data);
             $.each(data_json, function(index, info){
                 if (index == "date") {
@@ -338,11 +338,22 @@ funs["su"] = function() {
                         var option = document.createElement('option');
                         option.value = info[i]; // 设置选项的值
                         option.text = info[i]; // 设置选项显示的文本
-                        select.append(option);
+                        selectDate.append(option);
                     }
-                    select.options[info.length - 1].selected = true;
+                    selectDate.options[info.length - 1].selected = true;
                 }
             });
+            var selectTime = document.getElementById('instrument_info_time_select');
+            for(let i = 0; i < 24; i++)
+            {
+                var option = document.createElement('option');
+                // 设置选项的值
+                option.value = i + 1; 
+                // 设置选项显示的文本
+                var textTime = `第${i + 1}个小时(${i}:00-${i + 1}:00)`;
+                option.text = textTime; 
+                selectTime.append(option);
+            }
         });
     }
     else if(current_subpage == "pages/datetime_setting.html")
@@ -537,6 +548,7 @@ funs["su"] = function() {
     {
         $("button#stat_instrument_info").on("click", function(e){
             var instrument_info_date_select = $("#instrument_info_date_select")[0].value;
+            var instrument_info_time_select = $("#instrument_info_time_select")[0].value;
             // alert("click::instrument_info_date_select = " + instrument_info_date_select);
             $("div.widget-error-tips").css("display", "none");
             // 
@@ -555,8 +567,9 @@ funs["su"] = function() {
             }
           
             // Do submit job
-            $.get("/action/status?mode=get_instrument_info&record_time="
-                        + instrument_info_date_select, function(_data, _status){
+            $.get("/action/status?mode=get_instrument_info&record_date="
+                        + instrument_info_date_select + "&record_time="
+                        + instrument_info_time_select, function(_data, _status){
                 // alert("_data = " + _data);
                 var data_json = JSON.parse(_data);
                 var instrument_scale = 0;
@@ -725,12 +738,14 @@ funs["su"] = function() {
                         // This variable is defined by macro TIME_SPAN in the web server source code.
                         // #define    TIME_SPAN               900 //   15mins  120       // 2 minutes
                         // 24 * 60 is minutes of one day
-                        time_span = 24 * 60 / instrument_scale;
+                        // time_span = 24 * 60 / instrument_scale;
+                        
+                        hour_span = 60 * 60 / instrument_scale;  // 60 * 60 / 360 = 10
                         
                         for (let i = 0; i <= info; i++) {
-                            time_result = i * time_span;
-                            time_hours = Math.floor(time_result / 60);
-                            time_minutes = time_result % 60;
+                            time_result = i * hour_span;
+                            time_minutes = Math.floor(time_result / 60);
+                            time_second = time_result % 60;
                             // Set time_hours
                             if(time_hours < 10)
                             {
@@ -1148,7 +1163,7 @@ funs["su"] = function() {
             });
             
             // get_battery_info
-            $.get("/action/status?mode=get_battery_info&record_time="
+            $.get("/action/status?mode=get_battery_info&record_date="
                         + instrument_info_date_select, function(_data, _status){
                 // alert("_data = " + _data);
                 var data_json = JSON.parse(_data);
@@ -1189,7 +1204,7 @@ funs["su"] = function() {
             });
             
             // get_usart_info
-            $.get("/action/status?mode=get_usart_info&record_time="
+            $.get("/action/status?mode=get_usart_info&record_date="
                         + instrument_info_date_select, function(_data, _status){
                 // alert("_data = " + _data);
                 var data_json = JSON.parse(_data);

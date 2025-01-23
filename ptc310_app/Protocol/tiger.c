@@ -163,3 +163,8 @@ uint16_t TIGER_DataOutput(char* strOutput)
 	return 0;
 }
 
+uint16_t TIGER_DataColumnsNumber()
+{
+	return 1;
+}
+

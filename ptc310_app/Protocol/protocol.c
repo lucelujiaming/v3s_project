@@ -44,6 +44,7 @@ typedef struct
 	uint16_t (*request_proc)(void);
 	uint8_t (*analysis_proc)(uint16_t len);
 	// 
+	uint16_t (*get_data_columns_number)();
 	uint16_t (*data_output)(char* strOutput);
 	
 
@@ -63,27 +64,45 @@ uint8_t uart_ptc_status = UART_PTC_STATUS_OK;
 
 PROTOCOL_DEF ProtocolProcList[PROTOCOL_MAX]=
 {
-	{PMS_Init_1, NULL, PMS_PDS_PA_Analysis, PMS_PDS_PA_DataOutput},
-	{PMS_Init_1, NULL, PMS_HPGP_101_Analysis, PMS_HPGP_101_DataOutput},
-	{PMS_Init_2, NULL, PMS_LASAIR_III_Analysis, PMS_LASAIR_III_DataOutput},
-	{MEECO_Init, MEECO_Request, MEECO_Analysis, MEECO_DataOutput},	
-	{JAG_Init, JAG_Request, JAG_Analysis, JAG_DataOutput},
+	{PMS_Init_1, NULL, PMS_PDS_PA_Analysis, 
+					PMS_PDS_PA_DataColumnsNumber, PMS_PDS_PA_DataOutput},
+	{PMS_Init_1, NULL, PMS_HPGP_101_Analysis, 
+					PMS_HPGP_101_DataColumnsNumber, PMS_HPGP_101_DataOutput},
+	{PMS_Init_2, NULL, PMS_LASAIR_III_Analysis, 
+					PMS_LASAIR_III_DataColumnsNumber, PMS_LASAIR_III_DataOutput},
+	{MEECO_Init, MEECO_Request, MEECO_Analysis, 
+					MEECO_DataColumnsNumber, MEECO_DataOutput},	
+	{JAG_Init, JAG_Request, JAG_Analysis, 
+					JAG_DataColumnsNumber, JAG_DataOutput},
 	
-	{PEAK_Init, NULL, PEAK_Analysis, PEAK_DataOutput},
-	{DELTAF_Init, DELTAF_Request, DELTAF_Analysis, DELTAF_DataOutput},
-	{TIGER_Init, TIGER_Request, TIGER_Analysis, TIGER_DataOutput},
-	{ORTHODYNE_Init, NULL, ORTHODYNE_Analysis, ORTHODYNE_DataOutput},
-	{SAES_Init, NULL, SAES_Analysis, SAES_DataOutput},
+	{PEAK_Init, NULL, PEAK_Analysis, 
+					PEAK_DataColumnsNumber, PEAK_DataOutput},
+	{DELTAF_Init, DELTAF_Request, DELTAF_Analysis, 
+					DELTAF_DataColumnsNumber, DELTAF_DataOutput},
+	{TIGER_Init, TIGER_Request, TIGER_Analysis, 
+					TIGER_DataColumnsNumber, TIGER_DataOutput},
+	{ORTHODYNE_Init, NULL, ORTHODYNE_Analysis, 
+					ORTHODYNE_DataColumnsNumber, ORTHODYNE_DataOutput},
+	{SAES_Init, NULL, SAES_Analysis, 
+					SAES_DataColumnsNumber, SAES_DataOutput},
 	
-	{AMETEK_Init, AMETEK_5000_Request, AMETEK_5000_Analysis, AMETEK_5000_DataOutput},
-	{AMETEK_Init, AMETEK_2850_Request, AMETEK_2850_Analysis, AMETEK_2850_DataOutput},
-	{TELEDYNE_Init, NULL, TELEDYNE_Analysis, TELEDYNE_DataOutput},
-	{SERVOMEX_NANO_Init, SERVOMEX_NANO_Request, SERVOMEX_NANO_Analysis, SERVOMEX_NANO_DataOutput},
-	{SERVOMEX_K1000A_Init, NULL, SERVOMEX_K1000A_Analysis, SERVOMEX_K1000A_DataOutput},
+	{AMETEK_Init, AMETEK_5000_Request, AMETEK_5000_Analysis, 
+					AMETEK_5000_DataColumnsNumber, AMETEK_5000_DataOutput},
+	{AMETEK_Init, AMETEK_2850_Request, AMETEK_2850_Analysis, 
+					AMETEK_2850_DataColumnsNumber, AMETEK_2850_DataOutput},
+	{TELEDYNE_Init, NULL, TELEDYNE_Analysis, 
+					TELEDYNE_DataColumnsNumber, TELEDYNE_DataOutput},
+	{SERVOMEX_NANO_Init, SERVOMEX_NANO_Request, SERVOMEX_NANO_Analysis, 
+					SERVOMEX_NANO_DataColumnsNumber, SERVOMEX_NANO_DataOutput},
+	{SERVOMEX_K1000A_Init, NULL, SERVOMEX_K1000A_Analysis, 
+					SERVOMEX_K1000A_DataColumnsNumber, SERVOMEX_K1000A_DataOutput},
 	
-	{HCTM_Init, NULL, HCTM_WCPC0703E_Analysis, HCTM_WCPC0703E_DataOutput},
-	{PMS_Init_2, NULL, PMS_PDS_E_Analysis, PMS_PDS_E_DataOutput},
-	{RELIYA_Init, NULL, RELIYA_HGPC_100_Analysis, RELIYA_HGPC_100_DataOutput}
+	{HCTM_Init, NULL, HCTM_WCPC0703E_Analysis, 
+					HCTM_WCPC0703E_DataColumnsNumber, HCTM_WCPC0703E_DataOutput},
+	{PMS_Init_2, NULL, PMS_PDS_E_Analysis, 
+					PMS_PDS_E_DataColumnsNumber, PMS_PDS_E_DataOutput},
+	{RELIYA_Init, NULL, RELIYA_HGPC_100_Analysis, 
+					RELIYA_HGPC_100_DataColumnsNumber, RELIYA_HGPC_100_DataOutput}
 };
 
 PROTOCOL_DEF *ProtocolConvert;
