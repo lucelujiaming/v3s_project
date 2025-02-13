@@ -1,0 +1,159 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>system update</title>
+</head>
+<body>
+
+<div class="container widget-container panel-container">
+    <div class="panel-header">
+        <h3 class="panel-title">
+        <span class="panel-title-text">设备控制</span>
+        </h3>
+    </div>
+    <div class="panel-content" stype="display:block">
+        <div class="panel-tbar-container"></div>
+        <div class="panel-content-container">
+            <div class="container widget-container text-container file-container inline error" style="height: 400px;">
+                <div class="widget-fieldlabel-wrap m">
+                    <label class="widget-fieldlabel text-fieldlabel">仪表种类</label>
+                    <span class="widget-separator">:</span>
+                </div>
+                <div class="file-wrap widget-wrap" style="width: 250px;text-align: right;">
+                    <div class="widget-wrap text-wrap">
+                        <span class="text-wrap">
+                            <select id="instrument_class" 
+                                  name="instrument_class" style="width: 130px;" 
+                                  onchange="instrumentClassChange()" >
+                                <option value= "0">PMS</option>
+                                <option value= "1">MEECO</option>
+                                <option value= "2">JAG</option>
+                                <option value= "3">PEAK/P9000</option>
+                                <option value= "4">DELTA-F</option>
+                                <option value= "5">TIGER</option>
+                                <option value= "6">ORTHODYNE</option>
+                                <option value= "7">SAES</option>
+                                <option value= "8">AMETEK</option>
+                                <option value= "9">Teledyne</option>
+                                <option value= "10">SERVOMEX</option>
+                                <option value= "11">HCTM</option>
+                                <option value= "12">RELIYA</option>
+                            </select> 
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel-content-container">
+            <div class="container widget-container text-container file-container inline error" style="height: 400px;">
+                <div class="widget-fieldlabel-wrap m">
+                    <label class="widget-fieldlabel text-fieldlabel">仪表型号</label>
+                    <span class="widget-separator">:</span>
+                </div>
+                <div class="file-wrap widget-wrap" style="width: 250px;text-align: right;">
+                    <div class="widget-wrap text-wrap">
+                        <span class="text-wrap">
+                            <select id="instrument_type" 
+                                  name="instrument_type" style="width: 230px;" >
+                            </select> 
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel-content-container">
+            <div class="container widget-container text-container file-container inline error">
+                <div class="widget-fieldlabel-wrap m">
+                    <label class="widget-fieldlabel text-fieldlabel">设备地址</label>
+                    <span class="widget-separator">:</span>
+                </div>
+                <div class="file-wrap widget-wrap" style="width: 250px;text-align: right;">
+                    <div class="widget-wrap text-wrap">
+                        <span class="text-wrap">
+                           <input id="instrument_address" style="width: 100px;"/>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel-content-container">
+            <div class="container widget-container text-container file-container inline error">
+                <div class="widget-fieldlabel-wrap m">
+                    <label class="widget-fieldlabel text-fieldlabel">读取间隔(0.1s)</label>
+                    <span class="widget-separator">:</span>
+                </div>
+                <div class="file-wrap widget-wrap" style="width: 250px;text-align: right;">
+                    <div class="widget-wrap text-wrap">
+                        <span class="text-wrap">
+                           <input id="instrument_timespan" style="width: 100px;" onchange="checkInstrumentConfig()"/>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel-content-container">
+            <div class="container widget-container text-container file-container inline error">
+                <div class="widget-fieldlabel-wrap m">
+                    <label class="widget-fieldlabel text-fieldlabel">超时时间(0.1s)</label>
+                    <span class="widget-separator">:</span>
+                </div>
+                <div class="file-wrap widget-wrap" style="width: 250px;text-align: right;">
+                    <div class="widget-wrap text-wrap">
+                        <span class="text-wrap">
+                           <input id="instrument_timeout" style="width: 100px;" onchange="checkInstrumentConfig()"/>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel-content-container">
+            <div class="container widget-container text-container file-container inline error">
+                <div class="widget-fieldlabel-wrap m">
+                    <label class="widget-fieldlabel text-fieldlabel">双字数据顺序</label>
+                    <span class="widget-separator">:</span>
+                </div>
+                <div class="file-wrap widget-wrap" style="width: 250px;text-align: right;">
+                    <div class="widget-wrap text-wrap">
+                        <span class="text-wrap">
+                            <select id="instrument_endian" 
+                                  name="instrument_endian" style="width: 100px;" >
+                                <option value= "0">大端</option>
+                                <option value= "1">小端</option>
+                            </select> 
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel-content-container">
+            <div class="container widget-container text-container file-container inline error">
+                <div class="widget-fieldlabel-wrap m">
+                    <label class="widget-fieldlabel text-fieldlabel">最大故障次数</label>
+                    <span class="widget-separator">:</span>
+                </div>
+                <div class="file-wrap widget-wrap" style="width: 250px;text-align: right;">
+                    <div class="widget-wrap text-wrap">
+                        <span class="text-wrap">
+                           <input id="instrument_fault_times" style="width: 100px;" onchange="checkInstrumentConfig()"/>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="container widget-container text-container file-container inline error">
+                <div class="widget-wrap-outer button-wrap-outer">
+                    <div class="widget-wrap button-wrap">
+                        <button type="button" 
+                                id="set_instrument_config" 
+                                name="set_instrument_config" class="button-button">
+                        <span class="text button-text">设置</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel-fbar-container"></div>
+    </div>
+</div>
+</body>
+</html>

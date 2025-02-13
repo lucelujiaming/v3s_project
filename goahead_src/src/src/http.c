@@ -2202,6 +2202,9 @@ PUBLIC ssize websWriteBlock(Webs *wp, char *buf, ssize size)
         size -= thisWrite;
         buf += thisWrite;
         written += thisWrite;
+		// 当数据过长的时候，如果发的太快。浏览器会来不及收。导致数据接收出错。
+		// 因此上需要加一个延时。
+		usleep(1000);
     }
     bufAddNull(op);
     return written;

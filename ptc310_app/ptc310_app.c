@@ -16,6 +16,13 @@
 #include <sys/stat.h>
 #include <pthread.h>
 
+#include <sys/time.h>
+#include <signal.h>
+#include <time.h>
+
+#include <arpa/inet.h>
+#include <sys/socket.h>
+
 #include "param.h"
 
 #include "modbus.h"
@@ -29,6 +36,8 @@
 
 #include "v3s_gpio_operation.h"
 
+#include "v3s_udp_controller.h"
+
 #define MODBUS_MAX_ADU_LENGTH  260
 
 
@@ -39,9 +48,10 @@
 #define INSTRUMENT_UART_DEVICE   "/dev/ttyS1"
 
 // output_mix_history_trend
-#define    INSTRUMENT_HISTORY_TIME_SPAN      10 //   15mins   600   // 10 minutes
-#define    INSTRUMENT_HISTORY_TIME_SCALE    (24 * 60 * 60 / INSTRUMENT_HISTORY_TIME_SPAN)
+// 把时间间隔修改为一秒钟记录一次，分小时显示，每一次显示3600个点。
+#define    INSTRUMENT_HISTORY_TIME_SPAN      1 //   15mins   600   // 10 minutes
 #define    INSTRUMENT_HISTORY_HOUR_SCALE    (60 * 60 / INSTRUMENT_HISTORY_TIME_SPAN)
+#define    INSTRUMENT_HISTORY_TIME_SCALE    (24 * 60 * 60 / INSTRUMENT_HISTORY_TIME_SPAN)
 // #define    NEW_YEAR_DAY_2024    1704038400
 
 #define  INSTRUMENT_ONLINE             0
@@ -56,7 +66,11 @@ char instrument_uart_device[20];
 // localtime()函数返回的是一个静态变量的指针，这个指针指向的内存是由C标准库管理的，属于静态存储区。
 // 每次调用localtime()时，它都会返回一个指向同一个静态区域内存的指针，
 // 这意味着多次调用localtime()会返回相同的指针，并且这个指针指向的内存会在程序结束时由系统自动释放‌。
+
+// log_record_tm会在启动时设置为当天，并在日期变化的时候更新。
 struct tm    log_record_tm;
+// last_log_record_tm会在启动时设置为当天，并在日期变化的时候更新。
+struct tm    last_log_record_tm;
 
 
 // 数据格式参见《PTC310_V2.7.3用户手册》
@@ -139,7 +153,7 @@ int open_ptc_port()
     	printf("Instrument default path is %s...\n", INSTRUMENT_UART_DEVICE);
     }
 	printf("open_ptc_port: open return %d\n", instrument_fd);
-    if (instrument_fd < 0) {
+    if (instrument_fd == -1) {
         perror("INSTRUMENT_UART_DEVICE open error");
         exit(1);
     }
@@ -164,7 +178,11 @@ void out_instrument_history_record(time_t iFakeTimeStamp)
     struct tm*     tmNow    = localtime(&timeNow);
 
 	Protocol_DataOutput(cProtocolDataOutput);
-	printf("cProtocolDataOutput = [%s]\r\n", cProtocolDataOutput);
+	
+	// printf("cProtocolDataOutput = [%s] at %04d-%02d-%02d %02d:%02d:%02d\r\n", 
+	//		cProtocolDataOutput, 
+    //        tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, 
+	//		tmNow->tm_hour, tmNow->tm_min, tmNow->tm_sec);
 
     sprintf(cFileContent, "\"%04d-%02d-%02d %02d:%02d:%02d\",%s\r\n",
             tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, 
@@ -416,7 +434,7 @@ int append_file(char * cFileName, char * cFileContent)
             tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, cFileName);
     // 2. 打开PTC私有协议对应的串口
     append_fd = open(cFilePathWithName, O_RDWR | O_APPEND);
-    if (append_fd < 0) {
+    if (append_fd == -1) {
 		// 这里的2>&1表示将标准错误（文件描述符2）重定向到标准输出（文件描述符1）。
 	    sprintf(cFilePathMkdirCommand, "mkdir -p /root/sdcard/app/instrument_info/%d_%02d_%02d/ 2>&1",
 	            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
@@ -432,8 +450,8 @@ int append_file(char * cFileName, char * cFileContent)
 		}
 		
         append_fd = open(cFilePathWithName, O_RDWR | O_CREAT);
-        if (append_fd < 0) {
-	        // printf("append_file: open failed return %d\n", append_fd);
+        if (append_fd == -1) {
+	        printf("append_file: open failed return %d\n", append_fd);
             return -1;
         }
     }
@@ -443,12 +461,14 @@ int append_file(char * cFileName, char * cFileContent)
     return 0;
 }
 
+#define   DIR_HAS_EXISTED      1
+#define   DIR_NOT_EXISTS       0
 int dir_exists(const char *path) {
     struct stat st;
     if (stat(path, &st) == 0) {
-        return 1; // 目录存在
+        return DIR_HAS_EXISTED; // 目录存在
     } else {
-        return 0; // 目录不存在
+        return DIR_NOT_EXISTS; // 目录不存在
     }
 }
 
@@ -471,14 +491,15 @@ int append_logcontent_to_file(char * cFileName, char * cFileContent)
 	// return append_file(cFileName, cFileContent);
 	
 	/********************************************************************
-	 * 经过测试发现，在SD卡上频繁写入会导致SD卡无法创建目录。
-	 * 为了规避这个问题，需要构造一套逻辑来解决。
-	 * 方法是当天的日志写在内部存储上，每当日期变化，把之前的日志移动到SD卡上。
-	 * 这里首先把目标目录创建好。
+	 * Step 2: 
+ 	 *   经过测试发现，在SD卡上频繁写入会导致SD卡无法创建目录。
+ 	 *   为了规避这个问题，需要构造一套逻辑来解决。
+ 	 *   方法是当天的日志写在内部存储上，每当日期变化，把之前的日志移动到SD卡上。
+ 	 *   这里首先把目标目录创建好。
 	 ********************************************************************/
 	sprintf(cFilePathCommand, "/root/sdcard/app/instrument_info/%d_%02d_%02d/",
 	            log_record_tm.tm_year + 1900, log_record_tm.tm_mon + 1, log_record_tm.tm_mday);
-	if(dir_exists(cFilePathCommand) == 0)
+	if(dir_exists(cFilePathCommand) == DIR_NOT_EXISTS)
 	{
 		memset(cFilePathCommand, 0x00, 128);
 		// 这里的2>&1表示将标准错误（文件描述符2）重定向到标准输出（文件描述符1）。
@@ -493,7 +514,6 @@ int append_logcontent_to_file(char * cFileName, char * cFileContent)
 			{
 				printf("Command <%s> error: errorInfo is %s\n", cFilePathCommand, cMkdirOutput);
 				isPrintMkdirOutput = PRINT_MKDIR_OUTPUT_OFF;
-				
 		        memset(cMkdirOutput, 0x00, 256);
                 get_cmd_printf("/root/app/www/remount_sdcard.sh", cMkdirOutput, 256);
 				if(strlen(cMkdirOutput) > 0)
@@ -506,32 +526,91 @@ int append_logcontent_to_file(char * cFileName, char * cFileContent)
 			    }
 			}
     	    memcpy(&log_record_tm, localtime(&timeNow), sizeof(struct tm));
-	        return -1;
+	        // return -1;
+		}
+		else 
+		{
+			/********************************************************************
+			 * Step 3: 
+			 *   We start a new day and we need copy yesterday's log to SDCard.
+			 ********************************************************************/
+			memset(cFilePathCommand, 0x00, 128);
+			sprintf(cFilePathCommand, "/root/sdcard/app/instrument_info/%d_%02d_%02d/",
+			            last_log_record_tm.tm_year + 1900, last_log_record_tm.tm_mon + 1, last_log_record_tm.tm_mday);
+			if(dir_exists(cFilePathCommand) == DIR_HAS_EXISTED)
+			{
+				memset(cFilePathCommand, 0x00, 128);
+				sprintf(cFilePathCommand, 
+					"cp /root/app/instrument_info/*_%d_%02d_%02d.txt /root/sdcard/app/instrument_info/%d_%02d_%02d/ 2>&1",
+					last_log_record_tm.tm_year + 1900, last_log_record_tm.tm_mon + 1, last_log_record_tm.tm_mday,
+					last_log_record_tm.tm_year + 1900, last_log_record_tm.tm_mon + 1, last_log_record_tm.tm_mday);
+				memset(cMkdirOutput, 0x00, 256);
+				get_cmd_printf(cFilePathCommand, cMkdirOutput, 256);
+				if(strlen(cMkdirOutput) > 0)
+				{
+				    printf("Command <%s> error: errorInfo is %s\n", cFilePathCommand, cMkdirOutput);
+				}
+				else {
+					/********************************************************************
+					 * Step 4: 
+					 *   We start a new day and we have copied yesterday's log to SDCard.
+					 *   Now we can delete yesterday's log.
+					 ********************************************************************/
+					memset(cFilePathCommand, 0x00, 128);
+					sprintf(cFilePathCommand, "rm /root/app/instrument_info/*_%d_%02d_%02d.txt 2>&1",
+						last_log_record_tm.tm_year + 1900, last_log_record_tm.tm_mon + 1, last_log_record_tm.tm_mday);
+					memset(cMkdirOutput, 0x00, 256);
+					get_cmd_printf(cFilePathCommand, cMkdirOutput, 256);
+					if(strlen(cMkdirOutput) > 0)
+					{
+					    printf("Command <%s> error: errorInfo is %s\n", cFilePathCommand, cMkdirOutput);
+					}
+	    	    	memcpy(&last_log_record_tm, localtime(&timeNow), sizeof(struct tm));
+				}
+			}
+			else {
+				printf("(%s) does not exist.\n",cFilePathCommand);
+			}
 		}
 	}
-	
+
+	/********************************************************************
+	 * Step 1: 
+	 *   We start a new day and we set the flag of new day.
+	 ********************************************************************/
 	if((tmNow->tm_year != log_record_tm.tm_year)
 		|| (tmNow->tm_mon != log_record_tm.tm_mon)
 		|| (tmNow->tm_mday != log_record_tm.tm_mday))
 	{
-		printf("get_cmd_printf(%s) return OK.\n",cFilePathCommand);
+		printf("We have a new day and path(%s) is over.\n",cFilePathCommand);
 		isPrintMkdirOutput = PRINT_MKDIR_OUTPUT_ON;
-		sprintf(cFilePathCommand, 
-			"mv /root/app/instrument_info/* /root/sdcard/app/instrument_info/%d_%02d_%02d/ 2>&1",
-			log_record_tm.tm_year + 1900, log_record_tm.tm_mon + 1, log_record_tm.tm_mday);
-		get_cmd_printf(cFilePathCommand, cMkdirOutput, 256);
+		// memset(cFilePathCommand, 0x00, 128);
+		// sprintf(cFilePathCommand, 
+		// 	"cp /root/app/instrument_info/*_%d_%02d_%02d.txt /root/sdcard/app/instrument_info/%d_%02d_%02d/ 2>&1",
+		// 	log_record_tm.tm_year + 1900, log_record_tm.tm_mon + 1, log_record_tm.tm_mday,
+		// 	log_record_tm.tm_year + 1900, log_record_tm.tm_mon + 1, log_record_tm.tm_mday);
+		// memset(cMkdirOutput, 0x00, 256);
+		// get_cmd_printf(cFilePathCommand, cMkdirOutput, 256);
+		// if(strlen(cMkdirOutput) > 0)
+		// {
+		//     printf("Command <%s> error: errorInfo is %s\n", cFilePathCommand, cMkdirOutput);
+		// }
 		memcpy(&log_record_tm, localtime(&timeNow), sizeof(struct tm));
 	}
-
 		
     sprintf(cFilePathWithName, "/root/app/instrument_info/%s", cFileName);
     append_fd = open(cFilePathWithName, O_RDWR | O_APPEND);
-    if (append_fd < 0) {
+    if (append_fd == -1) {
+		memset(cFilePathCommand, 0x00, 128);
 	    sprintf(cFilePathCommand, "mkdir -p /root/app/instrument_info/ 2>&1");
+		memset(cMkdirOutput, 0x00, 256);
 		get_cmd_printf(cFilePathCommand, cMkdirOutput, 256);
-	
+		if(strlen(cMkdirOutput) > 0)
+		{
+		    printf("Command <%s> error: errorInfo is %s\n", cFilePathCommand, cMkdirOutput);
+		}
         append_fd = open(cFilePathWithName, O_RDWR | O_CREAT);
-        if (append_fd < 0) {
+        if (append_fd == -1) {
 	        printf("append_file: O_CREAT failed return %d\n", append_fd);
             return -1;
         }
@@ -542,9 +621,44 @@ int append_logcontent_to_file(char * cFileName, char * cFileContent)
     return 0;
 }
 
+void out_instrument_history_timer_handler(int signum) {
+    // 执行定时器到期时需要做的操作
+    // 注意：定时器处理函数应该尽量保持简短，避免执行耗时操作
+	out_instrument_history_record(time(NULL));
+}
+
+void set_out_instrument_history_timer(int seconds) {
+    struct itimerval timer;
+    timer.it_value.tv_sec = seconds;  // 第一次定时器到期的秒数
+    timer.it_value.tv_usec = 0;       // 第一次定时器到期的微秒数
+    // timer.it_interval = timer.it_value;
+    timer.it_interval.tv_sec = seconds;  // 定时器周期的秒数（如果为0，则只执行一次）
+    timer.it_interval.tv_usec = 0;       // 定时器周期的微秒数
+
+    // 设置定时器信号处理函数
+    // signal(SIGALRM, timer_handler);
+    struct sigaction act;
+    act.sa_handler = out_instrument_history_timer_handler;
+    act.sa_flags = 0;
+    sigemptyset(&act.sa_mask); 
+    sigaction(SIGALRM,&act,NULL); //设置信号 SIGALRM 的处理函数为 timer_handler
+
+    // 启动定时器
+    setitimer(ITIMER_REAL, &timer, NULL);
+}
+
+/*停止setitimer定时器*/
+void delete_out_instrument_history_setitimer() 
+{
+    struct itimerval value; 
+    value.it_value.tv_sec = 0; 
+    value.it_value.tv_usec = 0; 
+    value.it_interval = value.it_value; 
+    setitimer(ITIMER_REAL, &value, NULL); 
+}
+
 static void* thread_instrument_Protocol(void *arg)
 {
-    time_t timeNow = time(NULL);
     int   convert_protocol_fd = 0; // , send_res;
 	convert_protocol_fd = open_ptc_port();
     // printf("uart Open...\n");
@@ -552,15 +666,12 @@ static void* thread_instrument_Protocol(void *arg)
 	memset(IReg, 0x00, sizeof(int16_t) * IREG_MAX);
     // 2.1 设置串口参数
 	Protocol_Init(convert_protocol_fd);
+	set_out_instrument_history_timer(INSTRUMENT_HISTORY_TIME_SPAN);
 	while (1)
 	{
 		Protocol_Proc(convert_protocol_fd);
-		if(time(NULL) - timeNow >= INSTRUMENT_HISTORY_TIME_SPAN)
-		{
-			timeNow = time(NULL);
-			out_instrument_history_record(timeNow);
-		}
 	}
+	delete_out_instrument_history_setitimer();
     close(convert_protocol_fd);
     return (void*)NULL;
 }
@@ -685,9 +796,10 @@ static void* thread_modbus_operation(void *arg)
 		if(HReg[HR_UNIT_RESET])
 		{
 	        printf("Unit Reset with HReg[HR_UNIT_RESET] = %d\n", HReg[HR_UNIT_RESET]);
-			while(1)
-			{
-			}
+			// while(1)
+			// {
+			// }
+			system("reboot");
 		}
 
 	}
@@ -698,10 +810,174 @@ static void* thread_modbus_operation(void *arg)
     return (void*)NULL;
 }
 
+
+#define V3S_UDP_CONTROLLER_BUFFER_SIZE 1024
+static void* thread_v3s_udp_controller(void *arg)
+{
+    int   sockfd = 0; // , send_res;
+    char cReceiveBuffer[V3S_UDP_CONTROLLER_BUFFER_SIZE];
+    char cSendBuffer[V3S_UDP_CONTROLLER_BUFFER_SIZE];
+    struct sockaddr_in client_addr;
+    socklen_t addr_len;
+    ssize_t nReceiveDataLen = 0;
+
+	char cDataType = 0;
+	int iDataLen  = 0;
+	sockfd = v3s_udp_control_server_init();
+	while (1)
+	{
+		iDataLen = 0;
+        addr_len = sizeof(client_addr);
+        // 接收数据报
+		memset(cReceiveBuffer, 0x00, V3S_UDP_CONTROLLER_BUFFER_SIZE);
+        nReceiveDataLen = recvfrom(sockfd, cReceiveBuffer, V3S_UDP_CONTROLLER_BUFFER_SIZE, 0,
+        						(struct sockaddr *)&client_addr, &addr_len);
+	    // printf("nReceiveDataLen is %d.\n", nReceiveDataLen);
+        if (nReceiveDataLen < 0) {
+            printf("Receive data failed.\n");
+            continue;
+        }
+		if(nReceiveDataLen >= 3)
+		{
+			memset(cSendBuffer, 0x00, V3S_UDP_CONTROLLER_BUFFER_SIZE);
+			iDataLen = cReceiveBuffer[1] * 255 + cReceiveBuffer[2];
+			if(iDataLen + 3 != nReceiveDataLen){
+	            printf("[%s:%s:%d] Data length is %d and Data length error.\n",
+						__FILE__, __FUNCTION__, __LINE__, iDataLen);
+				cSendBuffer[0] = MODBUS_CONFIG_SET_RESPONSE;
+				cSendBuffer[1] = 0x00;
+				cSendBuffer[2] = 0x02;
+				cSendBuffer[3] = MODBUS_CONFIG_RESPONSE_BADREQUEST / 256;
+				cSendBuffer[4] = MODBUS_CONFIG_RESPONSE_BADREQUEST % 256;  // 400 Bad Request
+	        	sendto(sockfd, cSendBuffer, 5, 
+	        				0, (struct sockaddr *)&client_addr, addr_len);
+            	printf("[%s:%s:%d] Length error: ReceiveData length is %d and data length is %d.\n", 
+						__FILE__, __FUNCTION__, __LINE__, 
+						nReceiveDataLen, iDataLen);
+	            continue;
+	        }
+ 			cDataType = cReceiveBuffer[0];
+	        if(cDataType == MODBUS_CONFIG_GET_REQUEST && iDataLen == 0x00)
+	        {
+				cSendBuffer[0] = MODBUS_CONFIG_GET_RESPONSE;
+				cSendBuffer[1] = 0x00;
+				cSendBuffer[2] = 0x06;
+				for(int i = 0; i < MODBUS_CONFIG_CP_REGISTER_ADDR_MAX; i++)
+				{
+					cSendBuffer[i + 3] = HReg[i];
+				}
+	        	sendto(sockfd, cSendBuffer, MODBUS_CONFIG_CP_REGISTER_ADDR_MAX + 3, 
+	        				0, (struct sockaddr *)&client_addr, addr_len);
+            	// printf("[%s:%s:%d] GET_REQUEST OK: ReceiveData length is %d and data length is %d.\n", 
+				//		__FILE__, __FUNCTION__, __LINE__, 
+				//		nReceiveDataLen, iDataLen);
+	        }
+			else if(cDataType == MODBUS_CONFIG_SET_REQUEST &&
+				iDataLen > 0x00 && iDataLen < MODBUS_CONFIG_CP_REGISTER_ADDR_MAX)
+	        {
+				for(int i = 0; i < iDataLen; i++)
+				{
+					HReg[i] = cReceiveBuffer[i + 3];
+					PARAM_Save(i, cReceiveBuffer[i + 3]); 
+				}
+				// Update Protocol Config
+				// Update_Protocol_Config();
+				cSendBuffer[0] = MODBUS_CONFIG_SET_RESPONSE;
+				cSendBuffer[1] = 0x00;
+				cSendBuffer[2] = 0x02;
+				cSendBuffer[3] = 0x00;
+				cSendBuffer[4] = MODBUS_CONFIG_RESPONSE_OK;  // 200 OK
+	        	sendto(sockfd, cSendBuffer, 5, 
+	        				0, (struct sockaddr *)&client_addr, addr_len);
+            	// printf("[%s:%s:%d] SET_REQUEST OK: ReceiveData length is %d and data length is %d.\n", 
+				//		__FILE__, __FUNCTION__, __LINE__, 
+				//		nReceiveDataLen, iDataLen);
+	        }
+			else if(cDataType == INST_GET_LATEST_READINGS_REQUEST && iDataLen == 0x00)
+	        {
+				char cFloatBuffer[16] = {0};
+				char cProtocolDataOutput[1024];
+				Protocol_DataOutput(cProtocolDataOutput);
+				uint16_t iDataColumnsNumber = Protocol_GetDataColumnsNumber();
+				
+	            printf("[%s:%s:%d] iDataColumnsNumber is %d.\n", 
+						__FILE__, __FUNCTION__, __LINE__, iDataColumnsNumber);
+				cSendBuffer[0] = INST_GET_LATEST_READINGS_RESPONSE;
+				cSendBuffer[1] = iDataColumnsNumber / 256;
+				cSendBuffer[2] = iDataColumnsNumber % 256;
+				// Copy all readings
+				char * pDataBufPtr = cProtocolDataOutput;
+				float fReading = 0.0;
+				float* fReadingPtr = &fReading;
+				for(int i = 0; i < iDataColumnsNumber; i++)
+				{   
+				    char * cSeqPtr = strchr(pDataBufPtr, ',');
+				    if(cSeqPtr)
+				    {   
+				        memset(cFloatBuffer, 0x00, 16);
+				        memcpy(cFloatBuffer, pDataBufPtr, cSeqPtr - pDataBufPtr);
+				        fReading = atof(cFloatBuffer);
+				        printf("cFloatBuffer = %s and fReading = %.6f\n", cFloatBuffer, fReading);
+						memcpy(&cSendBuffer[3 + 4 * i], fReadingPtr, 4);
+				        pDataBufPtr = cSeqPtr + 1;
+				    }   
+				    else {
+				        printf("[%s:%s:%d] Data length is %d and Data length error.\n", 
+						__FILE__, __FUNCTION__, __LINE__, iDataLen);
+						cSendBuffer[0] = MODBUS_CONFIG_SET_RESPONSE;
+						cSendBuffer[1] = 0x00;
+						cSendBuffer[2] = 0x02;
+						cSendBuffer[3] = MODBUS_CONFIG_RESPONSE_INTERNAL_ERROR / 256;
+						cSendBuffer[4] = MODBUS_CONFIG_RESPONSE_INTERNAL_ERROR % 256;  // 500 Internal Server Error
+			        	sendto(sockfd, cSendBuffer, 5, 
+			        				0, (struct sockaddr *)&client_addr, addr_len);
+			            printf("[%s:%s:%d] Error DataType: DataType is %d.\n", 
+								__FILE__, __FUNCTION__, __LINE__, cDataType);
+						continue;
+				    }   
+				}
+	        	sendto(sockfd, cSendBuffer, iDataColumnsNumber * 4 + 3, 
+	        				0, (struct sockaddr *)&client_addr, addr_len);
+	        }
+			else 
+			{
+	            printf("[%s:%s:%d] Data length is %d and Data length error.\n", 
+						__FILE__, __FUNCTION__, __LINE__, iDataLen);
+				cSendBuffer[0] = MODBUS_CONFIG_SET_RESPONSE;
+				cSendBuffer[1] = 0x00;
+				cSendBuffer[2] = 0x02;
+				cSendBuffer[3] = MODBUS_CONFIG_RESPONSE_BADREQUEST / 256;
+				cSendBuffer[4] = MODBUS_CONFIG_RESPONSE_BADREQUEST % 256;  // 400 Bad Request
+	        	sendto(sockfd, cSendBuffer, 5, 
+	        				0, (struct sockaddr *)&client_addr, addr_len);
+	            printf("[%s:%s:%d] Error DataType: DataType is %d.\n", 
+						__FILE__, __FUNCTION__, __LINE__, cDataType);
+			}
+		}
+		else 
+		{
+            printf("Data length is %d and Data length error.\n", iDataLen);
+			cSendBuffer[0] = MODBUS_CONFIG_SET_RESPONSE;
+			cSendBuffer[1] = 0x00;
+			cSendBuffer[2] = 0x02;
+			cSendBuffer[3] = MODBUS_CONFIG_RESPONSE_BADREQUEST / 256;
+			cSendBuffer[4] = MODBUS_CONFIG_RESPONSE_BADREQUEST % 256;  // 400 Bad Request
+        	sendto(sockfd, cSendBuffer, 5, 
+        				0, (struct sockaddr *)&client_addr, addr_len);
+        	printf("[%s:%s:%d] nReceiveDataLen error: ReceiveData length is %d and data length is %d.\n", 
+				__FILE__, __FUNCTION__, __LINE__, 
+				nReceiveDataLen, iDataLen);
+		}
+	}
+    close(sockfd);
+    return (void*)NULL;
+}
+
 //RTU模式的Slave端程序
 int main(int argc, char ** argv)
 {
     pthread_t instrument_thread;
+    pthread_t instrument_control_thread;
     pthread_t modbus_operation_thread;
 	// int ret = 0;
 	V3S_GPIO_Init();
@@ -713,6 +989,7 @@ int main(int argc, char ** argv)
     time_t timeNow = time(NULL);
 	// log_record_tm =  = localtime(&timeNow);
     memcpy(&log_record_tm, localtime(&timeNow), sizeof(struct tm));
+    memcpy(&last_log_record_tm, localtime(&timeNow), sizeof(struct tm));
 
 	memset(modbus_uart_device, 0x00, 20);
 	memset(instrument_uart_device, 0x00, 20);
@@ -740,6 +1017,8 @@ int main(int argc, char ** argv)
 	pthread_create(&modbus_operation_thread, NULL, thread_modbus_operation, NULL);
 	// printf("Start Protocol_Proc and ret return %d\n", ret);
 	pthread_create(&instrument_thread, NULL, thread_instrument_Protocol, NULL);
+	
+	pthread_create(&instrument_control_thread, NULL, thread_v3s_udp_controller, NULL);
 	
 	//5. 循环接受客户端请求，并且响应客户端
 	while (1)

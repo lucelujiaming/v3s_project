@@ -146,7 +146,7 @@ uint16_t TIGER_DataOutput(char* strOutput)
 		cConcertrationBuffer[2] = protocol_buff[7]&0x00FF;
 		cConcertrationBuffer[1] = protocol_buff[6]>>8;
 		cConcertrationBuffer[0] = protocol_buff[6]&0x00FF;
-				printf("DELTAF_DataOutput::little_endian\r\n");
+		//		printf("DELTAF_DataOutput::little_endian\r\n");
 	}
 	else
 	{
@@ -154,7 +154,7 @@ uint16_t TIGER_DataOutput(char* strOutput)
 		cConcertrationBuffer[2] = protocol_buff[6]&0x00FF;
 		cConcertrationBuffer[1] = protocol_buff[7]>>8;
 		cConcertrationBuffer[0] = protocol_buff[7]&0x00FF;
-				printf("DELTAF_DataOutput::big_endian\r\n");
+		//		printf("DELTAF_DataOutput::big_endian\r\n");
 	}
     sprintf(strOutput, "%f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f",
             *floatConcertration, // Real    Concertration(ppb)

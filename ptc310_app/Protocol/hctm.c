@@ -120,7 +120,7 @@ uint16_t HCTM_WCPC0703E_DataOutput(char* strOutput)
 		cTotalParticleBuffer[2] = protocol_buff[6]&0x00FF;
 		cTotalParticleBuffer[1] = protocol_buff[5]>>8;
 		cTotalParticleBuffer[0] = protocol_buff[5]&0x00FF;
-				printf("DELTAF_DataOutput::little_endian\r\n");
+		//		printf("DELTAF_DataOutput::little_endian\r\n");
 	}
 	else
 	{
@@ -138,7 +138,7 @@ uint16_t HCTM_WCPC0703E_DataOutput(char* strOutput)
 		cTotalParticleBuffer[2] = protocol_buff[5]&0x00FF;
 		cTotalParticleBuffer[1] = protocol_buff[6]>>8;
 		cTotalParticleBuffer[0] = protocol_buff[6]&0x00FF;
-				printf("DELTAF_DataOutput::big_endian\r\n");
+		//		printf("DELTAF_DataOutput::big_endian\r\n");
 	}
     sprintf(strOutput, "%f,%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f",
             *floatParticleSEC,     // 30002	Real	Particle / SEC

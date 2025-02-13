@@ -54,5 +54,5 @@ void PARAM_Save(uint16_t addr, int16_t value)
 	printf("PARAM_Save addr=%d and value = %d\n", addr, value);
 	sprintf(keyConfig, "Config%03d", addr);
 	sprintf(valueConfig, "%d", value);
-    put_ini_key_string("HReg", keyConfig, valueConfig, PARAM_CONFIG_FILE_NAME);	
+    set_ini_key_string("HReg", keyConfig, valueConfig, PARAM_CONFIG_FILE_NAME);	
 }

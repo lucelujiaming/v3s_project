@@ -1,0 +1,141 @@
+﻿<!DOCTYPE html>  
+<html>  
+<head>  
+    <title>High Chart Test</title>  
+</head>  
+<body>
+<script type="text/javascript" src="../js/highcharts.js"></script>
+<script type="text/javascript" src="../js/accessibility.js"></script>
+<div id="legend-container"></div>
+
+
+<figure class="highcharts-figure">
+    <div id="container"></div>
+    <p class="highcharts-description">
+        Basic line chart showing trends in a dataset. This chart includes the
+        <code>series-label</code> module, which adds a label to each line for
+        enhanced readability.
+    </p>
+</figure>
+
+<script type="text/javascript">
+function getData(n, scale) {
+    const arr = [];
+    let i,
+        x,
+        a,
+        b,
+        c,
+        spike;
+    for (
+        i = 0, x = Date.UTC(new Date().getUTCFullYear(), 0, 1) - n * 36e5;
+        i < n;
+        i = i + 1, x = x + 36e5
+    ) {
+        if (i % 100 === 0) {
+            a = 2 * Math.random();
+        }
+        if (i % 1000 === 0) {
+            b = 2 * Math.random();
+        }
+        if (i % 10000 === 0) {
+            c = 2 * Math.random();
+        }
+        if (i % 50000 === 0) {
+            spike = 10;
+        } else {
+            spike = 0;
+        }
+        arr.push([
+            x,
+            scale * Math.sin(i / 100) + a + b + c + spike + Math.random()
+        ]);
+    }
+    return arr;
+}
+const n = 50000,
+dataOne = getData(n, 2);
+dataTwo = getData(n, 7);
+dataThr = getData(n, 12);
+dataFor = getData(n, 20);
+
+const record_diagram_data = [
+    {
+        data: dataOne,
+        lineWidth: 0.5,
+        name: 'Hourly One data points',
+        color: 'rgb(54, 56, 235)',
+    },{
+        data: dataTwo,
+        lineWidth: 0.5,
+        name: 'Hourly Two data points',
+        color: 'rgb(80, 162, 235)',
+    },{
+        data: dataThr,
+        lineWidth: 0.5,
+        name: 'Hourly Three data points',
+        color: 'rgb(54, 162, 55)',
+    },{
+        data: dataFor,
+        lineWidth: 0.5,
+        name: 'Hourly Four data points',
+        color: 'rgb(54, 128, 55)',
+    }
+]
+
+const record_diagram_config = {
+    chart: {
+                    type: 'line',
+                    borderWidth: 1,
+                    zoomType: 'x',
+                    panning: true,
+                    panKey:'ctrl',
+                    resetZoomButton: {
+                        relativeTo: 'chart',
+                        position: {
+                            align: 'left',
+                            verticalAlign: 'bottom',
+                            x: 20,
+                            y: -50
+                        }
+                    }
+    },
+
+    title: {
+        text: 'Highcharts drawing ' + n + ' points',
+        align: 'left'
+    },
+
+    // subtitle: {
+    //     text: 'Using the Boost module',
+    //     align: 'left'
+    // },
+
+    accessibility: {
+        screenReaderSection: {
+            beforeChartFormat: '<{headingTagName}>' +
+                '{chartTitle}</{headingTagName}><div>{chartSubtitle}</div>' +
+                '<div>{chartLongdesc}</div><div>{xAxisDescription}</div><div>' +
+                '{yAxisDescription}</div>'
+        }
+    },
+
+    tooltip: {
+        valueDecimals: 2
+    },
+
+    xAxis: {
+        type: 'datetime'
+    },
+
+    series: record_diagram_data
+};
+// console.time('line');
+Highcharts.chart('container', record_diagram_config);
+// console.timeEnd('line');
+
+
+</script>
+<br>
+</body>  
+</html>

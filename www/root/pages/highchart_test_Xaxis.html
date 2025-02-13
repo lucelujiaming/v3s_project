@@ -1,0 +1,67 @@
+﻿<!DOCTYPE html>  
+<html>  
+<head>  
+    <title>High Chart Test</title>  
+</head>  
+<body>
+<script type="text/javascript" src="../js/highcharts.src.js"></script>
+<script type="text/javascript" src="../js/accessibility.js"></script>
+<div id="chartContainer"></div>
+
+<script type="text/javascript">
+function getData(n) {
+    const arr = [];
+    let i,
+        x,
+        a,
+        b,
+        c,
+        spike;
+    for (
+        i = 0, x = Date.UTC(new Date().getUTCFullYear(), 0, 1) - n * 36e5;
+        i < n;
+        i = i + 1, x = x + 36e5
+    ) {
+        if (i % 100 === 0) {
+            a = 2 * Math.random();
+        }
+        if (i % 1000 === 0) {
+            b = 2 * Math.random();
+        }
+        if (i % 10000 === 0) {
+            c = 2 * Math.random();
+        }
+        if (i % 50000 === 0) {
+            spike = 10;
+        } else {
+            spike = 0;
+        }
+        arr.push([
+            x,
+            2 * Math.sin(i / 100) + a + b + c + spike + Math.random()
+        ]);
+    }
+    return arr;
+}
+const n = 50000,
+data = getData(n);
+    
+var options = {
+   chart: {
+      type: 'line'
+   },
+   xAxis: {
+      type: 'datetime',
+      minRange: 3600 * 1000 // 设置x轴的最小范围为1小时
+   },
+   series: [{
+      data: [/* 数据数组 */]
+   }]
+};
+var chart = Highcharts.chart('chartContainer', options);
+chart.xAxis.setExtremes(new Date(2023, 0, 1), new Date(2023, 0, 3));
+
+</script>
+<br>
+</body>  
+</html>

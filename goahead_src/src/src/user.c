@@ -24,17 +24,18 @@
 
 #include    "cJSON.h"
 
-#define INSTRUMENT_INFO_STR_LEN     0xC000
+#define    TIME_SPAN               1 //   15mins  120       // 2 minutes
+// #define    TIME_SCALE              (24 * 60 * 60 / TIME_SPAN)
+#define    HOUR_SCALE              (60 * 60 / TIME_SPAN)
+
+// #define INSTRUMENT_INFO_STR_LEN     0xC000
+#define INSTRUMENT_INFO_STR_LEN     0x57800   // 350K
 #define BATTERY_INFO_STR_LEN        1024
 #define USART_INFO_STR_LEN          1024
-
+// ulimit -s is 8192(KB) = 0x800000
 #define INFO_STR_LEN                (INSTRUMENT_INFO_STR_LEN + BATTERY_INFO_STR_LEN + USART_INFO_STR_LEN) // 5120
 
 #define INFO_STR_LAST_COMMA         2
-
-#define    TIME_SPAN               10 //   15mins  120       // 2 minutes
-// #define    TIME_SCALE              (24 * 60 * 60 / TIME_SPAN)
-#define    HOUR_SCALE              (60 * 60 / TIME_SPAN)
 
 // Fireware decode macro and struct
 #define FIRMWARE_MAGIC 0x55005678
@@ -272,17 +273,17 @@ char* initProc()
 
 void statusProc(Webs *wp)
 {
+    char * pSeq = NULL;
+    char *pRecordDate = NULL, *pRecordTime = NULL;
     char *ret_str;
     char *pMode;
     char *pValue;
     int   iValue;
+    char info_first_str[256] = { 0 };
+    char info_second_str[256] = { 0 };
     char info_str[INFO_STR_LEN] = { 0 };
-    char info_first_str[64] = { 0 };
-    char info_second_str[64] = { 0 };
-    char * pSeq = NULL;
 
     // char *pStartDateTime, *pEndDateTime;
-    char *pRecordDate, *pRecordTime;
 
     pMode = websGetVar(wp, "mode", "");
     trace(2, "[%s:%s:%d] statusProc::pVal = %s", __FILE__, __FUNCTION__, __LINE__, pMode);
@@ -406,6 +407,60 @@ void statusProc(Webs *wp)
         websFlush(wp);
         websDone(wp);
     }
+    else if(strcmp(pMode, "get_instrument_config") == 0)
+    {
+		// Call ptc310_config_editor
+        get_cmd_printf("/root/app/ptc310_config_editor GETMBJ", info_str, INFO_STR_LEN);
+		
+        websSetStatus(wp, 200);
+        websWriteHeaders(wp, -1, 0);
+        websWriteEndHeaders(wp);
+        websWrite(wp, info_str);
+        websFlush(wp);
+        websDone(wp);
+    }
+    else if(strcmp(pMode, "set_instrument_config") == 0)
+    {
+    	char * pInstType       = websGetVar(wp, "inst_type", "");
+    	char * pInstAddr       = websGetVar(wp, "inst_addr", "");
+    	char * pInstTimeSpan   = websGetVar(wp, "inst_timespan", "");
+    	char * pInstTimeOut    = websGetVar(wp, "inst_timeout", "");
+    	char * pInstEndian     = websGetVar(wp, "inst_endian", "");
+    	char * pInstFaultTimes = websGetVar(wp, "inst_fault_times", "");
+
+		if(strlen(pInstType) > 0 && strlen(pInstAddr) > 0 
+			&& strlen(pInstTimeSpan) > 0 && strlen(pInstTimeOut) > 0
+			&& strlen(pInstEndian) > 0 && strlen(pInstFaultTimes) > 0)
+		{
+        	sprintf(info_first_str, 
+				"/root/app/ptc310_config_editor SETMB %s %s %s %s %s %s",
+				pInstType, pInstAddr, pInstTimeSpan, 
+				pInstTimeOut, pInstEndian, pInstFaultTimes);
+			trace(2, "[%s:%s:%d] info_first_str = %s", 
+				__FILE__, __FUNCTION__, __LINE__, info_first_str);
+			get_cmd_printf(info_first_str, info_str, INFO_STR_LEN);
+		}
+		
+        websSetStatus(wp, 200);
+        websWriteHeaders(wp, -1, 0);
+        websWriteEndHeaders(wp);
+        websWrite(wp, info_str);
+        websFlush(wp);
+		
+        websDone(wp);
+    }
+    else if(strcmp(pMode, "get_latest_reading") == 0)
+    {
+		// Call ptc310_config_editor
+        get_cmd_printf("/root/app/ptc310_config_editor GETLV", info_str, INFO_STR_LEN);
+		
+        websSetStatus(wp, 200);
+        websWriteHeaders(wp, -1, 0);
+        websWriteEndHeaders(wp);
+        websWrite(wp, info_str);
+        websFlush(wp);
+        websDone(wp);
+    }
     else if(strcmp(pMode, "get_history_datelist") == 0)
     {
 		// 4096 / 15 = 273 days
@@ -509,16 +564,16 @@ void statusProc(Webs *wp)
 		                sprintf(info_first_str, 
 		                    "head -%d /root/sdcard/app/instrument_info/%s/instrument_history_info_record_unixtime_%s.txt | tail -%d", 
 		                    HOUR_SCALE * iRecordTime, pRecordDate, pRecordDate, 
-		                    HOUR_SCALE * ( iRecordTime - 1));
+		                    HOUR_SCALE);
 		                trace(2, "[%s:%s:%d] info_first_str = %s", __FILE__, __FUNCTION__, __LINE__, info_first_str);
 					}
 					// Recode time is longer than iRecordTime - 1, we  can only return log in last several minutes.
 					else if(iInstrumentInfoFileLines > HOUR_SCALE * (iRecordTime - 1))
 		            {
 		                sprintf(info_first_str, 
-		                    "head -%d /root/sdcard/app/instrument_info/%s/instrument_history_info_record_unixtime_%s.txt | tail -%d", 
-		                    HOUR_SCALE * iRecordTime, pRecordDate, pRecordDate, 
-		                    iInstrumentInfoFileLines - HOUR_SCALE * ( iRecordTime - 1));
+		                    "tail -%d /root/sdcard/app/instrument_info/%s/instrument_history_info_record_unixtime_%s.txt", 
+		                    iInstrumentInfoFileLines - HOUR_SCALE * ( iRecordTime - 1), 
+		                    pRecordDate, pRecordDate);
 		                trace(2, "[%s:%s:%d] info_first_str = %s", __FILE__, __FUNCTION__, __LINE__, info_first_str);
 		            }
 					// Recode time is less than iRecordTime, we  can not return anything.
@@ -528,17 +583,17 @@ void statusProc(Webs *wp)
 		                trace(2, "[%s:%s:%d] info_first_str = %s", __FILE__, __FUNCTION__, __LINE__, info_first_str);
 		            }
 				}
-				// Return log in the first hour
+				// iRecordTime == 1 and we can return log in the first hour
 				else {
 	                sprintf(info_first_str, 
 	                    "head -%d /root/sdcard/app/instrument_info/%s/instrument_history_info_record_unixtime_%s.txt", 
-	                    HOUR_SCALE * iRecordTime, pRecordDate, pRecordDate);
+	                    HOUR_SCALE, pRecordDate, pRecordDate);
 		            trace(2, "[%s:%s:%d] info_first_str = %s", __FILE__, __FUNCTION__, __LINE__, info_first_str);
 				}
 	            get_cmd_printf(info_first_str, instrument_info_string_ptr, INSTRUMENT_INFO_STR_LEN);
                 // Remove last ",\r\n"
                 instrument_info_string_ptr[strlen(instrument_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
-                trace(2, "[%s:%s:%d] instrument_info_string_ptr = %s", __FILE__, __FUNCTION__, __LINE__, instrument_info_string_ptr);
+                // trace(2, "[%s:%s:%d] instrument_info_string_ptr = %s", __FILE__, __FUNCTION__, __LINE__, instrument_info_string_ptr);
 			}
 			else 
             {
@@ -582,6 +637,7 @@ void statusProc(Webs *wp)
                 HOUR_SCALE, instrument_info_string_ptr, battery_info_string_ptr, usart_info_string_ptr);
             
             // trace(2, "[%s:%s:%d] info_str = %s", __FILE__, __FUNCTION__, __LINE__, info_str);
+            trace(2, "[%s:%s:%d] strlen(info_str) = %d", __FILE__, __FUNCTION__, __LINE__, strlen(info_str));
             websSetStatus(wp, 200);
             websWriteHeaders(wp, -1, 0);
             websWriteEndHeaders(wp);
@@ -589,6 +645,7 @@ void statusProc(Webs *wp)
             websFlush(wp);
         }
         websDone(wp);
+        trace(2, "[%s:%s:%d] websFlush end", __FILE__, __FUNCTION__, __LINE__);
 		free(instrument_info_string_ptr);
 		free(battery_info_string_ptr);
 		free(usart_info_string_ptr);
@@ -597,8 +654,8 @@ void statusProc(Webs *wp)
     {
         char *battery_info_string_ptr = (char *)malloc(BATTERY_INFO_STR_LEN);
         pRecordDate = websGetVar(wp, "record_date", "");
-        trace(2, "%ld - [%s:%s:%d] websWrite::pRecordDate = %s",
-                      time(NULL), __FILE__, __FUNCTION__, __LINE__, pRecordDate);
+        trace(2, "[%s:%s:%d] %ld - websWrite::pRecordDate = %s",
+                      __FILE__, __FUNCTION__, __LINE__, time(NULL), pRecordDate);
         if(strlen(pRecordDate) > 0)
         {
             int iBatteryInfoFileSize = 0;

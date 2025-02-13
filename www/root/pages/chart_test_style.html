@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>  
+<html>  
+<head>  
+    <title>实时数据可视化图表</title>  
+</head>  
+<body>
+<script type="text/javascript" src="../js/chart_2.8.0.js"></script>
+<script type="text/javascript" src="../js/chartjs-plugin-style.js"></script>
+<div id="legend-container"></div>
+<div id="Chart_Div">
+<canvas id="myChart" width="200" height="100"></canvas>
+</div>
+<script type="text/javascript">
+var ctx = document.getElementById('myChart').getContext('2d');
+var chart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+    datasets: [{
+      data: [45, 20, 64, 32, 76, 51],
+      borderWidth: 0,
+      backgroundColor: 'rgb(255, 99, 132)',
+      bevelWidth: 3,
+      bevelHighlightColor: 'rgba(255, 255, 255, 0.75)',
+      bevelShadowColor: 'rgba(0, 0, 0, 0.5)',
+      shadowOffsetX: 3,
+      shadowOffsetY: 3,
+      shadowBlur: 10,
+      shadowColor: 'rgba(0, 0, 0, 0.5)',
+    }]
+  },
+  options: {
+    tooplips: {
+      bevelWidth: 3,
+      bevelHighlightColor: 'rgba(255, 255, 255, 0.75)',
+      bevelShadowColor: 'rgba(0, 0, 0, 0.5)',
+      shadowOffsetX: 3,
+      shadowOffsetY: 3,
+      shadowBlur: 10,
+      shadowColor: 'rgba(0, 0, 0, 0.5)'
+    }
+  }
+});
+</script>
+<br>
+</body>  
+</html>

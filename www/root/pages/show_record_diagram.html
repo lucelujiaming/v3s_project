@@ -75,14 +75,32 @@
                         </div>
                     </div>
                 </div>
-            <iframe id="firmware-setting-iframe" name="firmware-setting-iframe" style="left: 0px; top: 0px; display: none"></iframe>
+            <iframe id="firmware-setting-iframe" 
+                name="firmware-setting-iframe" style="left: 0px; top: 0px; display: none"></iframe>
         </div>    
         <div class="panel-fbar-container"></div>
     </div>
 </div>
-<div id="legend-container"></div>
+<!-- div id="legend-container"></div>
 <div id="Chart_Div" width="400" height="500">
 <canvas id="myChart" width="400" height="500"></canvas>
+</div -->
+<div id="myChart"></div>
+
+<div class="container widget-container text-container read-only" style="height: 10px;">
+    <div class="widget-fieldlabel-wrap m" style="height: 10px;">
+        <label class="widget-fieldlabel text-fieldlabel" style="height: 2px;">当前读数</label>
+        <span class="widget-separator"  style="height: 2px;">:</span>
+    </div>
+    <div class="widget-wrap-outer text-wrap-outer"  style="height: 2px;">
+        <div class="widget-wrap text-wrap"  style="height: 2px;">
+            <span class="text-wrap"  style="height: 2px;">
+                <input style="height: 20px;" type="text" 
+                    id="current_instrument_value" name="current_instrument_value"
+                    value="" readonly="readonly" class="text-text xxl" maxlength="100">
+            </span>
+        </div>
+    </div>
 </div>
 
 <div class="container widget-container grid-container" style="width:48%;hight:100%;float:left;">

@@ -265,7 +265,7 @@ uint16_t MEECO_DataOutput(char* strOutput)
 		cFlowSetpointBuffer[2] = protocol_buff[6]&0x00FF;
 		cFlowSetpointBuffer[1] = protocol_buff[5]>>8;
 		cFlowSetpointBuffer[0] = protocol_buff[5]&0x00FF;
-				printf("DELTAF_DataOutput::little_endian\r\n");
+		//		printf("DELTAF_DataOutput::little_endian\r\n");
 	}
 	else
 	{
@@ -278,7 +278,7 @@ uint16_t MEECO_DataOutput(char* strOutput)
 		cFlowSetpointBuffer[2] = protocol_buff[5]&0x00FF;
 		cFlowSetpointBuffer[1] = protocol_buff[6]>>8;
 		cFlowSetpointBuffer[0] = protocol_buff[6]&0x00FF;
-				printf("DELTAF_DataOutput::big_endian\r\n");
+		//		printf("DELTAF_DataOutput::big_endian\r\n");
 	}
     sprintf(strOutput, "%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f",
             *floatDisplayValue,  // 30004   Real    Display Value   

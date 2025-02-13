@@ -1,0 +1,42 @@
+﻿<!DOCTYPE html>  
+<html>  
+<head>  
+    <title>实时数据可视化图表</title>  
+</head>  
+<body>
+<script type="text/javascript" src="../js/chart_2.8.0.js"></script>
+<script type="text/javascript" src="../js/chartjs-chart-smith.js"></script>
+<div id="legend-container"></div>
+<div id="Chart_Div">
+<canvas id="myChart" width="200" height="100"></canvas>
+</div>
+<script type="text/javascript">
+var ctx = document.getElementById('myChart').getContext('2d');
+var chart = new Chart(ctx, {
+        type: 'smith',
+      options: {
+        aspectRatio: 1,
+        elements: {
+          point: {
+            pointStyle: 'cross',
+            radius: 10,
+            hoverRadius: 10,
+            borderColor: 'black'
+          }
+        }
+      },
+      data: {
+        datasets: [{
+          label: 'My Dataset',
+          data: [
+            { real : 1.0, imag : 2.0}, 
+            { real : 1.0, imag : 1.0},
+            { real : 1.0, imag : -1.0}
+          ],
+        }]
+      }
+});
+</script>
+<br>
+</body>  
+</html>

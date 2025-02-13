@@ -39,8 +39,10 @@
 
 void Protocol_Init(int fd);
 uint16_t Protocol_DataOutput(char * strOutput);
+uint16_t Protocol_GetDataColumnsNumber();
 
 void Protocol_Proc(int fd);
+// void Update_Protocol_Config();
 
 extern int16_t HReg[HREG_MAX];
 extern int16_t IReg[IREG_MAX];

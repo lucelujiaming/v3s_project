@@ -18,9 +18,13 @@
 var application_filestatus = 1;
 var system_filestatus = 1;
 
+var first_ip_address_status  = 1;
+var second_ip_address_status = 1;
+var first_mac_address_status  = 1;
+var second_mac_address_status = 1;
+
 var current_subpage = "";
 
-var last_reading_interval_id;
 // 自定义
 const instrument_color_custom = new Array(
             "rgb(54, 56, 235)", "rgb(80, 162, 235)", "rgb(54, 162, 55)", 
@@ -183,16 +187,6 @@ dataTwo = getData(n, 7);
 dataThr = getData(n, 12);
 dataFor = getData(n, 20);
 
-function getLastReading() {
-    $.get("/action/status?mode=get_latest_reading", function(_data, _status){
-        // var pos = _data.indexOf(";");
-        // var first_mac = _data.substring(0, pos).trim();
-        // var second_mac = _data.substring(pos + 1).trim();
-        // alert("_data = " + _data);
-        $("#current_instrument_value").attr("value", _data);
-    });  
-}
-
 var checkApplicationFileName = function() {
     var fname = $("#application_filename")[0].innerText;
     if (!fname || fname.length == 0) {
@@ -220,11 +214,6 @@ var checkSystemFileName = function() {
         $("div.widget-error-tips").css("display", "block");
     }
 };
-
-var first_ip_address_status  = 1;
-var second_ip_address_status = 1;
-var first_mac_address_status  = 1;
-var second_mac_address_status = 1;
 
 var checkIPAddress = function() {
     var first_ip_address = $("#new_first_ip_address")[0].value;
@@ -272,245 +261,8 @@ var checkMACAddress = function() {
     }
 };
 
-var instrument_config_status  = 0;
-
-function checkInstrumentConfig(instrumentType) {
-    var instrument_address     = $("#instrument_address")[0].value;
-    var instrument_timespan    = $("#instrument_timespan")[0].value;
-    var instrument_timeout     = $("#instrument_timeout")[0].value;
-    var instrument_fault_times = $("#instrument_fault_times")[0].value;
-    
-    instrument_config_status  = 0;
-    // 检查设备地址
-    if (!instrument_address || instrument_address.length == 0) {
-        instrument_config_status = 1;
-        alert("设备地址为空！");
-        return;
-    } else if (/^([1-9]*)$/.test(instrument_address)) {
-        instrument_config_status = 0;
-    } else {
-        instrument_config_status = 2;
-        alert("设备地址格式错误！");
-        return;
-    }
-    // 检查读取间隔(0.1s)
-    if (!instrument_timespan || instrument_timespan.length == 0) {
-        instrument_config_status = 1;
-        alert("读取间隔为空！");
-        return;
-    } else if (/^([1-9]*)0$/.test(instrument_timespan)) {
-        instrument_config_status = 0;
-    } else {
-        instrument_config_status = 2;
-        alert("读取间隔格式错误：读取间隔为10的倍数！");
-        return;
-    }
-    // 检查超时时间(0.1s) 
-    if (!instrument_timeout || instrument_timeout.length == 0) {
-        instrument_config_status = 1;
-        alert("超时时间为空！");
-        return;
-    } else if (/^([1-9]*)0$/.test(instrument_timeout)) {
-        instrument_config_status = 0;
-    } else {
-        instrument_config_status = 2;
-        alert("超时时间格式错误：超时时间为10的倍数！");
-        return;
-    }
-    // 检查最大故障次数 
-    if (!instrument_fault_times || instrument_fault_times.length == 0) {
-        instrument_config_status = 1;
-        alert("超时时间为空！");
-        return;
-    } else if (/^([1-9][0-9]*)$/.test(instrument_fault_times)) {
-        instrument_config_status = 0;
-    } else {
-        instrument_config_status = 2;
-        alert("最大故障次数格式错误：最大故障次数为数字！");
-        return;
-    }
-}
-
-function setInstrumentClassByType(instrumentType) {
-	var instrumentClassSelect = document.getElementById('instrument_class');
-    if((instrumentType == 0) || (instrumentType == 1)  // PDS-PA（HPGP101） & mLPC101
-     ||(instrumentType == 2) || (instrumentType == 16)) // Lasair III & PDS-E（PMS Mode）
-    {
-        instrumentClassSelect.options[0].selected = true;
-    }
-    else if(instrumentType == 3)   // Tracer2，Aquavolt
-    {
-        instrumentClassSelect.options[1].selected = true;
-    }
-    else if(instrumentType == 4)   //MX1-A，MXNY
-    {
-        instrumentType.options[2].selected = true;
-    }
-    else if(instrumentType == 5)   // RCP，FID，PDHID
-    {
-        instrumentClassSelect.options[3].selected = true;
-    }
-    else if(instrumentType == 6)   // 310E，550E，560，745，750
-    {
-        instrumentClassSelect.options[4].selected = true;
-    }
-    else if(instrumentType == 7)   // HALO+，HALO 3Q，SPARK
-    {
-        instrumentType.options[5].selected = true;
-    }
-    else if(instrumentType == 8)   // DID550，ORTHOSMART
-    {
-        instrumentClassSelect.options[6].selected = true;
-    }
-    else if(instrumentClassSelect == 9)   // TA7000，TA5000
-    {
-        instrumentClassSelect.options[7].selected = true;
-    }
-    else if((instrumentType == 10)      // 5830，5920，3050
-         && (instrumentType == 11))     // 2850
-    {
-        instrumentClassSelect.options[8].selected = true;
-    }
-    else if(instrumentType == 12)   // U3000
-    {
-        instrumentClassSelect.options[9].selected = true;
-    }
-    else if((instrumentType == 13)      // Nanochrome
-         && (instrumentType == 14))     // K1000A
-    {
-        instrumentClassSelect.options[10].selected = true;
-    }
-    else if(instrumentType == 15)   // WCPC-0703E
-    {
-        instrumentClassSelect.options[11].selected = true;
-    }
-    else if(instrumentType == 17)   // HGPC-100（EX）
-    {
-        instrumentClassSelect.options[12].selected = true;
-    }
-};
-
-function instrumentClassChange() {
-	var instrumentClassSelect = $("#instrument_class")[0].value;
-    var instrumentType = document.getElementById('instrument_type');
-    instrumentType.innerHTML = "";
-    if(instrumentClassSelect == 0)   // PMS
-    {
-        var optionOne = document.createElement('option');
-        optionOne.value = 0;
-        optionOne.text = "PDS-PA（HPGP101）";
-        instrumentType.append(optionOne);
-        var optionTwo = document.createElement('option');
-        optionTwo.value = 1;
-        optionTwo.text = "mLPC101";
-        instrumentType.append(optionTwo);
-        var optionThree = document.createElement('option');
-        optionThree.value = 2;
-        optionThree.text = "Lasair III";
-        instrumentType.append(optionThree);
-        var optionFour = document.createElement('option');
-        optionFour.value = 16;
-        optionFour.text = "PDS-E（PMS Mode）";
-        instrumentType.append(optionFour);
-    }
-    else if(instrumentClassSelect == 1)   // MEECO
-    {
-        var optionOne = document.createElement('option');
-        optionOne.value = 3;
-        optionOne.text = "Tracer2，Aquavolt";
-        instrumentType.append(optionOne);
-    }
-    else if(instrumentClassSelect == 2)   // JAG
-    {
-        var optionOne = document.createElement('option');
-        optionOne.value = 4;
-        optionOne.text = "MX1-A，MXNY";
-        instrumentType.append(optionOne);
-    }
-    else if(instrumentClassSelect == 3)   // PEAK/P9000
-    {
-        var optionOne = document.createElement('option');
-        optionOne.value = 5;
-        optionOne.text = "RCP，FID，PDHID";
-        instrumentType.append(optionOne);
-    }
-    else if(instrumentClassSelect == 4)   // DELTA-F
-    {
-        var optionOne = document.createElement('option');
-        optionOne.value = 6;
-        optionOne.text = "310E，550E，560，745，750";
-        instrumentType.append(optionOne);
-    }
-    else if(instrumentClassSelect == 5)   // TIGER
-    {
-        var optionOne = document.createElement('option');
-        optionOne.value = 7;
-        optionOne.text = "HALO+，HALO 3Q，SPARK";
-        instrumentType.append(optionOne);
-    }
-    else if(instrumentClassSelect == 6)   // ORTHODYNE
-    {
-        var optionOne = document.createElement('option');
-        optionOne.value = 8;
-        optionOne.text = "DID550，ORTHOSMART";
-        instrumentType.append(optionOne);
-    }
-    else if(instrumentClassSelect == 7)   // SAES
-    {
-        var optionOne = document.createElement('option');
-        optionOne.value = 9;
-        optionOne.text = "TA7000，TA5000";
-        instrumentType.append(optionOne);
-    }
-    else if(instrumentClassSelect == 8)   // AMETEK
-    {
-        var optionOne = document.createElement('option');
-        optionOne.value = 10;
-        optionOne.text = "5830，5920，3050";
-        instrumentType.append(optionOne);
-        var optionTwo = document.createElement('option');
-        optionTwo.value = 11;
-        optionTwo.text = "2850";
-        instrumentType.append(optionTwo);
-    }
-    else if(instrumentClassSelect == 9)   // Teledyne
-    {
-        var optionOne = document.createElement('option');
-        optionOne.value = 12;
-        optionOne.text = "U3000";
-        instrumentType.append(optionOne);
-    }
-    else if(instrumentClassSelect == 10)   // SERVOMEX
-    {
-        var optionOne = document.createElement('option');
-        optionOne.value = 13;
-        optionOne.text = "Nanochrome";
-        instrumentType.append(optionOne);
-        var optionTwo = document.createElement('option');
-        optionTwo.value = 14;
-        optionTwo.text = "K1000A";
-        instrumentType.append(optionTwo);
-    }
-    else if(instrumentClassSelect == 11)   // HCTM
-    {
-        var optionOne = document.createElement('option');
-        optionOne.value = 15;
-        optionOne.text = "WCPC-0703E";
-        instrumentType.append(optionOne);
-    }
-    else if(instrumentClassSelect == 12)   // RELIYA
-    {
-        var optionOne = document.createElement('option');
-        optionOne.value = 17;
-        optionOne.text = "HGPC-100（EX）";
-        instrumentType.append(optionOne);
-    }
-    instrumentType.options[0].selected = true;
-};
-
 var funs = {};
 funs["su"] = function() {
-    clearInterval(last_reading_interval_id);
     //   alert("current_subpage=" + current_subpage);
     // onClick
     if(current_subpage == "pages/ip_address_setting.html")
@@ -541,60 +293,6 @@ funs["su"] = function() {
             var second_mac = _data.substring(pos + 1).trim();
             $("#new_first_mac_address").attr("value", first_mac);
             $("#new_second_mac_address").attr("value", second_mac);
-        });
-    }
-    else if(current_subpage == "pages/instrument_web_control.html")
-    {
-        var instrumentType = document.getElementById('instrument_type');
-        var optionOne = document.createElement('option');
-        optionOne.value = 0;
-        optionOne.text = "PDS-PA（HPGP101）";
-        instrumentType.append(optionOne);
-        var optionTwo = document.createElement('option');
-        optionTwo.value = 1;
-        optionTwo.text = "mLPC101";
-        instrumentType.append(optionTwo);
-        var optionThree = document.createElement('option');
-        optionThree.value = 2;
-        optionThree.text = "Lasair III";
-        instrumentType.append(optionThree);
-        var optionFour = document.createElement('option');
-        optionFour.value = 16;
-        optionFour.text = "PDS-E（PMS Mode）";
-        instrumentType.append(optionFour);
-
-        instrumentType.options[0].selected = true;
-        
-        $("div.loading-container#loading-container").css("display", "block");
-        // 获取MAC地址设定
-        $.get("/action/status?mode=get_instrument_config", function(_data, _status){
-            // alert("get_macconfig = " + _data);
-            $("div.loading-container#loading-container").css("display", "none");
-            var data_json = JSON.parse(_data);
-            $.each(data_json, function(index, info){
-                if (index == "Data0") {
-                    // alert("Data0 = " + info);
-                    setInstrumentClassByType(info);
-                    instrumentClassChange();
-                    $("#instrument_type").attr("value", info);
-                }
-                else if (index == "Data1") {
-                    // alert("Data1 = " + info);
-                    $("#instrument_address").attr("value", info);
-                }
-                else if (index == "Data2") {
-                    $("#instrument_timespan").attr("value", info);
-                }
-                else if (index == "Data3") {
-                    $("#instrument_timeout").attr("value", info);
-                }
-                else if (index == "Data4") {
-                    $("#instrument_endian").attr("value", info);
-                }
-                else if (index == "Data5") {
-                    $("#instrument_fault_times").attr("value", info);
-                }
-            });
         });
     }
     else if((current_subpage == "pages/application_upgrade.html")
@@ -663,7 +361,6 @@ funs["su"] = function() {
     }
     else if(current_subpage == "pages/show_record_diagram.html")
     {
-        // last_reading_interval_id = setInterval(getLastReading, 2000);
         // alert("AAAA current_subpage=" + current_subpage);
         $("div.loading-container#loading-container").css("display", "block");
         // 系统信息
@@ -755,7 +452,6 @@ funs["su"] = function() {
             $("#current_date").attr("value", _data);
         });
     }
-    
     // onClick
     if((current_subpage == "pages/application_upgrade.html")
         ||(current_subpage == "pages/system_upgrade.html"))
@@ -886,64 +582,6 @@ funs["su"] = function() {
                 $("div.widget-error-tips").css("display", "block");
             }
         });
-    }
-    else if(current_subpage == "pages/instrument_web_control.html")
-    {
-        // MAC设置
-        // alert("click::mac_address = " + current_subpage);
-        $("button#set_instrument_config").on("click", function(e){
-            checkInstrumentConfig();
-            alert("click::instrument_web_control = " + instrument_config_status);
-            if (instrument_config_status == 0)
-            {
-                var instrument_type = $("#instrument_type")[0].value;
-                var instrument_address = $("#instrument_address")[0].value;
-                var instrument_timespan = $("#instrument_timespan")[0].value;
-                var instrument_timeout = $("#instrument_timeout")[0].value;
-                var instrument_endian = $("#instrument_endian")[0].value;
-                var instrument_fault_times = $("#instrument_fault_times")[0].value;
-                
-                var instrument_config_str = instrument_type + ";"
-                                          + instrument_address + ";" 
-                                          + instrument_timespan + ";"
-                                          + instrument_timeout + ";"
-                                          + instrument_endian + ";"
-                                          + instrument_fault_times ;
-                alert("click::mac_address = " + instrument_config_str);
-                $("div.widget-error-tips").css("display", "none");
-                // 
-                $("#loading-text").html("修改中...");
-                $("div.loading-container#loading-container").css("display", "block");
-                $("div.mask#mask").css("display", "block");
-                var updateMACAddress = function() {
-                    $("div.loading-container#loading-container").css("display", "none");
-                    $("div.mask#mask").css("display", "none");
-                    alert("设置成功");
-                    // self.location='http://192.168.168.' + ip_address;
-                    location.reload(); 
-                };
-                var waitforMACSetDone = function() {
-                    setTimeout(updateMACAddress, 2000);
-                }
-                // Do submit job
-                $.get("/action/status?mode=set_instrument_config" +
-                        "&inst_type="        + instrument_type  + 
-                        "&inst_addr="        + instrument_address + 
-                        "&inst_timespan="    + instrument_timespan + 
-                        "&inst_timeout="     + instrument_timeout + 
-                        "&inst_endian="      + instrument_endian + 
-                        "&inst_fault_times=" + instrument_fault_times , 
-                        function(_data, _status){});
-                waitforMACSetDone();
-            }
-            else if (instrument_config_status == 1)
-            {
-                // alert("mac_address_status = " + first_mac_address_status);
-                $("div.error-tips-content").html("MAC地址格式错误");
-                $("div.widget-error-tips").css("display", "block");
-            }
-        });
-        
     }
     else if(current_subpage == "pages/show_record_diagram.html")
     {
@@ -1133,7 +771,7 @@ funs["su"] = function() {
                 var time_minutes = 0;
                 $.each(data_json, function(index, info){
                     if (index == "Scale") {
-                        alert("Scale = " + info );
+                        // alert("Scale = " + info );
                         instrument_scale = info;
                         
                         // This variable is defined by macro TIME_SPAN in the web server source code.
@@ -1170,9 +808,7 @@ funs["su"] = function() {
                         }
                     }
                     else if (index == "InstrumentInfo") {
-                        alert("InstrumentInfo length = " + info.length +
-                              " instrument_scale = " + instrument_scale);
-                        alert("info[i][0] = " + info[0][0]);
+                        // alert("InstrumentInfo = " + info + " and info.length = " + info.length);
                         for (let i = 0; i < info.length; i++) {
                             particle_first_array[i]  = [instrument_scale_array[i], info[i][0]];
                             particle_second_array[i] = [instrument_scale_array[i], info[i][1]];
@@ -1249,75 +885,100 @@ funs["su"] = function() {
                     }
                 }
 
+
                 const record_diagram_data = [
                     {
-                        data: particle_first_array,
-                        lineWidth: 2,
-                        name: '颗粒度通道1',
-                        color: lines_border_color_array[0]
+                        data: dataOne,
+                        lineWidth: 0.5,
+                        name: 'Hourly One data points',
+                        color: 'rgb(54, 56, 235)',
                     },{
-                        data: particle_second_array,
-                        lineWidth: 2,
-                        name: '颗粒度通道2',
-                        color: lines_border_color_array[1]
+                        data: dataTwo,
+                        lineWidth: 0.5,
+                        name: 'Hourly Two data points',
+                        color: 'rgb(80, 162, 235)',
                     },{
-                        data: particle_third_array,
-                        lineWidth: 2,
-                        name: '颗粒度通道3',
-                        color: lines_border_color_array[2]
+                        data: dataThr,
+                        lineWidth: 0.5,
+                        name: 'Hourly Three data points',
+                        color: 'rgb(54, 162, 55)',
                     },{
-                        data: particle_fourth_array,
-                        lineWidth: 2,
-                        name: '颗粒度通道4',
-                        color: lines_border_color_array[3]
-                    },{
-                        data: particle_fifth_array,
-                        lineWidth: 2,
-                        name: '颗粒度通道5',
-                        color: lines_border_color_array[4]
-                    },{
-                        data: particle_sixth_array,
-                        lineWidth: 2,
-                        name: '颗粒度通道6',
-                        color: lines_border_color_array[5]
-                    },{
-                        data: particle_seventh_array,
-                        lineWidth: 2,
-                        name: '颗粒度通道7',
-                        color: lines_border_color_array[6]
-                    },{
-                        data: particle_eighth_array,
-                        lineWidth: 2,
-                        name: '颗粒度通道8',
-                        color: lines_border_color_array[7]
-                    },{
-                        data: laser_first_array,
-                        lineWidth: 2,
-                        name: '辐射度通道1',
-                        color: lines_border_color_array[8]
-                    },{
-                        data: laser_second_array,
-                        lineWidth: 2,
-                        name: '辐射度通道2',
-                        color: lines_border_color_array[9]
+                        data: dataFor,
+                        lineWidth: 0.5,
+                        name: 'Hourly Four data points',
+                        color: 'rgb(54, 128, 55)',
                     }
-                    // ,{
-                    //     data: battery_info_array,
-                    //     lineWidth: 0.5,
-                    //     name: '掉电情况',
-                    //     color: 'rgb(0, 99, 132)'
-                    // },{
-                    //     data: usart_info_array,
-                    //     lineWidth: 0.5,
-                    //     name: '串口状态',
-                    //     color: 'rgb(255, 0, 132)'
-                    // },{
-                    //     data: battery_usart_info_array,
-                    //     lineWidth: 0.5,
-                    //     name: '掉电情况和串口状态',
-                    //     color: 'rgb(255, 99, 0)'
-                    // }
-                ];
+                ]
+
+                // const record_diagram_data = [
+                //     {
+                //         data: particle_first_array,
+                //         lineWidth: 0.5,
+                //         name: '颗粒度通道1',
+                //         color: lines_border_color_array[0]
+                //     },{
+                //         data: particle_second_array,
+                //         lineWidth: 0.5,
+                //         name: '颗粒度通道2',
+                //         color: lines_border_color_array[1]
+                //     },{
+                //         data: particle_third_array,
+                //         lineWidth: 0.5,
+                //         name: '颗粒度通道3',
+                //         color: lines_border_color_array[2]
+                //     },{
+                //         data: particle_fourth_array,
+                //         lineWidth: 0.5,
+                //         name: '颗粒度通道4',
+                //         color: lines_border_color_array[3]
+                //     },{
+                //         data: particle_fifth_array,
+                //         lineWidth: 0.5,
+                //         name: '颗粒度通道5',
+                //         color: lines_border_color_array[4]
+                //     },{
+                //         data: particle_sixth_array,
+                //         lineWidth: 0.5,
+                //         name: '颗粒度通道6',
+                //         color: lines_border_color_array[5]
+                //     },{
+                //         data: particle_seventh_array,
+                //         lineWidth: 0.5,
+                //         name: '颗粒度通道7',
+                //         color: lines_border_color_array[6]
+                //     },{
+                //         data: particle_eighth_array,
+                //         lineWidth: 0.5,
+                //         name: '颗粒度通道8',
+                //         color: lines_border_color_array[7]
+                //     },{
+                //         data: laser_first_array,
+                //         lineWidth: 0.5,
+                //         name: '辐射度通道1',
+                //         color: lines_border_color_array[8]
+                //     },{
+                //         data: laser_second_array,
+                //         lineWidth: 0.5,
+                //         name: '辐射度通道2',
+                //         color: lines_border_color_array[9]
+                //     }
+                //     // ,{
+                //     //     data: battery_info_array,
+                //     //     lineWidth: 0.5,
+                //     //     name: '掉电情况',
+                //     //     color: 'rgb(0, 99, 132)'
+                //     // },{
+                //     //     data: usart_info_array,
+                //     //     lineWidth: 0.5,
+                //     //     name: '串口状态',
+                //     //     color: 'rgb(255, 0, 132)'
+                //     // },{
+                //     //     data: battery_usart_info_array,
+                //     //     lineWidth: 0.5,
+                //     //     name: '掉电情况和串口状态',
+                //     //     color: 'rgb(255, 99, 0)'
+                //     // }
+                //  ];
                 
                 const record_diagram_config = {
                     chart: {
@@ -1336,10 +997,17 @@ funs["su"] = function() {
                             }
                         }
                     },
+
                     title: {
                         text: '采样信息',
                         align: 'left'
                     },
+
+                    // subtitle: {
+                    //     text: 'Using the Boost module',
+                    //     align: 'left'
+                    // },
+
                     accessibility: {
                         screenReaderSection: {
                             beforeChartFormat: '<{headingTagName}>' +
@@ -1348,15 +1016,15 @@ funs["su"] = function() {
                                 '{yAxisDescription}</div>'
                         }
                     },
+
+                    tooltip: {
+                        valueDecimals: 2
+                    },
+
                     xAxis: {
-                        // type: 'linear'
-                        categories: instrument_scale_array
+                        type: 'datetime'
                     },
-                    yAxis: {
-                        // tickInterval: 0.000001, 
-                        minorTicks: true,
-                        allowDecimals: true
-                    },
+
                     series: record_diagram_data
                 };
                 alert("AAAA");
@@ -1611,8 +1279,8 @@ $(document).ready(function(e){
 					<li class="fst " id="menu-advanced-running-status-li">
 					     <a class="fst none-sec" data-child="no" 
 						    data-name="running-status" name="running-status" tab-id="tab-menu-ul-1010746721" 
-							ref-url="pages/system_state.html" ifun="su">
-                               <span class="icon"></span><span class="text">运行状态</span>
+							ref-url="pages/system_state.html" ifun="su"><span class="icon">
+							   </span><span class="text">运行状态</span>
 						 </a>
 					</li>
 					<li class="fst selected" id="menu-advanced-sys-tools-li">
@@ -1636,7 +1304,7 @@ $(document).ready(function(e){
 							   <span class="icon"></span><span class="text">时间设置</span>
 						 </a>
 				    </li>
-					<li class="fst selected" id="menu-advanced-statistic-diagram-li">
+					<li class="fst selected" id="menu-advanced-sys-tools-li">
 					     <a class="fst none-sec selected" data-child="no" 
 						    data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
 							ref-url="pages/show_record_diagram.html" ifun="su">

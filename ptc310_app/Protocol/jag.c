@@ -314,7 +314,7 @@ uint16_t JAG_DataOutput(char* strOutput)
 		cC_TEMPBuffer[2] = protocol_buff[8]&0x00FF;
 		cC_TEMPBuffer[1] = protocol_buff[7]>>8;
 		cC_TEMPBuffer[0] = protocol_buff[7]&0x00FF;
-				printf("DELTAF_DataOutput::little_endian\r\n");
+		//		printf("DELTAF_DataOutput::little_endian\r\n");
 	}
 	else
 	{
@@ -327,7 +327,7 @@ uint16_t JAG_DataOutput(char* strOutput)
 		cC_TEMPBuffer[2] = protocol_buff[7]&0x00FF;
 		cC_TEMPBuffer[1] = protocol_buff[8]>>8;
 		cC_TEMPBuffer[0] = protocol_buff[8]&0x00FF;
-				printf("DELTAF_DataOutput::big_endian\r\n");
+		//		printf("DELTAF_DataOutput::big_endian\r\n");
 	}
     sprintf(strOutput, "%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f",      
             *floatMeasuredValue, // 30004	    Real	Measured Value	

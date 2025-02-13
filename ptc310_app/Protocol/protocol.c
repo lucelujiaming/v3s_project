@@ -116,6 +116,20 @@ static volatile MTIMER tm_FrmAckTo= {"FrmAckTo", 0,false,false,{0, 0},1000};
 
 void record_uart_ptc_status(int status);
 
+//  void Update_Protocol_Config()
+//  {
+//  	uint16_t prot_id;
+//  	uint16_t inst_addr;
+//  	uint32_t req_time;
+//  	uint32_t ack_time;
+//  	
+//  	prot_id= HReg[CP_PROTOCOL_ID];
+//  	inst_addr= HReg[CP_INSTRUMENT_ADDR];
+//  	req_time= (uint32_t)HReg[CP_ENQUIRY_TIME]*100;
+//  	ack_time= (uint32_t)HReg[CP_RESPONSE_TIME]*100;
+//  	little_endian= HReg[CP_32BIT_LE];
+//  }
+
 void Protocol_Init(int fd)
 {
 	uint16_t prot_id;
@@ -296,6 +310,15 @@ uint16_t Protocol_DataOutput(char * strOutput)
 	return 0;
 }
 
+uint16_t Protocol_GetDataColumnsNumber()
+{
+	if(ProtocolConvert->get_data_columns_number)
+	{
+		return (*ProtocolConvert->get_data_columns_number)();
+	}
+	return 0;
+}
+
 
 void record_uart_ptc_status(int status)
 {
@@ -304,8 +327,9 @@ void record_uart_ptc_status(int status)
     // 2. 打开PTC私有协议对应的串口
     uart_ptc_status_fd = open("./uart_ptc_status_record", O_RDWR|O_NOCTTY/*|O_NDELAY*/);
 	printf("record_uart_ptc_status: open return %d\n", uart_ptc_status_fd);
-    if (uart_ptc_status_fd < 0) {
+    if (uart_ptc_status_fd == -1) {
 	    printf("record_uart_ptc_status: open failed %d\n", uart_ptc_status_fd);
+		close(uart_ptc_status_fd);
         return;
     }
 	sprintf(cTemp, "%ld\t%d\r\n", time(NULL), status);

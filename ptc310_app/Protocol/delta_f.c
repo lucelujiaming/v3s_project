@@ -142,7 +142,7 @@ uint16_t DELTAF_DataOutput(char* strOutput)
 		cHO2ppbBuffer[2] = protocol_buff[7]&0x00FF;
 		cHO2ppbBuffer[1] = protocol_buff[6]>>8;
 		cHO2ppbBuffer[0] = protocol_buff[6]&0x00FF;
-				printf("DELTAF_DataOutput::little_endian\r\n");
+		//		printf("DELTAF_DataOutput::little_endian\r\n");
 	}
 	else
 	{
@@ -155,7 +155,7 @@ uint16_t DELTAF_DataOutput(char* strOutput)
 		cHO2ppbBuffer[2] = protocol_buff[6]&0x00FF;
 		cHO2ppbBuffer[1] = protocol_buff[7]>>8;
 		cHO2ppbBuffer[0] = protocol_buff[7]&0x00FF;
-				printf("DELTAF_DataOutput::big_endian\r\n");
+		//		printf("DELTAF_DataOutput::big_endian\r\n");
 	}
 	
 //	// PPM -> PPB
@@ -180,10 +180,10 @@ uint16_t DELTAF_DataOutput(char* strOutput)
 //		*floatHO2ppb = *floatHO2ppb * 1000;
 //	}
 
-	printf("DELTAF_DataOutput::cO2ppbBuffer = [%02X, %02X, %02X, %02X]\r\n", 
-		cO2ppbBuffer[0], cO2ppbBuffer[1], cO2ppbBuffer[2], cO2ppbBuffer[3]);
-	printf("DELTAF_DataOutput::cHO2ppbBuffer = [%02X, %02X, %02X, %02X]\r\n", 
-		cHO2ppbBuffer[0], cHO2ppbBuffer[1], cHO2ppbBuffer[2], cHO2ppbBuffer[3]);
+	// printf("DELTAF_DataOutput::cO2ppbBuffer = [%02X, %02X, %02X, %02X]\r\n", 
+	//	cO2ppbBuffer[0], cO2ppbBuffer[1], cO2ppbBuffer[2], cO2ppbBuffer[3]);
+	// printf("DELTAF_DataOutput::cHO2ppbBuffer = [%02X, %02X, %02X, %02X]\r\n", 
+	//	cHO2ppbBuffer[0], cHO2ppbBuffer[1], cHO2ppbBuffer[2], cHO2ppbBuffer[3]);
 	
     sprintf(strOutput, "%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f",
             *floatO2ppb,       // 30005	Real	O2 ppb	

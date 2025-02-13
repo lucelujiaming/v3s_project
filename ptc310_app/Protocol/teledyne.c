@@ -118,7 +118,7 @@ uint16_t TELEDYNE_DataOutput(char* strOutput)
 		cConcentrationBuffer[2] = protocol_buff[2]&0x00FF;
 		cConcentrationBuffer[1] = protocol_buff[1]>>8;
 		cConcentrationBuffer[0] = protocol_buff[1]&0x00FF;
-				printf("DELTAF_DataOutput::little_endian\r\n");
+		//		printf("DELTAF_DataOutput::little_endian\r\n");
 	}
 	else
 	{
@@ -126,7 +126,7 @@ uint16_t TELEDYNE_DataOutput(char* strOutput)
 		cConcentrationBuffer[2] = protocol_buff[1]&0x00FF;
 		cConcentrationBuffer[1] = protocol_buff[2]>>8;
 		cConcentrationBuffer[0] = protocol_buff[2]&0x00FF;
-				printf("DELTAF_DataOutput::big_endian\r\n");
+		//		printf("DELTAF_DataOutput::big_endian\r\n");
 	}
     sprintf(strOutput, "%f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f",
             *floatConcentration, // 30002       Real    Concentration

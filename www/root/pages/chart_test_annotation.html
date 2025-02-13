@@ -1,0 +1,62 @@
+﻿<!DOCTYPE html>  
+<html>  
+<head>  
+    <title>实时数据可视化图表</title>  
+</head>  
+<body>
+<script type="text/javascript" type="module" src="../js/chart.js"></script>
+<script type="text/javascript" type="module" src="../js/chartjs-plugin-annotation.js"></script>
+<div id="legend-container"></div>
+<div id="Chart_Div">
+<canvas id="myChart" width="200" height="100"></canvas>
+</div>
+<script type="module" type="text/javascript" >
+Chart.register('annotation')
+ 
+const ctx = document.getElementById('myChart').getContext('2d');
+ 
+const myChart = new Chart(ctx, {
+    type: 'line', // 图表类型
+    data: {
+        // 数据集
+        labels: ['一月', '二月', '三月', '四月', '五月', '六月'],
+        datasets: [{
+            label: '数据集',
+            data: [12, 4, 5, 2, 8, 7],
+            backgroundColor: 'rgba(0, 123, 255, 0.5)',
+            borderColor: 'rgba(0, 123, 255, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        // 图表选项
+    },
+    plugins: [
+        // 注册注解插件
+        {
+            id: 'annotation', // 插件ID
+            type: 'annotation',
+            annotations: {
+                points: [
+                    {
+                        type: 'line', // 注解类型
+                        mode: 'vertical', // 方向
+                        scaleID: 'x-axis-0', // 所在x轴
+                        value: '三月', // 在'三月'的位置
+                        borderColor: 'rgba(255, 255, 255, 0.5)', // 线条颜色
+                        borderWidth: 2, // 线条宽度
+                        label: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.75)', // 标签背景色
+                            content: '特定点' // 标签内容
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+});
+
+</script>
+<br>
+</body>  
+</html>

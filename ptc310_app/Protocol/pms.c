@@ -269,7 +269,7 @@ uint16_t PMS_PDS_PA_DataOutput(char* strOutput)
 		cLaserRefBuffer[1] = protocol_buff[17]>>8;
 		cLaserRefBuffer[0] = protocol_buff[17]&0x00FF;
         floatLaserRef[0] = *floatLaserRefBufferPtr;
-				printf("DELTAF_DataOutput::little_endian\r\n");
+		//		printf("DELTAF_DataOutput::little_endian\r\n");
 
 		cCounterZeroPointOneBuffer[3] = protocol_buff[52]>>8;
 		cCounterZeroPointOneBuffer[2] = protocol_buff[52]&0x00FF;
@@ -381,7 +381,7 @@ uint16_t PMS_PDS_PA_DataOutput(char* strOutput)
 		cLaserRefBuffer[1] = protocol_buff[18]>>8;
 		cLaserRefBuffer[0] = protocol_buff[18]&0x00FF;
         floatLaserRef[0] = *floatLaserRefBufferPtr;
-				printf("DELTAF_DataOutput::big_endian\r\n");
+		//		printf("DELTAF_DataOutput::big_endian\r\n");
 
 		cCounterZeroPointOneBuffer[3] = protocol_buff[51]>>8;
 		cCounterZeroPointOneBuffer[2] = protocol_buff[51]&0x00FF;
@@ -892,7 +892,8 @@ uint16_t PMS_LASAIR_III_DataOutput(char* strOutput)
 		// cRefGoodBuffer[2] = protocol_buff[16]&0x00FF;
 		// cRefGoodBuffer[1] = protocol_buff[15]>>8;
 		// cRefGoodBuffer[0] = protocol_buff[15]&0x00FF;
-				printf("DELTAF_DataOutput::little_endian\r\n");
+		
+		//		printf("DELTAF_DataOutput::little_endian\r\n");
 	}
 	else
 	{
@@ -935,7 +936,8 @@ uint16_t PMS_LASAIR_III_DataOutput(char* strOutput)
 		// cRefGoodBuffer[2] = protocol_buff[15]&0x00FF;
 		// cRefGoodBuffer[1] = protocol_buff[16]>>8;
 		// cRefGoodBuffer[0] = protocol_buff[16]&0x00FF;
-				printf("DELTAF_DataOutput::big_endian\r\n");
+		
+		//		printf("DELTAF_DataOutput::big_endian\r\n");
 	}
     sprintf(strOutput, "%f,%f,%f,%f,%f,%f,%f,%.1f,%.1f,%.1f",
             *floatZeroPointThree, // 	30002	    Real	0.3
@@ -1156,7 +1158,7 @@ uint16_t PMS_PDS_E_DataOutput(char* strOutput)
 		cLaserRefBuffer[2] = protocol_buff[18]&0x00FF;
 		cLaserRefBuffer[1] = protocol_buff[17]>>8;
 		cLaserRefBuffer[0] = protocol_buff[17]&0x00FF;
-				printf("DELTAF_DataOutput::little_endian\r\n");
+		//		printf("DELTAF_DataOutput::little_endian\r\n");
 	}
 	else
 	{
@@ -1204,7 +1206,7 @@ uint16_t PMS_PDS_E_DataOutput(char* strOutput)
 		cLaserRefBuffer[2] = protocol_buff[17]&0x00FF;
 		cLaserRefBuffer[1] = protocol_buff[18]>>8;
 		cLaserRefBuffer[0] = protocol_buff[18]&0x00FF;
-				printf("DELTAF_DataOutput::big_endian\r\n");
+		//		printf("DELTAF_DataOutput::big_endian\r\n");
 	}
 
 	// printf("DELTAF_DataOutput::cO2ppbBuffer = [%02X, %02X, %02X, %02X]\r\n", 

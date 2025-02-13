@@ -1,0 +1,40 @@
+﻿<!DOCTYPE html>  
+<html>  
+<head>  
+    <title>实时数据可视化图表</title>  
+</head>  
+<body>
+<script type="text/javascript" src="../js/chart_2.8.0.js"></script>
+<script type="text/javascript" src="../js/rough.js"></script>
+<script type="text/javascript" src="../js/chartjs-plugin-rough.js"></script>
+<div id="legend-container"></div>
+<div id="Chart_Div">
+<canvas id="myChart" width="200" height="100"></canvas>
+</div>
+<script type="text/javascript">
+var ctx = document.getElementById('myChart').getContext('2d');
+var chart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+    datasets: [{
+      data: [45, 20, 64, 32, 76, 51],
+      backgroundColor: 'rgb(255, 99, 132)',
+      borderColor: 'rgb(255, 99, 132)',
+      borderWidth: 3,
+      rough: {
+        roughness: 6,
+        bowing: 2,
+        fillStyle: 'cross-hatch',
+        fillWeight: 0.25,
+        hachureAngle: 15,
+        hachureGap: 12
+      }
+    }]
+  },
+  plugins: [ChartRough]
+});
+</script>
+<br>
+</body>  
+</html>

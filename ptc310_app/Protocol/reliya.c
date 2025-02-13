@@ -136,7 +136,7 @@ uint16_t RELIYA_HGPC_100_DataOutput(char* strOutput)
 		cCounterZeroPointFiveBuffer[2] = protocol_buff[8]&0x00FF;
 		cCounterZeroPointFiveBuffer[1] = protocol_buff[7]>>8;
 		cCounterZeroPointFiveBuffer[0] = protocol_buff[7]&0x00FF;
-				printf("DELTAF_DataOutput::little_endian\r\n");
+		//		printf("DELTAF_DataOutput::little_endian\r\n");
 	}
 	else
 	{
@@ -159,7 +159,7 @@ uint16_t RELIYA_HGPC_100_DataOutput(char* strOutput)
 		cCounterZeroPointFiveBuffer[2] = protocol_buff[7]&0x00FF;
 		cCounterZeroPointFiveBuffer[1] = protocol_buff[8]>>8;
 		cCounterZeroPointFiveBuffer[0] = protocol_buff[8]&0x00FF;
-				printf("DELTAF_DataOutput::big_endian\r\n");
+		//		printf("DELTAF_DataOutput::big_endian\r\n");
 	}
 
 	// printf("DELTAF_DataOutput::cO2ppbBuffer = [%02X, %02X, %02X, %02X]\r\n", 

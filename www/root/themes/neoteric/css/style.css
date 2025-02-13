@@ -339,6 +339,16 @@ div.menu-container ul.menu-tree li.selected#menu-advanced-sys-tools-li span.icon
 	background: url("../img/menu/system_active.png");
 }
 
+div.menu-container ul.menu-tree li#menu-advanced-statistic-diagram-li span.icon{
+	background: url("../img/menu/statistic_normal.png");
+}
+
+div.menu-container ul.menu-tree li#menu-advanced-statistic-diagram-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-statistic-diagram-tools-li:hover span.icon,
+div.menu-container ul.menu-tree li.selected#menu-statistic-diagram-tools-li span.icon{
+	background: url("../img/menu/statistic_active.png");
+}
+
 #menu-wizard{
 	width: 168px;
 	height: 32px;
