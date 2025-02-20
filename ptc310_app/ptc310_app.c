@@ -184,7 +184,7 @@ void out_instrument_history_record(time_t iFakeTimeStamp)
     //        tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, 
 	//		tmNow->tm_hour, tmNow->tm_min, tmNow->tm_sec);
 
-    sprintf(cFileContent, "\"%04d-%02d-%02d %02d:%02d:%02d\",%s\r\n",
+    sprintf(cFileContent, "%04d-%02d-%02d %02d:%02d:%02d,[%s],\r\n",
             tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, 
             tmNow->tm_hour, tmNow->tm_min, tmNow->tm_sec,
             cProtocolDataOutput);
@@ -193,21 +193,20 @@ void out_instrument_history_record(time_t iFakeTimeStamp)
             tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
     append_logcontent_to_file(cFileName, cFileContent);
 	
-    struct tm*     tmToday  = localtime(&timeNow);
-    tmToday->tm_hour = tmToday->tm_min = tmToday->tm_sec = 0;
-    // time_t timeToday = mktime(tmToday);
-    
-    // sprintf(cFileContent, "[%ld,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d],\r\n",
-    sprintf(cFileContent, "[%s],\r\n",
-            // timeNow - timeToday,
-            cProtocolDataOutput);
-
-    sprintf(cFileName, "instrument_history_info_record_unixtime_%04d_%02d_%02d.txt", 
-            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
-    // printf("We output the instrument_history_info_record_unixtime_%04d_%02d_%02d.txt at %ld.\r\n",
-    //         tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, timeNow);
-    append_logcontent_to_file(cFileName, cFileContent);
-
+//    struct tm*     tmToday  = localtime(&timeNow);
+//    tmToday->tm_hour = tmToday->tm_min = tmToday->tm_sec = 0;
+//    // time_t timeToday = mktime(tmToday);
+//    
+//    // sprintf(cFileContent, "[%ld,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d],\r\n",
+//    sprintf(cFileContent, "[%s],\r\n",
+//            // timeNow - timeToday,
+//            cProtocolDataOutput);
+//
+//    sprintf(cFileName, "instrument_history_info_record_unixtime_%04d_%02d_%02d.txt", 
+//            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
+//    // printf("We output the instrument_history_info_record_unixtime_%04d_%02d_%02d.txt at %ld.\r\n",
+//    //         tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, timeNow);
+//    append_logcontent_to_file(cFileName, cFileContent);
 }
 
 void out_battery_info_record(int iOfflineStatus, time_t iFakeTimeStamp)
@@ -473,22 +472,22 @@ int dir_exists(const char *path) {
 }
 
 
+/********************************************************************
+ * 这个函数用于处理SD卡无法写入问题。
+ * 详细流程参见《SD卡无法写入问题的规避方法》。
+ ********************************************************************/
 #define   PRINT_MKDIR_OUTPUT_ON   1
 #define   PRINT_MKDIR_OUTPUT_OFF  0
-int append_logcontent_to_file(char * cFileName, char * cFileContent)
+void sdcard_operation_process()
 {
 	static int isPrintMkdirOutput = PRINT_MKDIR_OUTPUT_ON;
 	// int iRet = 0;
     char cMkdirOutput[256] = {0};
     // char cRemountOutput[256];
-	
-    char cFilePathWithName[128] = {0};
+    
     char cFilePathCommand[128] = {0};
-    int   append_fd; // , send_res;
     time_t timeNow = time(NULL);
     struct tm*     tmNow    = localtime(&timeNow);
-
-	// return append_file(cFileName, cFileContent);
 	
 	/********************************************************************
 	 * Step 2: 
@@ -508,6 +507,7 @@ int append_logcontent_to_file(char * cFileName, char * cFileContent)
 		memset(cMkdirOutput, 0x00, 256);
 	    // iRet = 
 		get_cmd_printf(cFilePathCommand, cMkdirOutput, 256);
+		printf("Exec command : <%s> return '%s'\n", cFilePathCommand, cMkdirOutput);
 		if(strlen(cMkdirOutput) > 0)
 		{
 			if(isPrintMkdirOutput == PRINT_MKDIR_OUTPUT_ON)
@@ -516,6 +516,7 @@ int append_logcontent_to_file(char * cFileName, char * cFileContent)
 				isPrintMkdirOutput = PRINT_MKDIR_OUTPUT_OFF;
 		        memset(cMkdirOutput, 0x00, 256);
                 get_cmd_printf("/root/app/www/remount_sdcard.sh", cMkdirOutput, 256);
+				printf("Exec command : <%s> return '%s'\n", cFilePathCommand, cMkdirOutput);
 				if(strlen(cMkdirOutput) > 0)
 				{
 				   printf("Command remount_sdcard.sh error: errorInfo is %s\n", cMkdirOutput);
@@ -546,6 +547,7 @@ int append_logcontent_to_file(char * cFileName, char * cFileContent)
 					last_log_record_tm.tm_year + 1900, last_log_record_tm.tm_mon + 1, last_log_record_tm.tm_mday);
 				memset(cMkdirOutput, 0x00, 256);
 				get_cmd_printf(cFilePathCommand, cMkdirOutput, 256);
+				printf("Exec command : <%s> return '%s'\n", cFilePathCommand, cMkdirOutput);
 				if(strlen(cMkdirOutput) > 0)
 				{
 				    printf("Command <%s> error: errorInfo is %s\n", cFilePathCommand, cMkdirOutput);
@@ -561,6 +563,7 @@ int append_logcontent_to_file(char * cFileName, char * cFileContent)
 						last_log_record_tm.tm_year + 1900, last_log_record_tm.tm_mon + 1, last_log_record_tm.tm_mday);
 					memset(cMkdirOutput, 0x00, 256);
 					get_cmd_printf(cFilePathCommand, cMkdirOutput, 256);
+					printf("Exec command : <%s> return '%s'\n", cFilePathCommand, cMkdirOutput);
 					if(strlen(cMkdirOutput) > 0)
 					{
 					    printf("Command <%s> error: errorInfo is %s\n", cFilePathCommand, cMkdirOutput);
@@ -597,7 +600,19 @@ int append_logcontent_to_file(char * cFileName, char * cFileContent)
 		// }
 		memcpy(&log_record_tm, localtime(&timeNow), sizeof(struct tm));
 	}
-		
+}
+
+int append_logcontent_to_file(char * cFileName, char * cFileContent)
+{
+    char cMkdirOutput[256] = {0};
+    // char cRemountOutput[256];
+    
+    char cFilePathCommand[128] = {0};
+    char cFilePathWithName[128] = {0};
+    int   append_fd; // , send_res;
+
+	// return append_file(cFileName, cFileContent);
+	// Write log , We must do it firstly otherwise the following operation would make timestamp error.
     sprintf(cFilePathWithName, "/root/app/instrument_info/%s", cFileName);
     append_fd = open(cFilePathWithName, O_RDWR | O_APPEND);
     if (append_fd == -1) {
@@ -615,9 +630,17 @@ int append_logcontent_to_file(char * cFileName, char * cFileContent)
             return -1;
         }
     }
-	// printf("append_file: write %s return %d\n", cFileContent, append_fd);
 	write(append_fd, cFileContent, strlen(cFileContent));
+	// printf("append_file: write %s in the %s.\n", cFileContent, cFileName);
 	close(append_fd);
+	// End of Write log 
+	
+	/********************************************************************
+ 	 * 当天的日志写在内部存储上，每当日期变化，把之前的日志移动到SD卡上。
+	 ********************************************************************/
+	// printf("------------start of sdcard_operation_process------------\n");
+	sdcard_operation_process();
+	// printf("------------ end of sdcard_operation_process ------------\n");
     return 0;
 }
 

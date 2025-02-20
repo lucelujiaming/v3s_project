@@ -663,7 +663,7 @@ funs["su"] = function() {
     }
     else if(current_subpage == "pages/show_record_diagram.html")
     {
-        // last_reading_interval_id = setInterval(getLastReading, 2000);
+        last_reading_interval_id = setInterval(getLastReading, 2000);
         // alert("AAAA current_subpage=" + current_subpage);
         $("div.loading-container#loading-container").css("display", "block");
         // 系统信息
@@ -972,8 +972,14 @@ funs["su"] = function() {
                         + instrument_info_date_select + "&record_time="
                         + instrument_info_time_select, function(_data, _status){
                 // alert("_data = " + _data);
-                var data_json = JSON.parse(_data);
+                var data_json = null;
+                try {
+                    data_json = JSON.parse(_data);
+                } catch (error) {
+                    alert("该时间段日志损坏，解析JSON时发生错误: " + error);
+                }
                 var instrument_scale = 0;
+                var instrument_channel_num = 0;
                 var instrument_scale_array   = new Array();
                 var battery_info_array       = new Array();
                 var usart_info_array         = new Array();
@@ -1133,7 +1139,7 @@ funs["su"] = function() {
                 var time_minutes = 0;
                 $.each(data_json, function(index, info){
                     if (index == "Scale") {
-                        alert("Scale = " + info );
+                        // alert("Scale = " + info );
                         instrument_scale = info;
                         
                         // This variable is defined by macro TIME_SPAN in the web server source code.
@@ -1141,38 +1147,51 @@ funs["su"] = function() {
                         // 24 * 60 is minutes of one day
                         // time_span = 24 * 60 / instrument_scale;
                         
-                        hour_span = 60 * 60 / instrument_scale;  // 60 * 60 / 360 = 10
+                        hour_span = 60 * 60 / instrument_scale;  // 60 * 60 / 3600 = 1
                         
-                        for (let i = 0; i <= info; i++) {
+                        for (let i = 0; i < info; i++) {
                             time_result = i * hour_span;
                             time_minutes = Math.floor(time_result / 60);
                             time_second = time_result % 60;
+                            // console.log("time_minutes = " + time_minutes + ", time_second = " + time_second);
+                            // alert("i = " + i);
+                            // if(i % 2 === 0)
+                            // {
                             // Set time_hours
-                            if(time_hours < 10)
-                            {
-                                instrument_scale_array[i] = "0" + time_hours + ":";
-                            }
-                            else 
-                            {
-                                instrument_scale_array[i] = time_hours + ":";
-                            }
-                            // Set time_minutes
                             if(time_minutes < 10)
                             {
+                                instrument_scale_array[i] = "0" + time_minutes + ":";
+                            }
+                            else 
+                            {
+                                instrument_scale_array[i] = time_minutes + ":";
+                            }
+                            // Set time_minutes
+                            if(time_second < 10)
+                            {
                                 instrument_scale_array[i] = instrument_scale_array[i] + 
-                                                            "0" + time_minutes; //  + ":00";
+                                                            "0" + time_second; //  + ":00";
                             }
                             else 
                             {
                                 instrument_scale_array[i] = instrument_scale_array[i] + 
-                                                            time_minutes; //  + ":00";
+                                                            time_second; //  + ":00";
                             }
+                            // }
+                            // else 
+                            // {
+                            //     instrument_scale_array[i] = ""; //  + ":00";
+                            // }
+                            // console.log("i = " + i + ", instrument_scale_array[i] = " + instrument_scale_array[i]);
                         }
                     }
+                    else if (index == "ChannNum") {
+                        instrument_channel_num = info;
+                    }
                     else if (index == "InstrumentInfo") {
-                        alert("InstrumentInfo length = " + info.length +
-                              " instrument_scale = " + instrument_scale);
-                        alert("info[i][0] = " + info[0][0]);
+                        // alert("InstrumentInfo length = " + info.length +
+                        //       " instrument_scale = " + instrument_scale);
+                        // alert("info[i][0] = " + info[0][0]);
                         for (let i = 0; i < info.length; i++) {
                             particle_first_array[i]  = [instrument_scale_array[i], info[i][0]];
                             particle_second_array[i] = [instrument_scale_array[i], info[i][1]];
@@ -1187,6 +1206,11 @@ funs["su"] = function() {
                             
                             laser_first_array[i]        = [instrument_scale_array[i], info[i][8]];
                             laser_second_array[i]       = [instrument_scale_array[i], info[i][9]];
+                            // We will return instrument_scale + 1 because of time revert.
+                            if(i >= instrument_scale)
+                            {
+                                break;
+                            }
                         }
                         for (let i = info.length; i < instrument_scale; i++) {
                             particle_first_array[i]  = [instrument_scale_array[i], 0];
@@ -1249,75 +1273,419 @@ funs["su"] = function() {
                     }
                 }
 
-                const record_diagram_data = [
-                    {
-                        data: particle_first_array,
-                        lineWidth: 2,
-                        name: '颗粒度通道1',
-                        color: lines_border_color_array[0]
-                    },{
-                        data: particle_second_array,
-                        lineWidth: 2,
-                        name: '颗粒度通道2',
-                        color: lines_border_color_array[1]
-                    },{
-                        data: particle_third_array,
-                        lineWidth: 2,
-                        name: '颗粒度通道3',
-                        color: lines_border_color_array[2]
-                    },{
-                        data: particle_fourth_array,
-                        lineWidth: 2,
-                        name: '颗粒度通道4',
-                        color: lines_border_color_array[3]
-                    },{
-                        data: particle_fifth_array,
-                        lineWidth: 2,
-                        name: '颗粒度通道5',
-                        color: lines_border_color_array[4]
-                    },{
-                        data: particle_sixth_array,
-                        lineWidth: 2,
-                        name: '颗粒度通道6',
-                        color: lines_border_color_array[5]
-                    },{
-                        data: particle_seventh_array,
-                        lineWidth: 2,
-                        name: '颗粒度通道7',
-                        color: lines_border_color_array[6]
-                    },{
-                        data: particle_eighth_array,
-                        lineWidth: 2,
-                        name: '颗粒度通道8',
-                        color: lines_border_color_array[7]
-                    },{
-                        data: laser_first_array,
-                        lineWidth: 2,
-                        name: '辐射度通道1',
-                        color: lines_border_color_array[8]
-                    },{
-                        data: laser_second_array,
-                        lineWidth: 2,
-                        name: '辐射度通道2',
-                        color: lines_border_color_array[9]
-                    }
-                    // ,{
-                    //     data: battery_info_array,
-                    //     lineWidth: 0.5,
-                    //     name: '掉电情况',
-                    //     color: 'rgb(0, 99, 132)'
-                    // },{
-                    //     data: usart_info_array,
-                    //     lineWidth: 0.5,
-                    //     name: '串口状态',
-                    //     color: 'rgb(255, 0, 132)'
-                    // },{
-                    //     data: battery_usart_info_array,
-                    //     lineWidth: 0.5,
-                    //     name: '掉电情况和串口状态',
-                    //     color: 'rgb(255, 99, 0)'
-                    // }
-                ];
+                var record_diagram_data = null;
+                alert("instrument_channel_num = " + instrument_channel_num);
+                
+                if(instrument_channel_num == 0)
+                {
+                    record_diagram_data = [];
+                }
+                else if(instrument_channel_num == 1)
+                {
+                    record_diagram_data = [
+                        {
+                            data: particle_first_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道1',
+                            color: lines_border_color_array[0]
+                        }
+                    ];
+                }
+                else if(instrument_channel_num == 2)
+                {
+                    record_diagram_data = [
+                        {
+                            data: particle_first_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道1',
+                            color: lines_border_color_array[0]
+                        },{
+                            data: particle_second_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道2',
+                            color: lines_border_color_array[1]
+                        }
+                    ];
+                }
+                else if(instrument_channel_num == 3)
+                {
+                    record_diagram_data = [
+                        {
+                            data: particle_first_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道1',
+                            color: lines_border_color_array[0]
+                        },{
+                            data: particle_second_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道2',
+                            color: lines_border_color_array[1]
+                        },{
+                            data: particle_third_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道3',
+                            color: lines_border_color_array[2]
+                        }
+                    ];
+                }
+                else if(instrument_channel_num == 4)
+                {
+                    record_diagram_data = [
+                        {
+                            data: particle_first_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道1',
+                            color: lines_border_color_array[0]
+                        },{
+                            data: particle_second_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道2',
+                            color: lines_border_color_array[1]
+                        },{
+                            data: particle_third_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道3',
+                            color: lines_border_color_array[2]
+                        },{
+                            data: particle_fourth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道4',
+                            color: lines_border_color_array[3]
+                        }
+                    ];
+                }
+                else if(instrument_channel_num == 5)
+                {
+                    record_diagram_data = [
+                        {
+                            data: particle_first_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道1',
+                            color: lines_border_color_array[0]
+                        },{
+                            data: particle_second_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道2',
+                            color: lines_border_color_array[1]
+                        },{
+                            data: particle_third_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道3',
+                            color: lines_border_color_array[2]
+                        },{
+                            data: particle_fourth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道4',
+                            color: lines_border_color_array[3]
+                        },{
+                            data: particle_fifth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道5',
+                            color: lines_border_color_array[4]
+                        }
+                    ];
+                }
+                else if(instrument_channel_num == 6)
+                {
+                    record_diagram_data = [
+                        {
+                            data: particle_first_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道1',
+                            color: lines_border_color_array[0]
+                        },{
+                            data: particle_second_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道2',
+                            color: lines_border_color_array[1]
+                        },{
+                            data: particle_third_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道3',
+                            color: lines_border_color_array[2]
+                        },{
+                            data: particle_fourth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道4',
+                            color: lines_border_color_array[3]
+                        },{
+                            data: particle_fifth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道5',
+                            color: lines_border_color_array[4]
+                        },{
+                            data: particle_sixth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道6',
+                            color: lines_border_color_array[5]
+                        }
+                    ];
+                }
+                else if(instrument_channel_num == 7)
+                {
+                    record_diagram_data = [
+                        {
+                            data: particle_first_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道1',
+                            color: lines_border_color_array[0]
+                        },{
+                            data: particle_second_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道2',
+                            color: lines_border_color_array[1]
+                        },{
+                            data: particle_third_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道3',
+                            color: lines_border_color_array[2]
+                        },{
+                            data: particle_fourth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道4',
+                            color: lines_border_color_array[3]
+                        },{
+                            data: particle_fifth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道5',
+                            color: lines_border_color_array[4]
+                        },{
+                            data: particle_sixth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道6',
+                            color: lines_border_color_array[5]
+                        },{
+                            data: particle_seventh_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道7',
+                            color: lines_border_color_array[6]
+                        }
+                    ];
+                }
+                else if(instrument_channel_num == 8)
+                {
+                    record_diagram_data = [
+                        {
+                            data: particle_first_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道1',
+                            color: lines_border_color_array[0]
+                        },{
+                            data: particle_second_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道2',
+                            color: lines_border_color_array[1]
+                        },{
+                            data: particle_third_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道3',
+                            color: lines_border_color_array[2]
+                        },{
+                            data: particle_fourth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道4',
+                            color: lines_border_color_array[3]
+                        },{
+                            data: particle_fifth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道5',
+                            color: lines_border_color_array[4]
+                        },{
+                            data: particle_sixth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道6',
+                            color: lines_border_color_array[5]
+                        },{
+                            data: particle_seventh_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道7',
+                            color: lines_border_color_array[6]
+                        },{
+                            data: particle_eighth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道8',
+                            color: lines_border_color_array[7]
+                        }
+                    ];
+                }
+                else if(instrument_channel_num == 9)
+                {
+                    record_diagram_data = [
+                        {
+                            data: particle_first_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道1',
+                            color: lines_border_color_array[0]
+                        },{
+                            data: particle_second_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道2',
+                            color: lines_border_color_array[1]
+                        },{
+                            data: particle_third_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道3',
+                            color: lines_border_color_array[2]
+                        },{
+                            data: particle_fourth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道4',
+                            color: lines_border_color_array[3]
+                        },{
+                            data: particle_fifth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道5',
+                            color: lines_border_color_array[4]
+                        },{
+                            data: particle_sixth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道6',
+                            color: lines_border_color_array[5]
+                        },{
+                            data: particle_seventh_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道7',
+                            color: lines_border_color_array[6]
+                        },{
+                            data: particle_eighth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道8',
+                            color: lines_border_color_array[7]
+                        },{
+                            data: laser_first_array,
+                            lineWidth: 2,
+                            name: '辐射度通道1',
+                            color: lines_border_color_array[8]
+                        }
+                    ];
+                }
+                else if(instrument_channel_num == 10)
+                {
+                    record_diagram_data = [
+                        {
+                            data: particle_first_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道1',
+                            color: lines_border_color_array[0]
+                        },{
+                            data: particle_second_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道2',
+                            color: lines_border_color_array[1]
+                        },{
+                            data: particle_third_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道3',
+                            color: lines_border_color_array[2]
+                        },{
+                            data: particle_fourth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道4',
+                            color: lines_border_color_array[3]
+                        },{
+                            data: particle_fifth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道5',
+                            color: lines_border_color_array[4]
+                        },{
+                            data: particle_sixth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道6',
+                            color: lines_border_color_array[5]
+                        },{
+                            data: particle_seventh_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道7',
+                            color: lines_border_color_array[6]
+                        },{
+                            data: particle_eighth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道8',
+                            color: lines_border_color_array[7]
+                        },{
+                            data: laser_first_array,
+                            lineWidth: 2,
+                            name: '辐射度通道1',
+                            color: lines_border_color_array[8]
+                        },{
+                            data: laser_second_array,
+                            lineWidth: 2,
+                            name: '辐射度通道2',
+                            color: lines_border_color_array[9]
+                        }
+                    ];
+                }
+                else {
+                    record_diagram_data = [
+                        {
+                            data: particle_first_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道1',
+                            color: lines_border_color_array[0]
+                        },{
+                            data: particle_second_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道2',
+                            color: lines_border_color_array[1]
+                        },{
+                            data: particle_third_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道3',
+                            color: lines_border_color_array[2]
+                        },{
+                            data: particle_fourth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道4',
+                            color: lines_border_color_array[3]
+                        },{
+                            data: particle_fifth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道5',
+                            color: lines_border_color_array[4]
+                        },{
+                            data: particle_sixth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道6',
+                            color: lines_border_color_array[5]
+                        },{
+                            data: particle_seventh_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道7',
+                            color: lines_border_color_array[6]
+                        },{
+                            data: particle_eighth_array,
+                            lineWidth: 2,
+                            name: '颗粒度通道8',
+                            color: lines_border_color_array[7]
+                        },{
+                            data: laser_first_array,
+                            lineWidth: 2,
+                            name: '辐射度通道1',
+                            color: lines_border_color_array[8]
+                        },{
+                            data: laser_second_array,
+                            lineWidth: 2,
+                            name: '辐射度通道2',
+                            color: lines_border_color_array[9]
+                        }
+                        // ,{
+                        //     data: battery_info_array,
+                        //     lineWidth: 0.5,
+                        //     name: '掉电情况',
+                        //     color: 'rgb(0, 99, 132)'
+                        // },{
+                        //     data: usart_info_array,
+                        //     lineWidth: 0.5,
+                        //     name: '串口状态',
+                        //     color: 'rgb(255, 0, 132)'
+                        // },{
+                        //     data: battery_usart_info_array,
+                        //     lineWidth: 0.5,
+                        //     name: '掉电情况和串口状态',
+                        //     color: 'rgb(255, 99, 0)'
+                        // }
+                    ];
+                }
                 
                 const record_diagram_config = {
                     chart: {
@@ -1359,7 +1727,7 @@ funs["su"] = function() {
                     },
                     series: record_diagram_data
                 };
-                alert("AAAA");
+                // alert("AAAA");
                 Highcharts.chart("myChart", record_diagram_config);
             });
             // get_battery_info

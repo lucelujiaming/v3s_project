@@ -29,7 +29,10 @@
 #define    HOUR_SCALE              (60 * 60 / TIME_SPAN)
 
 // #define INSTRUMENT_INFO_STR_LEN     0xC000
-#define INSTRUMENT_INFO_STR_LEN     0x57800   // 350K
+// INSTRUMENT_INFO_STR_LEN = HOUR_SCALE * 128
+// 128 ie the length of following log:
+// [-0.000821,-0.000821,-0.000821,-0.000821,-0.000821,-0.000821,-0.000821,-0.000821,-0.000821,-0.000821],
+#define INSTRUMENT_INFO_STR_LEN     0x70800    
 #define BATTERY_INFO_STR_LEN        1024
 #define USART_INFO_STR_LEN          1024
 // ulimit -s is 8192(KB) = 0x800000
@@ -195,6 +198,238 @@ int get_machine_name(char * machine_name_info)
 {
     get_cmd_printf("uname -m", machine_name_info, APP_PATH_LEN);
     return 1;
+}
+
+int getSequenceNumber(char * sDataLine, char * strPreFix)
+{
+    char cStartMinute[4] = {0};
+    char cStartSecond[4] = {0};
+    if(strlen(sDataLine) > (strlen(strPreFix) + 6))
+    {
+        // Calculate Sequence Number
+        memcpy(cStartMinute, sDataLine + strlen(strPreFix) + 1, 2);
+        int iStartMinute = atoi(cStartMinute);
+        memcpy(cStartSecond, sDataLine + strlen(strPreFix) + 4, 2);
+        int iStartSecond = atoi(cStartSecond);
+        
+        if(iStartMinute >= 0 || iStartSecond >= 0)
+        { 
+            return iStartMinute * 60 + iStartSecond;
+        }
+    }
+    printf("Error sDataLine = %s, strPreFix = %s. \r\n", sDataLine, strPreFix);
+    return -1;
+}
+
+int truncateLoglineWithChannelNum(char * sDataLine, int iChannNum)
+{
+    char * cTruncatePos = sDataLine;
+    // printf("[%s:%s:%d] Enter sDataLine = %s, iChannNum = %d. \r\n", 
+	//			__FILE__, __FUNCTION__, __LINE__, sDataLine, iChannNum);
+    for(int i = 0; i < iChannNum; i++)
+    {
+        cTruncatePos = strchr(cTruncatePos, ',');
+        if(cTruncatePos)
+        {
+            cTruncatePos++;
+        }
+        else {
+            printf("[%s:%s:%d] Error cTruncatePos. \r\n", 
+				__FILE__, __FUNCTION__, __LINE__);
+            
+        }
+    }
+    if(cTruncatePos)
+    {
+        // Omit last ','
+        cTruncatePos--;
+        cTruncatePos[0] = ']';
+        cTruncatePos[1] = ',';
+        cTruncatePos[2] = '\r';
+        cTruncatePos[3] = '\n';
+        cTruncatePos[4] = '\0';
+    }
+    // printf("[%s:%s:%d] Left sDataLine = %s, iChannNum = %d. \r\n", 
+	//			__FILE__, __FUNCTION__, __LINE__, sDataLine, iChannNum);
+}
+
+char * createEmptyRecordWithChannelNum(char * cEmptyRecord, int iLen, int iChannNum)
+{
+	memset(cEmptyRecord, 0x00, iLen);
+    // Create cEmptyRecord and cFillRecord by iChannNum
+    strcat(cEmptyRecord, "[");
+    for(int i = 0; i < iChannNum - 1; i++)
+    {
+        strcat(cEmptyRecord, "0.0,");
+    }
+    strcat(cEmptyRecord, "0.0] \r\n");
+	return cEmptyRecord;
+}
+
+char * findLastPosOfPreFix(char * sFileDataLine, char * strPreFix)
+{
+    char* cPosOfPreFixPtr = NULL;
+    char* cLastPosOfPreFixPtr = NULL;
+    cPosOfPreFixPtr = strstr(sFileDataLine, strPreFix);
+    // printf("[%s:%s:%d] sFileDataLine = %s.\r\n",
+    //                     __FILE__, __FUNCTION__, __LINE__, sFileDataLine);
+    // printf("[%s:%s:%d] cPosOfPreFixPtr = %s.\r\n",
+    //                    __FILE__, __FUNCTION__, __LINE__, cPosOfPreFixPtr);
+    while(cPosOfPreFixPtr != NULL)
+    {
+        cLastPosOfPreFixPtr = cPosOfPreFixPtr;
+        cPosOfPreFixPtr = strstr(cPosOfPreFixPtr + strlen(strPreFix), strPreFix);
+    }
+    return cLastPosOfPreFixPtr;
+}
+/***********************************************************************
+ * 函数名：    get_hourdata_from_logfile
+ * 入口参数：  iYear/iMonth/iDay/iHour: 年月日和小时。
+ *              strOutput:      对应年月日和小时的日志。
+ * 返回值：     成功返回  数据条数。条数不应该大于3600条。
+ *              否则返回   -1
+ ***********************************************************************/
+int get_hourdata_from_logfile(int iYear, int iMonth, int iDay, int iHour, 
+								int iChannNum, char* strOutput, int iStrOutputLen, const char* filename)
+{
+    // 查找标志。在找到对应年月日和小时的日志的时候置为一。
+    int iFound = -1;
+    // 日志文件中每一行的序号，也就是当前这一行和传入的
+    // 年月日和小时所差的秒数。从零开始。最大为3599。
+    int iTotalSecond = 0;
+    // 当前获取的日志条数。
+    // 这个值应该时刻跟随iTotalSecond，相差不能超过一。否则就说明日志有孔洞。
+    // 程序用这两个值来判断日志是否有孔洞。这里的孔洞包括两种情况。
+    // 1. 第一种情况是非整点启动。例如你的程序是10点15分启动的。
+    //    那么从10点00分到10点15分的日志就是一个孔洞。
+    // 2. 第一种情况是中途程序关闭。例如一个程序在10点15分启动的。
+    //    在11点15分的时候关闭。之后在11点30分的时候，再次启动。
+    //    那么从11点15分到11点30分的日志就是一个孔洞。
+    // 随便说一句，尾部的数据缺失不会当做孔洞。
+    // 例如一个程序在10点40分的时候关闭。之后在11点20分的时候，再次启动。
+    // 如果想获得10点的日志，程序只需要返回10点00分到10点40分的日志即可。
+    // 不需要补齐从10点40分到10点59分的日志。这部分会由网页自动补零。
+    int iLineCount        = 0;
+    int iFillOutputLen    = 0;
+	
+    char * cTimeStampExampleTemplate = "1979-01-01 01:01:00,";
+	// char * cEmptyRecordTemplate = "[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0] \r\n";
+	// char * cFillRecordTemplate  = "[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],\r\n";
+    
+    char cEmptyRecord[128]      = {0};
+    char cFillRecord[128] = {0};
+    
+    char sFileDataLine[1024];
+    char strPreFix[32] = {0};
+    char * sDataLinePtr = NULL;
+    
+    FILE* fpr;
+    if (NULL == (fpr = fopen(filename, "r")))
+    {
+		printf("logfile read %s failed\n", filename);
+		return -1;// 读取原文件
+    }
+    sprintf(strPreFix, "%04d-%02d-%02d %02d", iYear, iMonth, iDay, iHour);
+    printf("strPreFix = %s. \r\n", strPreFix);
+    
+    if(iChannNum <= 0)
+    {
+		printf("iChannNum is %d and <= 0\n", iChannNum);
+		return -1;// 读取原文件
+    }
+    // Create cEmptyRecord and cFillRecord by iChannNum
+    strcat(cEmptyRecord, "[");
+    strcat(cFillRecord, "[");
+    for(int i = 0; i < iChannNum - 1; i++)
+    {
+        strcat(cEmptyRecord, "0.0,");
+        strcat(cFillRecord, "0.0,");
+    }
+    strcat(cEmptyRecord, "0.0] \r\n");
+    strcat(cFillRecord, "0.0],\r\n");
+    
+    // Get log data
+    while (NULL != fgets(sFileDataLine, 1024, fpr)) {
+        if(iLineCount > 3600)
+        {
+            printf("[%s:%s:%d] sFileDataLine = %s, strPreFix = %s iLineCount = %d. \r\n",
+                        __FILE__, __FUNCTION__, __LINE__, sFileDataLine, strPreFix, iLineCount);
+            printf("iLineCount > 3600. Please Check log file. \r\n");
+            return -1;
+        }
+        else
+        {
+        //    printf("[%s:%s:%d] sFileDataLine = %s, strPreFix = %s iLineCount = %d. \r\n",
+        //                __FILE__, __FUNCTION__, __LINE__, sFileDataLine, strPreFix, iLineCount);
+            ;
+        }
+        // 找到前缀标示的起始位置
+        // printf("sFileDataLine = %s, strPreFix = %s. \r\n", sFileDataLine, strPreFix);
+        sDataLinePtr = findLastPosOfPreFix(sFileDataLine, strPreFix);
+        if(sDataLinePtr == NULL)
+        {
+            if (0 == iFound) {
+                printf("[%s:%s:%d] 前缀标示的数据已经结束. \r\n", 
+                                            __FILE__, __FUNCTION__, __LINE__);
+                break;
+            }
+            else
+            {
+                continue;
+            }
+        }
+        if (0 == strncmp(strPreFix, sDataLinePtr, strlen(strPreFix))) {
+            iFound = 0;
+            // 计算每一行中时间戳的序号，从0开始。
+            iTotalSecond = getSequenceNumber(sDataLinePtr, strPreFix);
+            if(iTotalSecond == -1)
+            {
+                break;
+            }
+            // 如果序号错位，表明出现孔洞。则需要补点。
+            if(iTotalSecond > iLineCount){
+                iFillOutputLen = strlen(cFillRecord) * (iTotalSecond - iLineCount);
+                if(iFillOutputLen > iStrOutputLen)
+                {
+                    printf("Fill string is larger than input buffer length. \r\n");
+                    break;
+                }
+                // We found a hole in the log
+                for(int i = iLineCount; i < iTotalSecond; i++)
+                {
+                    strcat(strOutput, cFillRecord);
+                }
+                iLineCount = iTotalSecond;
+            }
+            // Truncate sDataLine
+            truncateLoglineWithChannelNum(sDataLinePtr + strlen(cTimeStampExampleTemplate), iChannNum);
+            // iFillOutputLen = strlen(strOutput) + strlen(sDataLinePtr) - strlen(cTimeStampExampleTemplate);
+            iFillOutputLen = iFillOutputLen + strlen(sDataLinePtr) - strlen(cTimeStampExampleTemplate);
+            // printf("iFillOutputLen = %d, iStrOutputLen = %d. \r\n", iFillOutputLen, iStrOutputLen);
+            if(iFillOutputLen > iStrOutputLen)
+            {
+                printf("Record string is larger than input buffer length. \r\n");
+                break;
+            }
+            
+            strcat(strOutput, sDataLinePtr + strlen(cTimeStampExampleTemplate));
+            iLineCount++;
+        }
+        else if (0 == iFound) { // 前缀标示的数据已经结束。
+            printf("[%s:%s:%d] 前缀标示的数据已经结束. \r\n", 
+                                        __FILE__, __FUNCTION__, __LINE__);
+            break;  
+        }
+    }
+    fclose(fpr);
+    // 如果整个小时的日志都不存在。
+    if(iLineCount == 0)
+    {
+        printf("整个小时的日志都不存在. \r\n");
+        strcat(strOutput, cEmptyRecord);
+        iLineCount = 1;
+    }
+    return iLineCount;
 }
 
 char* initProc()
@@ -394,9 +629,9 @@ void statusProc(Webs *wp)
         char mem_string[APP_PATH_LEN] = "";
         char svm_string[APP_PATH_LEN] = "";
 
-        get_cmd_printf("cat /root/sdcard/app/board_cpuloadinfo.txt", cpuload_string, APP_PATH_LEN);
-        get_cmd_printf("cat /root/sdcard/app/board_meminfo.txt", mem_string, APP_PATH_LEN);
-        get_cmd_printf("cat /root/sdcard/app/svm_info.txt", svm_string, APP_PATH_LEN);
+        get_cmd_printf("cat /root/app/board_cpuloadinfo.txt", cpuload_string, APP_PATH_LEN);
+        get_cmd_printf("cat /root/app/board_meminfo.txt", mem_string, APP_PATH_LEN);
+        get_cmd_printf("cat /root/app/svm_info.txt", svm_string, APP_PATH_LEN);
 
         sprintf(info_str, "{ \"svm\": \"%s\", \"cpuload\": \"%s\", \"mem\": \"%s\" }",
            svm_string, cpuload_string, mem_string);
@@ -507,7 +742,7 @@ void statusProc(Webs *wp)
             int iInstrumentInfoFileSize = 0;
             struct stat stInstrumentInfoFile;
             sprintf(info_first_str, 
-                "/root/sdcard/app/instrument_info/%s/instrument_history_info_record_unixtime_%s.txt", 
+                "/root/sdcard/app/instrument_info/%s/instrument_history_record_%s.txt", 
                 pRecordDate, pRecordDate);
             if(stat(info_first_str, &stInstrumentInfoFile) == 0)
 			{
@@ -544,63 +779,43 @@ void statusProc(Webs *wp)
             //         pRecordDate, pRecordDate, iBatteryInfoFileSize);
 
 			int iRecordTime = atoi(pRecordTime);
-			if((iInstrumentInfoFileSize > 0) && (iRecordTime > 0))
+			int iChannNum   = 0;
+			char cChannNum[4] = {0};
+			// Call ptc310_config_editor get channel number
+	        get_cmd_printf("/root/app/ptc310_config_editor GETCHAN", cChannNum, 4);
+			iChannNum = atoi(cChannNum);
+			if((iInstrumentInfoFileSize > 0) && (iRecordTime > 0) 
+				&& (strlen(pRecordDate) == strlen("1979_01_01")))
 			{
-				// More than one hours
-				if(iRecordTime > 1)
-				{
-					char instrument_info_lines[10];
-	                sprintf(info_first_str, 
-	                    "cat /root/sdcard/app/instrument_info/%s/instrument_history_info_record_unixtime_%s.txt | wc -l", 
-	                     pRecordDate, pRecordDate);
-		            get_cmd_printf(info_first_str, instrument_info_lines, 10);
-				    int iInstrumentInfoFileLines = atoi(instrument_info_lines);
-					
-				    trace(2, "[%s:%s:%d] iInstrumentInfoFileLines = %d and iRecordTime = %d", 
-				                    __FILE__, __FUNCTION__, __LINE__, iInstrumentInfoFileLines, iRecordTime);
-					// Recode time is longer than iRecordTime, we  can return the whole hour's log.
-					if(iInstrumentInfoFileLines > HOUR_SCALE * iRecordTime)
-					{
-		                sprintf(info_first_str, 
-		                    "head -%d /root/sdcard/app/instrument_info/%s/instrument_history_info_record_unixtime_%s.txt | tail -%d", 
-		                    HOUR_SCALE * iRecordTime, pRecordDate, pRecordDate, 
-		                    HOUR_SCALE);
-		                trace(2, "[%s:%s:%d] info_first_str = %s", __FILE__, __FUNCTION__, __LINE__, info_first_str);
-					}
-					// Recode time is longer than iRecordTime - 1, we  can only return log in last several minutes.
-					else if(iInstrumentInfoFileLines > HOUR_SCALE * (iRecordTime - 1))
-		            {
-		                sprintf(info_first_str, 
-		                    "tail -%d /root/sdcard/app/instrument_info/%s/instrument_history_info_record_unixtime_%s.txt", 
-		                    iInstrumentInfoFileLines - HOUR_SCALE * ( iRecordTime - 1), 
-		                    pRecordDate, pRecordDate);
-		                trace(2, "[%s:%s:%d] info_first_str = %s", __FILE__, __FUNCTION__, __LINE__, info_first_str);
-		            }
-					// Recode time is less than iRecordTime, we  can not return anything.
-					else 
-		            {
-		                sprintf(info_first_str, "echo '[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]  '");
-		                trace(2, "[%s:%s:%d] info_first_str = %s", __FILE__, __FUNCTION__, __LINE__, info_first_str);
-		            }
-				}
-				// iRecordTime == 1 and we can return log in the first hour
-				else {
-	                sprintf(info_first_str, 
-	                    "head -%d /root/sdcard/app/instrument_info/%s/instrument_history_info_record_unixtime_%s.txt", 
-	                    HOUR_SCALE, pRecordDate, pRecordDate);
-		            trace(2, "[%s:%s:%d] info_first_str = %s", __FILE__, __FUNCTION__, __LINE__, info_first_str);
-				}
-	            get_cmd_printf(info_first_str, instrument_info_string_ptr, INSTRUMENT_INFO_STR_LEN);
+				char cYear[8] = {0}, cMonth[4] = {0}, cDay[4] = {0}; 
+				memcpy(cYear, pRecordDate, 4);
+				memcpy(cMonth, pRecordDate + 5, 2);
+				memcpy(cDay, pRecordDate + 8, 2);
+                sprintf(info_first_str, "/root/sdcard/app/instrument_info/%s/instrument_history_record_%s.txt", 
+                     pRecordDate, pRecordDate);
+				memset(instrument_info_string_ptr, 0x00, INSTRUMENT_INFO_STR_LEN);
+                trace(2, "[%s:%s:%d] get Year/Month/Day/Hour = '%d/%d/%d/%d/' from %s", __FILE__, __FUNCTION__, __LINE__, 
+					atoi(cYear), atoi(cMonth), atoi(cDay), iRecordTime - 1, info_first_str);
+				// When iRecordTime is 1, it means we get log from 00:00-01:00
+				// When iRecordTime is 2, it means we get log from 01:00-02:00
+				// So we use iRecordTime - 1 to get log
+				get_hourdata_from_logfile(atoi(cYear), atoi(cMonth), atoi(cDay), iRecordTime - 1, 
+							iChannNum, instrument_info_string_ptr, INSTRUMENT_INFO_STR_LEN, info_first_str);
+                // trace(2, "[%s:%s:%d] instrument_info_string_ptr = '%s'", __FILE__, __FUNCTION__, __LINE__, instrument_info_string_ptr);
+	            // get_cmd_printf(info_first_str, instrument_info_string_ptr, INSTRUMENT_INFO_STR_LEN);
                 // Remove last ",\r\n"
-                instrument_info_string_ptr[strlen(instrument_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
-                // trace(2, "[%s:%s:%d] instrument_info_string_ptr = %s", __FILE__, __FUNCTION__, __LINE__, instrument_info_string_ptr);
+                instrument_info_string_ptr[strlen(instrument_info_string_ptr) - INFO_STR_LAST_COMMA - 1] = '\0';
+                // trace(2, "[%s:%s:%d] instrument_info_string_ptr = '%s'", __FILE__, __FUNCTION__, __LINE__, instrument_info_string_ptr);
 			}
 			else 
             {
 				trace(2, "[%s:%s:%d] iInstrumentInfoFileSize = %d and iRecordTime = %d", 
 				                    __FILE__, __FUNCTION__, __LINE__, 
 				                    iInstrumentInfoFileSize, iRecordTime);
-                sprintf(instrument_info_string_ptr, "[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]");
+                // sprintf(instrument_info_string_ptr, "[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]");
+                sprintf(instrument_info_string_ptr, 
+                    createEmptyRecordWithChannelNum(instrument_info_string_ptr, INSTRUMENT_INFO_STR_LEN, iChannNum));
+                
             }
 			
 			if(iBatteryInfoFileSize > 0)
@@ -633,10 +848,10 @@ void statusProc(Webs *wp)
             }
 
             snprintf(info_str, INFO_STR_LEN, 
-                "{  \"Scale\": %d, \"InstrumentInfo\": [ %s ], \r\n\"BatteryInfo\": [ %s ], \r\n\"UsartInfo\": [ %s ] }", 
-                HOUR_SCALE, instrument_info_string_ptr, battery_info_string_ptr, usart_info_string_ptr);
+                "{  \"Scale\": %d, \"ChannNum\": %d, \"InstrumentInfo\": [ %s ], \r\n\"BatteryInfo\": [ %s ], \r\n\"UsartInfo\": [ %s ] }", 
+                HOUR_SCALE, iChannNum, instrument_info_string_ptr, battery_info_string_ptr, usart_info_string_ptr);
             
-            // trace(2, "[%s:%s:%d] info_str = %s", __FILE__, __FUNCTION__, __LINE__, info_str);
+            trace(2, "[%s:%s:%d] info_str = %s", __FILE__, __FUNCTION__, __LINE__, info_str);
             trace(2, "[%s:%s:%d] strlen(info_str) = %d", __FILE__, __FUNCTION__, __LINE__, strlen(info_str));
             websSetStatus(wp, 200);
             websWriteHeaders(wp, -1, 0);

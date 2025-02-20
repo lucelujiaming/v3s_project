@@ -6,6 +6,15 @@
 
 // #pragma warning(disable:4996)
 
+/***********************************************************************
+ * 函数名：         set_ini_key_string
+ * 入口参数：        title:    配置文件中一组数据的标识
+ *              key:      这组数据中要添加的值的标识
+ *              val:      更改后的值
+ *              filename: 要读取的文件路径
+ * 返回值：         成功返回      0
+ *              否则返回 -1
+ ***********************************************************************/
 int append_ini_key_string(const char* title, const char* key, char* val, const char* filename)
 {
     int iFound = -1;
@@ -66,6 +75,14 @@ int append_ini_key_string(const char* title, const char* key, char* val, const c
 }
 
 
+/***********************************************************************
+ * 函数名：         set_ini_key_string
+ * 入口参数：        title:    配置文件中一组数据的标识
+ *              key:      这组数据中要删除的值的标识
+ *              filename: 要读取的文件路径
+ * 返回值：         成功返回      0
+ *              否则返回 -1
+ ***********************************************************************/
 int delete_ini_key_string(const char* title, const char* key, const char* filename)
 {
     int iFound = -1;
@@ -113,11 +130,11 @@ int delete_ini_key_string(const char* title, const char* key, const char* filena
 
 /***********************************************************************
  * 函数名：         get_ini_key_string
- * 入口参数：         title: 配置文件中一组数据的标识
- *                       key: 这组数据中要读出的值的标识
- *                  filename: 要读取的文件路径
+ * 入口参数：        title:    配置文件中一组数据的标识
+ *              key:      这组数据中要读出的值的标识
+ *              filename: 要读取的文件路径
  * 返回值：         找到需要查的值则返回正确结果 0
- *                  否则返回-1
+ *              否则返回-1
  ***********************************************************************/
 int get_ini_key_string(const char* title, const char* key, char* bufValue, const char* filename)
 {
@@ -164,12 +181,12 @@ int get_ini_key_string(const char* title, const char* key, char* bufValue, const
 
 /***********************************************************************
  * 函数名：         set_ini_key_string
- * 入口参数：         title: 配置文件中一组数据的标识
- *                       key: 这组数据中要读出的值的标识
- *                       val: 更改后的值
- *                  filename: 要读取的文件路径
+ * 入口参数：        title:    配置文件中一组数据的标识
+ *              key:      这组数据中要读出的值的标识
+ *              val:      更改后的值
+ *              filename: 要读取的文件路径
  * 返回值：         成功返回  0
- *                  否则返回 -1
+ *              否则返回 -1
  ***********************************************************************/
 int set_ini_key_string(const char* title, const char* key, char* val, const char* filename)
 {
