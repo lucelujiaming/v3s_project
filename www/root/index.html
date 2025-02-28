@@ -286,7 +286,7 @@ function checkInstrumentConfig(instrumentType) {
         instrument_config_status = 1;
         alert("设备地址为空！");
         return;
-    } else if (/^([1-9]*)$/.test(instrument_address)) {
+    } else if (/^([0-9]*)$/.test(instrument_address)) {
         instrument_config_status = 0;
     } else {
         instrument_config_status = 2;
@@ -310,11 +310,11 @@ function checkInstrumentConfig(instrumentType) {
         instrument_config_status = 1;
         alert("超时时间为空！");
         return;
-    } else if (/^([1-9]*)0$/.test(instrument_timeout)) {
+    } else if (/^([1-9]*)$/.test(instrument_timeout)) {
         instrument_config_status = 0;
     } else {
         instrument_config_status = 2;
-        alert("超时时间格式错误：超时时间为10的倍数！");
+        alert("超时时间格式错误！");
         return;
     }
     // 检查最大故障次数 
@@ -1285,7 +1285,7 @@ funs["su"] = function() {
                     record_diagram_data = [
                         {
                             data: particle_first_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道1',
                             color: lines_border_color_array[0]
                         }
@@ -1296,12 +1296,12 @@ funs["su"] = function() {
                     record_diagram_data = [
                         {
                             data: particle_first_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道1',
                             color: lines_border_color_array[0]
                         },{
                             data: particle_second_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道2',
                             color: lines_border_color_array[1]
                         }
@@ -1312,17 +1312,17 @@ funs["su"] = function() {
                     record_diagram_data = [
                         {
                             data: particle_first_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道1',
                             color: lines_border_color_array[0]
                         },{
                             data: particle_second_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道2',
                             color: lines_border_color_array[1]
                         },{
                             data: particle_third_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道3',
                             color: lines_border_color_array[2]
                         }
@@ -1333,22 +1333,22 @@ funs["su"] = function() {
                     record_diagram_data = [
                         {
                             data: particle_first_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道1',
                             color: lines_border_color_array[0]
                         },{
                             data: particle_second_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道2',
                             color: lines_border_color_array[1]
                         },{
                             data: particle_third_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道3',
                             color: lines_border_color_array[2]
                         },{
                             data: particle_fourth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道4',
                             color: lines_border_color_array[3]
                         }
@@ -1359,27 +1359,27 @@ funs["su"] = function() {
                     record_diagram_data = [
                         {
                             data: particle_first_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道1',
                             color: lines_border_color_array[0]
                         },{
                             data: particle_second_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道2',
                             color: lines_border_color_array[1]
                         },{
                             data: particle_third_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道3',
                             color: lines_border_color_array[2]
                         },{
                             data: particle_fourth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道4',
                             color: lines_border_color_array[3]
                         },{
                             data: particle_fifth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道5',
                             color: lines_border_color_array[4]
                         }
@@ -1390,32 +1390,32 @@ funs["su"] = function() {
                     record_diagram_data = [
                         {
                             data: particle_first_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道1',
                             color: lines_border_color_array[0]
                         },{
                             data: particle_second_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道2',
                             color: lines_border_color_array[1]
                         },{
                             data: particle_third_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道3',
                             color: lines_border_color_array[2]
                         },{
                             data: particle_fourth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道4',
                             color: lines_border_color_array[3]
                         },{
                             data: particle_fifth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道5',
                             color: lines_border_color_array[4]
                         },{
                             data: particle_sixth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道6',
                             color: lines_border_color_array[5]
                         }
@@ -1426,37 +1426,37 @@ funs["su"] = function() {
                     record_diagram_data = [
                         {
                             data: particle_first_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道1',
                             color: lines_border_color_array[0]
                         },{
                             data: particle_second_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道2',
                             color: lines_border_color_array[1]
                         },{
                             data: particle_third_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道3',
                             color: lines_border_color_array[2]
                         },{
                             data: particle_fourth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道4',
                             color: lines_border_color_array[3]
                         },{
                             data: particle_fifth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道5',
                             color: lines_border_color_array[4]
                         },{
                             data: particle_sixth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道6',
                             color: lines_border_color_array[5]
                         },{
                             data: particle_seventh_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道7',
                             color: lines_border_color_array[6]
                         }
@@ -1467,42 +1467,42 @@ funs["su"] = function() {
                     record_diagram_data = [
                         {
                             data: particle_first_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道1',
                             color: lines_border_color_array[0]
                         },{
                             data: particle_second_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道2',
                             color: lines_border_color_array[1]
                         },{
                             data: particle_third_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道3',
                             color: lines_border_color_array[2]
                         },{
                             data: particle_fourth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道4',
                             color: lines_border_color_array[3]
                         },{
                             data: particle_fifth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道5',
                             color: lines_border_color_array[4]
                         },{
                             data: particle_sixth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道6',
                             color: lines_border_color_array[5]
                         },{
                             data: particle_seventh_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道7',
                             color: lines_border_color_array[6]
                         },{
                             data: particle_eighth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道8',
                             color: lines_border_color_array[7]
                         }
@@ -1513,47 +1513,47 @@ funs["su"] = function() {
                     record_diagram_data = [
                         {
                             data: particle_first_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道1',
                             color: lines_border_color_array[0]
                         },{
                             data: particle_second_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道2',
                             color: lines_border_color_array[1]
                         },{
                             data: particle_third_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道3',
                             color: lines_border_color_array[2]
                         },{
                             data: particle_fourth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道4',
                             color: lines_border_color_array[3]
                         },{
                             data: particle_fifth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道5',
                             color: lines_border_color_array[4]
                         },{
                             data: particle_sixth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道6',
                             color: lines_border_color_array[5]
                         },{
                             data: particle_seventh_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道7',
                             color: lines_border_color_array[6]
                         },{
                             data: particle_eighth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道8',
                             color: lines_border_color_array[7]
                         },{
                             data: laser_first_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '辐射度通道1',
                             color: lines_border_color_array[8]
                         }
@@ -1564,52 +1564,52 @@ funs["su"] = function() {
                     record_diagram_data = [
                         {
                             data: particle_first_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道1',
                             color: lines_border_color_array[0]
                         },{
                             data: particle_second_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道2',
                             color: lines_border_color_array[1]
                         },{
                             data: particle_third_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道3',
                             color: lines_border_color_array[2]
                         },{
                             data: particle_fourth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道4',
                             color: lines_border_color_array[3]
                         },{
                             data: particle_fifth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道5',
                             color: lines_border_color_array[4]
                         },{
                             data: particle_sixth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道6',
                             color: lines_border_color_array[5]
                         },{
                             data: particle_seventh_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道7',
                             color: lines_border_color_array[6]
                         },{
                             data: particle_eighth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道8',
                             color: lines_border_color_array[7]
                         },{
                             data: laser_first_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '辐射度通道1',
                             color: lines_border_color_array[8]
                         },{
                             data: laser_second_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '辐射度通道2',
                             color: lines_border_color_array[9]
                         }
@@ -1619,52 +1619,52 @@ funs["su"] = function() {
                     record_diagram_data = [
                         {
                             data: particle_first_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道1',
                             color: lines_border_color_array[0]
                         },{
                             data: particle_second_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道2',
                             color: lines_border_color_array[1]
                         },{
                             data: particle_third_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道3',
                             color: lines_border_color_array[2]
                         },{
                             data: particle_fourth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道4',
                             color: lines_border_color_array[3]
                         },{
                             data: particle_fifth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道5',
                             color: lines_border_color_array[4]
                         },{
                             data: particle_sixth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道6',
                             color: lines_border_color_array[5]
                         },{
                             data: particle_seventh_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道7',
                             color: lines_border_color_array[6]
                         },{
                             data: particle_eighth_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '颗粒度通道8',
                             color: lines_border_color_array[7]
                         },{
                             data: laser_first_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '辐射度通道1',
                             color: lines_border_color_array[8]
                         },{
                             data: laser_second_array,
-                            lineWidth: 2,
+                            lineWidth: 1,
                             name: '辐射度通道2',
                             color: lines_border_color_array[9]
                         }

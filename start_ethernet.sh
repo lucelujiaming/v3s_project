@@ -1,13 +1,34 @@
 #!/bin/sh
+# echo "rm /root/wifi-sta-dhcp.sh------------------------"
+# if [ -e "/root/wifi-sta-dhcp.sh" ]; then
+#     rm /root/wifi-sta-dhcp.sh
+# fi
+# if [ -e "/usr/sbin/wpa_supplicant" ]; then
+#     mv /usr/sbin/wpa_supplicant /usr/sbin/rm_wpa_supplicant
+# fi
+# if [ -e "/usr/sbin/wpa_cli" ]; then
+#     mv /usr/sbin/wpa_cli  /usr/sbin/rm_wpa_cli
+# fi
+# if [ -e "/sbin/udhcpc" ]; then
+#     mv /sbin/udhcpc /sbin/rm_udhcpc
+#     reboot
+# fi
+
 echo "lujiaming -----------------------------------"
 # Enable framebuffer play 
 ln -sf /dev/fb8  /dev/fb0
 # Enable two ethernet 
+echo "Enable two ethernet -----------------------------------"
+echo "Enable two ethernet by usb-set-hostmode.sh -----------------------------------"
 /root/usb-set-hostmode.sh 
 sleep 1
+echo "Enable two ethernet by usb-set-devicemode.sh -----------------------------------"
 /root/usb-set-devicemode.sh
 sleep 1
+echo "Enable two ethernet by usb-set-hostmode.sh -----------------------------------"
 /root/usb-set-hostmode.sh 
+echo "Enable two ethernet over -----------------------------------"
+ifconfig -a
 echo "lujiaming -----------------------------------"
 sleep 1
 if [ ! -e "/root/app/current_first_ip" ]; then
@@ -27,7 +48,7 @@ if [ ! -e "/root/app/current_second_ip" ]; then
 else
     SECONDIPADDR=`cat /root/app/current_second_ip`
     if [ $? -eq 0 ]; then
-        echo "lujiaming --------------SECONDIPADDR=$SECONDIPADDR---------------------"
+        # echo "lujiaming --------------SECONDIPADDR=$SECONDIPADDR---------------------"
         ifconfig eth1 $SECONDIPADDR
     else
         ifconfig eth1 192.168.168.130
@@ -53,8 +74,11 @@ if [ -e "/root/app/current_second_mac" ]; then
         /sbin/ifconfig eth1 up
     fi
 fi
+# 打开本地网络回环
+ifconfig lo up
 
-/root/app/goahead --verbose --home /root/app/www > /root/sdcard/app/goahead_output.log &
+# mkdir -p /root/sdcard/app
+/root/app/goahead --verbose --home /root/app/www > /root/app/goahead_output.log &
 # Run sedona app.
 if [ ! -e "/root/app/current_first_ip" ]; then
     echo "lujiaming --------------We need /root/app/current_first_ip ---------------------"
@@ -64,6 +88,20 @@ else
     cd - 1>/dev/null 2>&1
 fi
 echo "lujiaming -----------------------------------"
+
+    echo "lujiaming --------------We need /root/app/current_first_ip ---------------------"   
+    ifconfig eth0                                          
+    echo "lujiaming --------------We need /root/app/current_first_ip ---------------------"        
+    ifconfig -a                                                                                    
+    echo "lujiaming --------------We need /root/app/current_second_ip ---------------------"       
+    ifconfig eth1                                                                          
+    echo "lujiaming --------------We need /root/app/current_second_ip ---------------------" 
+
+echo "lujiaming start ptc310_app -----------------------------------"
+/root/app/ptc310_app ttyS2 ttyS1 > /root/app/ptc310_app_log.log &
+echo "lujiaming ptc310_app -----------------------------------"
+
+
 
 top_count=0
 while true; do
@@ -90,11 +128,17 @@ while true; do
       fi
       cd - 1>/dev/null 2>&1
       # The svm does not always run successfully
-      echo -n "Not Running" > /root/sdcard/app/svm_info.txt
+      echo -n "Not Running" > /root/app/svm_info.txt
     else
-      echo -n "Running" > /root/sdcard/app/svm_info.txt
+      echo -n "Running" > /root/app/svm_info.txt
     fi
     # echo "lujiaming --------------We need /root/app/current_first_ip ---------------------" 
+    # ifconfig eth0    
+    # echo "lujiaming --------------We need /root/app/current_first_ip ---------------------" 
+    # ifconfig -a 
+    # echo "lujiaming --------------We need /root/app/current_second_ip ---------------------" 
+    # ifconfig eth1   
+    # echo "lujiaming --------------We need /root/app/current_second_ip ---------------------" 
 
     eth0result=`ifconfig eth0 | grep "inet addr"`
     if [ -z "$eth0result" ]; then
@@ -111,20 +155,22 @@ while true; do
         fi
     fi
     # echo "lujiaming --------------We need /root/app/current_first_ip ---------------------" 
-    eth1result=`ifconfig eth1 | grep "inet addr"`
-    if [ -z "$eth1result" ]; then
-        if [ ! -e "/root/app/current_second_ip" ]; then
-            ifconfig eth1 192.168.168.130
-        else
-            SECONDIPADDR=`cat /root/app/current_second_ip`
-            if [ $? -eq 0 ]; then
-                echo "lujiaming --------------SECONDIPADDR=$SECONDIPADDR---------------------"
-                ifconfig eth1 $SECONDIPADDR
-            else 
-                ifconfig eth1 192.168.168.130                
-            fi
-        fi
-    fi
+    # eth1result=`ifconfig eth1 | grep "inet addr"`
+    # if [ -z "$eth1result" ]; then
+    #    if [ ! -e "/root/app/current_second_ip" ]; then
+    #        ifconfig eth1 192.168.168.130
+    #    else
+    #        SECONDIPADDR=`cat /root/app/current_second_ip`
+    #        if [ $? -eq 0 ]; then
+    #            # echo "lujiaming --------------SECONDIPADDR=$SECONDIPADDR---------------------"
+    #            ifconfig eth1 $SECONDIPADDR
+    #        else 
+    #            ifconfig eth1 192.168.168.130                
+    #        fi
+    #    fi
+    # fi
+
+
     # echo "lujiaming --------------We need /root/app/current_second_ip ---------------------" 
     # Output top info
     if [ $top_count -gt 9 ]; then                         

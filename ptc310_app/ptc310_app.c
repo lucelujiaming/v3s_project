@@ -823,6 +823,7 @@ static void* thread_modbus_operation(void *arg)
 			// {
 			// }
 			system("reboot");
+			break;
 		}
 
 	}
@@ -923,8 +924,8 @@ static void* thread_v3s_udp_controller(void *arg)
 				Protocol_DataOutput(cProtocolDataOutput);
 				uint16_t iDataColumnsNumber = Protocol_GetDataColumnsNumber();
 				
-	            printf("[%s:%s:%d] iDataColumnsNumber is %d.\n", 
-						__FILE__, __FUNCTION__, __LINE__, iDataColumnsNumber);
+	            // printf("[%s:%s:%d] iDataColumnsNumber is %d.\n", 
+				//       __FILE__, __FUNCTION__, __LINE__, iDataColumnsNumber);
 				cSendBuffer[0] = INST_GET_LATEST_READINGS_RESPONSE;
 				cSendBuffer[1] = iDataColumnsNumber / 256;
 				cSendBuffer[2] = iDataColumnsNumber % 256;
@@ -940,7 +941,7 @@ static void* thread_v3s_udp_controller(void *arg)
 				        memset(cFloatBuffer, 0x00, 16);
 				        memcpy(cFloatBuffer, pDataBufPtr, cSeqPtr - pDataBufPtr);
 				        fReading = atof(cFloatBuffer);
-				        printf("cFloatBuffer = %s and fReading = %.6f\n", cFloatBuffer, fReading);
+				        // printf("cFloatBuffer = %s and fReading = %.6f\n", cFloatBuffer, fReading);
 						memcpy(&cSendBuffer[3 + 4 * i], fReadingPtr, 4);
 				        pDataBufPtr = cSeqPtr + 1;
 				    }   

@@ -285,7 +285,10 @@ char * findLastPosOfPreFix(char * sFileDataLine, char * strPreFix)
 /***********************************************************************
  * 函数名：    get_hourdata_from_logfile
  * 入口参数：  iYear/iMonth/iDay/iHour: 年月日和小时。
- *              strOutput:      对应年月日和小时的日志。
+ *              iChannNum:      数据通道数
+ *              strOutput:      对应年月日和小时的日志缓冲区。
+ *              iStrOutputLen:  日志缓冲区长度。
+ *              filename:       日志文件名。
  * 返回值：     成功返回  数据条数。条数不应该大于3600条。
  *              否则返回   -1
  ***********************************************************************/
