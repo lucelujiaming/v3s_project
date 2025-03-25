@@ -72,7 +72,11 @@
                                 <span class="text button-text">浏览</span>
                                 </button>
                             </div>
-                            <input id="file" name="file" type="file" class="file-input"   accept=".sab, .scode" onchange="document.getElementById('application_filename').innerText=this.files[0].name;checkApplicationFileName()"/>
+                            <!-- accept=".sab, .scode" -->
+                            <input id="file" name="file" type="file" class="file-input"  
+                                     onchange="document.getElementById(
+                                            'application_filename').innerText
+                                                = this.files[0].name;checkApplicationFileName()"/>
                         </div>
                         <div class="widget-error-tips" style="left: 0px; top: 0px; display: none;">
                             <span class="widget-error-tips-delta"></span>

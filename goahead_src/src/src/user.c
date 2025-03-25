@@ -69,6 +69,9 @@ typedef struct {
 } FIRMWARE_T;
 // Fireware decode macro and struct end
 
+// Use this macro for some ptc310 logic
+#define PTC_310_UPLOAD
+
 int is_current_date(char * recordDateTime) {
     char strDate[128] = {0};	
 	time_t timeNow = time(NULL);
@@ -200,6 +203,14 @@ int get_machine_name(char * machine_name_info)
     return 1;
 }
 
+/***********************************************************************
+ * 函数名：getSequenceNumber
+ *   功能：获得日志开头时间戳中，前缀后面包含的秒数。
+ *         计算方法是：分钟*60 + 秒。
+ * 入口参数：          sDataLine: 日志。
+ *                strPreFix: 前缀。前缀形如："2024-03-24 07"。
+ * 返回值： 无须返回。
+ ***********************************************************************/
 int getSequenceNumber(char * sDataLine, char * strPreFix)
 {
     char cStartMinute[4] = {0};
@@ -221,6 +232,14 @@ int getSequenceNumber(char * sDataLine, char * strPreFix)
     return -1;
 }
 
+
+/***********************************************************************
+ * 函数名：truncateLoglineWithChannelNum
+ *   功能：根据通道个数截取日志。
+ * 入口参数：          sDataLine: 日志缓冲区。
+ *                iChannNum: 需要补点的通道个数。
+ * 返回值： 无须返回。
+ ***********************************************************************/
 int truncateLoglineWithChannelNum(char * sDataLine, int iChannNum)
 {
     char * cTruncatePos = sDataLine;
@@ -253,6 +272,15 @@ int truncateLoglineWithChannelNum(char * sDataLine, int iChannNum)
 	//			__FILE__, __FUNCTION__, __LINE__, sDataLine, iChannNum);
 }
 
+/***********************************************************************
+ * 函数名：createEmptyRecordWithChannelNum
+ *   功能：当日志出现记录中断的时候，进行补点。
+ *         形成类似于[0.0,0.0]的内容。
+ * 入口参数：  cEmptyRecord: 日志缓冲区。
+ *                     iLen: 日志缓冲区长度
+ *                iChannNum: 需要补点的通道个数。
+ * 返回值：     返回  日志缓冲区。
+ ***********************************************************************/
 char * createEmptyRecordWithChannelNum(char * cEmptyRecord, int iLen, int iChannNum)
 {
 	memset(cEmptyRecord, 0x00, iLen);
@@ -266,6 +294,15 @@ char * createEmptyRecordWithChannelNum(char * cEmptyRecord, int iLen, int iChann
 	return cEmptyRecord;
 }
 
+/***********************************************************************
+ * 函数名：    findLastPosOfPreFix
+ *   功能：寻找一行日志中的前缀位置。因为存在非常低概率的情况下，
+ *         两行日志打印到一行的情况。因此上，创建了这个函数。
+ * 入口参数：  sFileDataLine: 日志数据。
+ *                 strPreFix: 日志汇总应该包含的前缀。前缀形如："2024-03-24 07"。
+ * 返回值：     成功返回  指向日志中前缀所在位置的指针。
+ *          否则返回   NULL
+ ***********************************************************************/
 char * findLastPosOfPreFix(char * sFileDataLine, char * strPreFix)
 {
     char* cPosOfPreFixPtr = NULL;
@@ -282,6 +319,7 @@ char * findLastPosOfPreFix(char * sFileDataLine, char * strPreFix)
     }
     return cLastPosOfPreFixPtr;
 }
+
 /***********************************************************************
  * 函数名：    get_hourdata_from_logfile
  * 入口参数：  iYear/iMonth/iDay/iHour: 年月日和小时。
@@ -332,6 +370,7 @@ int get_hourdata_from_logfile(int iYear, int iMonth, int iDay, int iHour,
 		printf("logfile read %s failed\n", filename);
 		return -1;// 读取原文件
     }
+	// 前缀形如："2024-03-24 07"
     sprintf(strPreFix, "%04d-%02d-%02d %02d", iYear, iMonth, iDay, iHour);
     printf("strPreFix = %s. \r\n", strPreFix);
     
@@ -450,15 +489,24 @@ char* initProc()
     cJSON_AddStringToObject(ret_data, "version", info_str);
 
     memset(info_str, 0x00, INFO_STR_LEN);
+#ifdef PTC_310_UPLOAD
+    pVal = get_last_modify_time("/root/app/ptc310_app", info_str);
+#else
     pVal = get_last_modify_time("/root/app/app.sab", info_str);
+#endif
     if(pVal)
         cJSON_AddStringToObject(ret_data, "buildtime", info_str);
     else
         cJSON_AddStringToObject(ret_data, "buildtime", "Unknown");
 
     memset(info_str, 0x00, INFO_STR_LEN);
+#ifdef PTC_310_UPLOAD
+    get_cmd_printf("ps | grep 'ptc310_app' | grep -v grep", info_str, INFO_STR_LEN);
+    if(strlen(info_str) >= strlen("ptc310_app"))
+#else
     get_cmd_printf("ps | grep 'app.scode' | grep -v grep", info_str, INFO_STR_LEN);
     if(strlen(info_str) >= strlen("app.scode"))
+#endif
         cJSON_AddStringToObject(ret_data, "status", "standby");
     else
         cJSON_AddStringToObject(ret_data, "status", "shutdown");
@@ -475,9 +523,14 @@ char* initProc()
     char machine_name[APP_PATH_LEN] = "";
 
     get_cmd_printf("cat /etc/VERSION", version_string, APP_PATH_LEN);
-    pVal = get_last_modify_time("/root/app/app.sab", filetime_string);
+    // pVal = get_last_modify_time("/root/app/app.sab", filetime_string);
+#ifdef PTC_310_UPLOAD
+    get_cmd_printf("ps | grep 'ptc310_app' | grep -v grep", status_string, APP_PATH_LEN);
+    if(strlen(status_string) >= strlen("ptc310_app"))
+#else
     get_cmd_printf("ps | grep 'app.scode' | grep -v grep", status_string, APP_PATH_LEN);
     if(strlen(status_string) >= strlen("app.scode"))
+#endif
     {
         strcpy(status_string, "standby");
     }
@@ -630,14 +683,34 @@ void statusProc(Webs *wp)
     {
         char cpuload_string[APP_PATH_LEN] = "";
         char mem_string[APP_PATH_LEN] = "";
-        char svm_string[APP_PATH_LEN] = "";
+        char app_string[APP_PATH_LEN] = "";
 
         get_cmd_printf("cat /root/app/board_cpuloadinfo.txt", cpuload_string, APP_PATH_LEN);
         get_cmd_printf("cat /root/app/board_meminfo.txt", mem_string, APP_PATH_LEN);
-        get_cmd_printf("cat /root/app/svm_info.txt", svm_string, APP_PATH_LEN);
+        // get_cmd_printf("cat /root/app/svm_info.txt", svm_string, APP_PATH_LEN);
 
+#ifdef PTC_310_UPLOAD
+		get_cmd_printf("ps | grep 'ptc310_app' | grep -v grep", app_string, APP_PATH_LEN);
+		if(strlen(app_string) >= strlen("ptc310_app"))
+#else
+		get_cmd_printf("ps | grep 'app.scode' | grep -v grep", app_string, APP_PATH_LEN);
+		if(strlen(app_string) >= strlen("app.scode"))
+#endif
+		{
+			strcpy(app_string, "standby");
+		}
+		else
+		{
+			strcpy(app_string, "shutdown");
+		}
+		
+#ifdef PTC_310_UPLOAD
+        sprintf(info_str, "{ \"app\": \"%s\", \"cpuload\": \"%s\", \"mem\": \"%s\" }",
+           app_string, cpuload_string, mem_string);
+#else
         sprintf(info_str, "{ \"svm\": \"%s\", \"cpuload\": \"%s\", \"mem\": \"%s\" }",
-           svm_string, cpuload_string, mem_string);
+           app_string, cpuload_string, mem_string);
+#endif
         websSetStatus(wp, 200);
         websWriteHeaders(wp, -1, 0);
         websWriteEndHeaders(wp);
@@ -1167,6 +1240,51 @@ int decode_firmware(char *cFileName, char *outputPath)
     return 1;
 }
 
+#ifdef PTC_310_UPLOAD
+int check_uploadfile(Webs *wp)
+{
+    char            key[64];
+
+    char app_ptc310_app_str[APP_PATH_LEN] = "";
+    char app_goahead_str[APP_PATH_LEN] = "";
+    struct stat stat_buf;
+    char *pPathVal;
+    pPathVal = websGetVar(wp, "UPLOAD_DIR", "/root/sdcard");
+    trace(2, "[%s:%s:%d] pVal = %s", __FILE__, __FUNCTION__, __LINE__, pPathVal);
+    sprintf(app_ptc310_app_str, "%s/ptc310_app", pPathVal);
+    sprintf(app_goahead_str, "%s/goahead", pPathVal);
+    if(stat(app_ptc310_app_str, &stat_buf)==0)
+    {
+        memset(app_ptc310_app_str, 0x00, APP_PATH_LEN);
+        sprintf(app_ptc310_app_str, "mv %s/ptc310_app /root/app/", pPathVal);
+        system(app_ptc310_app_str);
+        system("chmod 755 /root/app/ptc310_app");
+        // Stop svm and watch dog would restart svm
+        system("/root/app/www/restart_ptc_app.sh &");
+        // system("/etc/rc.d/rc.svm &");
+        trace(2, "[%s:%s:%d] uploadProc :: update by %s",
+                        __FILE__, __FUNCTION__, __LINE__, app_ptc310_app_str);
+    }
+    else if(stat(app_goahead_str, &stat_buf)==0)
+    {
+        memset(app_ptc310_app_str, 0x00, APP_PATH_LEN);
+        sprintf(app_ptc310_app_str, "mv %s/goahead /root/app/", pPathVal);
+        system(app_ptc310_app_str);
+        system("chmod 755 /root/app/goahead");
+        // Update goahead by reboot.
+        system("reboot");
+        trace(2, "[%s:%s:%d] uploadProc :: update by %s",
+                        __FILE__, __FUNCTION__, __LINE__, app_ptc310_app_str);
+    }
+    else
+    {
+        trace(2, "[%s:%s:%d] uploadProc :: update error",
+                                    __FILE__, __FUNCTION__, __LINE__);
+        return 1;
+    }
+    return 0;
+}
+#else
 int check_uploadfile(Webs *wp)
 {
     char            key[64];
@@ -1177,7 +1295,7 @@ int check_uploadfile(Webs *wp)
     struct stat stat_buf;
     char *pPathVal;
     char *pFileNameVal;
-
+    // ./projects/goahead-linux-static-bit.h:150:    #define BIT_GOAHEAD_UPLOAD_DIR "/data/upload"
     pPathVal = websGetVar(wp, "UPLOAD_DIR", "/data/upload");
     trace(2, "[%s:%s:%d] pVal = %s", __FILE__, __FUNCTION__, __LINE__, pPathVal);
 
@@ -1239,6 +1357,7 @@ int check_uploadfile(Webs *wp)
     }
     return 0;
 }
+#endif
 
 void uploadProc(Webs *wp)
 {

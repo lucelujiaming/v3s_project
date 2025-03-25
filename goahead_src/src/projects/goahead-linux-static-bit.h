@@ -147,7 +147,9 @@
     #define BIT_GOAHEAD_UPLOAD 1
 #endif
 #ifndef BIT_GOAHEAD_UPLOAD_DIR
-    #define BIT_GOAHEAD_UPLOAD_DIR "/data/upload"
+    // #define BIT_GOAHEAD_UPLOAD_DIR "/data/upload"
+    // Change to /root/sdcard in the ptc310
+    #define BIT_GOAHEAD_UPLOAD_DIR "/root/sdcard"
 #endif
 #ifndef BIT_GOAHEAD_VERIFY_ISSUER
     #define BIT_GOAHEAD_VERIFY_ISSUER 0

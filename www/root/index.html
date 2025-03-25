@@ -201,9 +201,12 @@ var checkApplicationFileName = function() {
         application_filestatus = 0;
     } else if (fname == "app.scode") {
         application_filestatus = 0;
+    } else if (fname == "ptc310_app") {
+        application_filestatus = 0;
     } else {
         application_filestatus = 2;
-        $("div.error-tips-content").html("必须是app.sab和app.scode文件");
+        // $("div.error-tips-content").html("必须是app.sab和app.scode文件");
+        $("div.error-tips-content").html("只支持ptc310_app文件");
         $("div.widget-error-tips").css("display", "block");
     }
 };
@@ -310,7 +313,7 @@ function checkInstrumentConfig(instrumentType) {
         instrument_config_status = 1;
         alert("超时时间为空！");
         return;
-    } else if (/^([1-9]*)$/.test(instrument_timeout)) {
+    } else if (/^([1-9][0-9]*)$/.test(instrument_timeout)) {
         instrument_config_status = 0;
     } else {
         instrument_config_status = 2;
@@ -646,6 +649,7 @@ funs["su"] = function() {
         // 系统信息
         $.get("/action/status?mode=get_systeminfo", function(_data, _status){
             $("div.loading-container#loading-container").css("display", "none");
+            // alert("11111 data  = " + _data);
             var data_json = JSON.parse(_data);
             $.each(data_json, function(index, info){
                 // if (info.version && $("#software_version").length > 0) {
@@ -655,8 +659,8 @@ funs["su"] = function() {
                 else if (index == "mem") {
                     $("#mem_info").attr("value", info);
                 }
-                else if (index == "svm") {
-                    $("#svm_info").attr("value", info);
+                else if (index == "app") {
+                    $("#app_info").attr("value", info);
                 }
             });
         });
@@ -1274,7 +1278,7 @@ funs["su"] = function() {
                 }
 
                 var record_diagram_data = null;
-                alert("instrument_channel_num = " + instrument_channel_num);
+                alert("当前仪表包含" + instrument_channel_num+"个通道！");
                 
                 if(instrument_channel_num == 0)
                 {
@@ -1885,6 +1889,7 @@ var updateContent = function(url, fun) {
                 $.get("/action/status?mode=get_systeminfo", function(_data, _status){
                     $("div.loading-container#loading-container").css("display", "none");
                     var data_json = JSON.parse(_data);
+                    // alert("22222 data  = " + _data);
                     $.each(data_json, function(index, info){
                         // if (info.version && $("#software_version").length > 0) {
                         if (index == "cpuload") {
@@ -1893,8 +1898,8 @@ var updateContent = function(url, fun) {
                         else if (index == "mem") {
                             $("#mem_info").attr("value", info);
                         }
-                        else if (index == "svm") {
-                            $("#svm_info").attr("value", info);
+                        else if (index == "app") {
+                            $("#app_info").attr("value", info);
                         }
                     });
                 });
@@ -1976,62 +1981,62 @@ $(document).ready(function(e){
 			<div class="top-content-wrap" id="top-content">
 				<div id="menu-advanced" class="menu-container">
 					<ul class="menu-tree advanced">
-					<li class="fst " id="menu-advanced-running-status-li">
-					     <a class="fst none-sec" data-child="no" 
-						    data-name="running-status" name="running-status" tab-id="tab-menu-ul-1010746721" 
-							ref-url="pages/system_state.html" ifun="su">
-                               <span class="icon"></span><span class="text">运行状态</span>
-						 </a>
-					</li>
-					<li class="fst selected" id="menu-advanced-sys-tools-li">
-					     <a class="fst none-sec selected" data-child="no" 
-						    data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
-							ref-url="pages/ip_address_setting.html" ifun="su">
-							   <span class="icon"></span><span class="text">IP地址设置</span>
-						 </a>
-				    </li>
-					<li class="fst selected" id="menu-advanced-sys-tools-li">
-					     <a class="fst none-sec selected" data-child="no" 
-						    data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
-							ref-url="pages/mac_address_setting.html" ifun="su">
-							   <span class="icon"></span><span class="text">MAC地址设置</span>
-						 </a>
-				    </li>
-					<li class="fst selected" id="menu-advanced-sys-tools-li">
-					     <a class="fst none-sec selected" data-child="no" 
-						    data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
-							ref-url="pages/datetime_setting.html" ifun="su">
-							   <span class="icon"></span><span class="text">时间设置</span>
-						 </a>
-				    </li>
-					<li class="fst selected" id="menu-advanced-statistic-diagram-li">
-					     <a class="fst none-sec selected" data-child="no" 
-						    data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
-							ref-url="pages/show_record_diagram.html" ifun="su">
-							   <span class="icon"></span><span class="text">采样统计</span>
-						 </a>
-				    </li>
-					<li class="fst selected" id="menu-advanced-sys-tools-li">
-					     <a class="fst none-sec selected" data-child="no" 
-						    data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
-							ref-url="pages/instrument_web_control.html" ifun="su">
-							   <span class="icon"></span><span class="text">设备控制</span>
-						 </a>
-				    </li>
-					<li class="fst selected" id="menu-advanced-sys-tools-li">
-					     <a class="fst none-sec selected" data-child="no" 
-						    data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
-							ref-url="pages/application_upgrade.html" ifun="su">
-							   <span class="icon"></span><span class="text">应用升级</span>
-						 </a>
-				    </li>
-					<li class="fst selected" id="menu-advanced-sys-tools-li">
-					     <a class="fst none-sec selected" data-child="no" 
-						    data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
-							ref-url="pages/system_upgrade.html" ifun="su">
-							   <span class="icon"></span><span class="text">系统升级</span>
-						 </a>
-				    </li>
+                        <li class="fst " id="menu-advanced-running-status-li">
+                             <a class="fst none-sec" data-child="no" 
+                                data-name="running-status" name="running-status" tab-id="tab-menu-ul-1010746721" 
+                                ref-url="pages/system_state.html" ifun="su">
+                                   <span class="icon"></span><span class="text">运行状态</span>
+                             </a>
+                        </li>
+                        <li class="fst selected" id="menu-advanced-sys-tools-li">
+                             <a class="fst none-sec selected" data-child="no" 
+                                data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
+                                ref-url="pages/ip_address_setting.html" ifun="su">
+                                   <span class="icon"></span><span class="text">IP地址设置</span>
+                             </a>
+                        </li>
+                        <li class="fst selected" id="menu-advanced-sys-tools-li">
+                             <a class="fst none-sec selected" data-child="no" 
+                                data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
+                                ref-url="pages/mac_address_setting.html" ifun="su">
+                                   <span class="icon"></span><span class="text">MAC地址设置</span>
+                             </a>
+                        </li>
+                        <li class="fst selected" id="menu-advanced-sys-tools-li">
+                             <a class="fst none-sec selected" data-child="no" 
+                                data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
+                                ref-url="pages/datetime_setting.html" ifun="su">
+                                   <span class="icon"></span><span class="text">时间设置</span>
+                             </a>
+                        </li>
+                        <li class="fst selected" id="menu-advanced-statistic-diagram-li">
+                             <a class="fst none-sec selected" data-child="no" 
+                                data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
+                                ref-url="pages/show_record_diagram.html" ifun="su">
+                                   <span class="icon"></span><span class="text">采样统计</span>
+                             </a>
+                        </li>
+                        <li class="fst selected" id="menu-advanced-sys-tools-li">
+                             <a class="fst none-sec selected" data-child="no" 
+                                data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
+                                ref-url="pages/instrument_web_control.html" ifun="su">
+                                   <span class="icon"></span><span class="text">设备控制</span>
+                             </a>
+                        </li>
+                        <li class="fst selected" id="menu-advanced-sys-tools-li">
+                             <a class="fst none-sec selected" data-child="no" 
+                                data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
+                                ref-url="pages/application_upgrade.html" ifun="su">
+                                   <span class="icon"></span><span class="text">应用升级</span>
+                             </a>
+                        </li>
+                        <!-- li class="fst selected" id="menu-advanced-sys-tools-li">
+                             <a class="fst none-sec selected" data-child="no" 
+                                data-name="system-mgnt" name="system-mgnt" tab-id="tab-menu-ul-1559772315" 
+                                ref-url="pages/system_upgrade.html" ifun="su">
+                                   <span class="icon"></span><span class="text">系统升级</span>
+                             </a>
+                        </li-->
 					</ul>
 				</div>
                 <div id="func-advanced" class="function-container"></div>
