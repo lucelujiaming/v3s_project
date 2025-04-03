@@ -10,6 +10,8 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <pthread.h>
+
 #include <time.h>
 #include "timer.h"
 #include "mbvardef.h"
@@ -32,11 +34,6 @@
 #include "hctm.h"
 #include "reliya.h"
 
-#define UART_PTC_STATUS_OK        1
-#define UART_PTC_STATUS_NG        2
-
-
-
 typedef struct
 {
 	void (*init_proc)(int fd, uint16_t addr);
@@ -53,14 +50,16 @@ typedef struct
 int16_t HReg[HREG_MAX] = {0};
 int16_t IReg[IREG_MAX] = {0};
 
+// 2. 定义全局变量和读写锁
+pthread_rwlock_t hreg_rwlock;
+pthread_rwlock_t ireg_rwlock;
+
 char data_temp[100];
 int16_t* protocol_buff;
 uint8_t* serial_buff;
 uint8_t little_endian;
 
-uint8_t uart_ptc_status = UART_PTC_STATUS_OK;
-
-
+PTC310_INTERFACE_STATUS g_iInstrumentUsartOfflineStatus = INSTRUMENT_USART_ONLINE;
 
 PROTOCOL_DEF ProtocolProcList[PROTOCOL_MAX]=
 {
@@ -138,12 +137,14 @@ void Protocol_Init(int fd)
 	uint32_t ack_time;
 	
 	//Variables Initial
+    pthread_rwlock_rdlock(&hreg_rwlock); // 获取HReg的读锁
 	prot_id= HReg[CP_PROTOCOL_ID];
 	
 	inst_addr= HReg[CP_INSTRUMENT_ADDR];
 	
 	req_time= (uint32_t)HReg[CP_ENQUIRY_TIME]*100;
 	ack_time= (uint32_t)HReg[CP_RESPONSE_TIME]*100;
+    pthread_rwlock_unlock(&hreg_rwlock); // 释放HReg的读锁
 	
 	if(prot_id >= PROTOCOL_MAX)
 	{
@@ -187,9 +188,11 @@ void Protocol_Init(int fd)
 	protocol_buff= IReg;
 	// serial_buff= USART3_GetBuf();
     serial_buff= Instrument_USART_GetBuf();
+    pthread_rwlock_rdlock(&hreg_rwlock); // 获取HReg的读锁
 	little_endian= HReg[CP_32BIT_LE];
+    pthread_rwlock_unlock(&hreg_rwlock); // 释放HReg的读锁
 	
-	uart_ptc_status = UART_PTC_STATUS_OK;
+	g_iInstrumentUsartOfflineStatus = INSTRUMENT_USART_ONLINE;
 	
 	// Init Timer
 	Instrument_USART_Init();
@@ -197,19 +200,25 @@ void Protocol_Init(int fd)
 
 void Protocol_Proc(int fd)
 {
+    time_t timeNow = time(NULL);
 	uint16_t len;
 	uint8_t err;
+	uint16_t cp_fault_times, cp_protocol_id; 
 	
 	// len= USART3_FrameReceived();
 	len= Instrument_USART_FrameReceived(fd);
 	// printf("Instrument_USART_FrameReceived read %d\n", len);
 	if(len > 0)
 	{
-		printf("Protocol_Proc analysis_proc %d\n", len);
-		if(uart_ptc_status == UART_PTC_STATUS_NG)
+		// printf("Protocol_Proc analysis_proc %d\n", len);
+		if(g_iInstrumentUsartOfflineStatus == INSTRUMENT_USART_OFFLINE)
 		{
-			uart_ptc_status = UART_PTC_STATUS_OK;
-			record_uart_ptc_status(uart_ptc_status);
+			g_iInstrumentUsartOfflineStatus = INSTRUMENT_USART_ONLINE;
+			// record_uart_ptc_status(uart_ptc_status);
+			timeNow = time(NULL);
+			printf("[%s:%s:%d] start out_usart_info_record ONLINE because Instrument_USART_FrameReceived returns %d\n",
+						__FILE__, __FUNCTION__, __LINE__, len);
+			out_instrument_usart_info_record(g_iInstrumentUsartOfflineStatus, timeNow);
 		}
 		err= (*ProtocolConvert->analysis_proc)(len);
 		
@@ -219,29 +228,50 @@ void Protocol_Proc(int fd)
 						
 			if(ProtocolConvert->request_proc)
 			{
-				printf("Timer_Stop tm_FrmAckTo err=%d\n", err);
+				// printf("Timer_Stop tm_FrmAckTo err=%d\n", err);
 				Timer_Stop((MTIMER*)&tm_FrmAckTo);
 			}
 			else
 			{
-				printf("Timer_Restart tm_FrmAckTo err=%d\n", err);
+				printf("[%s:%s:%d] Timer_Restart tm_FrmAckTo err=%d\n", 
+                            __FILE__, __FUNCTION__, __LINE__, err);
 				Timer_Restart((MTIMER*)&tm_FrmAckTo);
 			}
+		}
+		else
+		{
+			printf("[%s:%s:%d] Timer_Stop tm_FrmAckTo err=%d\n", 
+                            __FILE__, __FUNCTION__, __LINE__, err);
 		}
 	}
 	else if(len == 0)
 	{
-		// printf("Nothing read\n");
+		// printf("\n");
+		printf("Instrument does not work and nothing read\n");
+		if(g_iInstrumentUsartOfflineStatus == INSTRUMENT_USART_ONLINE)
+		{
+			g_iInstrumentUsartOfflineStatus = INSTRUMENT_USART_OFFLINE;
+			// record_uart_ptc_status(uart_ptc_status);
+			timeNow = time(NULL);
+			printf("[%s:%s:%d] start out_usart_info_record OFFLINE because Instrument_USART_FrameReceived returns %d\n",
+						__FILE__, __FUNCTION__, __LINE__, len);
+			out_instrument_usart_info_record(g_iInstrumentUsartOfflineStatus, timeNow);
+		}
 	}
 	else if(len < 0)
 	{
 		printf("Protocol_Proc read error %d\n", len);
-		if(uart_ptc_status == UART_PTC_STATUS_OK)
+		if(g_iInstrumentUsartOfflineStatus == INSTRUMENT_USART_ONLINE)
 		{
-			uart_ptc_status = UART_PTC_STATUS_NG;
-			record_uart_ptc_status(uart_ptc_status);
+			g_iInstrumentUsartOfflineStatus = INSTRUMENT_USART_OFFLINE;
+			// record_uart_ptc_status(uart_ptc_status);
+			timeNow = time(NULL);
+			printf("[%s:%s:%d] start out_usart_info_record OFFLINE because Instrument_USART_FrameReceived returns %d\n",
+						__FILE__, __FUNCTION__, __LINE__, len);
+			out_instrument_usart_info_record(g_iInstrumentUsartOfflineStatus, timeNow);
 		}
 	}
+	check_instrument_usart_info_record(g_iInstrumentUsartOfflineStatus);
 	
 	//Time to Request
 	// printf("Timer_Expires tm_FrmReq\n");
@@ -269,9 +299,12 @@ void Protocol_Proc(int fd)
 	if(Timer_Expires((MTIMER*)&tm_FrmAckTo))
 	{
 		printf("Timer_Expires((MTIMER*)&tm_FrmAckTo)\n");
-		if(++comm_err_cnt > HReg[CP_FAULT_TIMES])
+		pthread_rwlock_rdlock(&hreg_rwlock); // 获取HReg的读锁
+		cp_fault_times = HReg[CP_FAULT_TIMES];
+		pthread_rwlock_unlock(&hreg_rwlock); // 释放HReg的读锁
+		if(++comm_err_cnt > cp_fault_times)
 		{
-			comm_err_cnt= HReg[CP_FAULT_TIMES];
+			comm_err_cnt= cp_fault_times;
 		}
 		
 		if(ProtocolConvert->request_proc)
@@ -283,18 +316,31 @@ void Protocol_Proc(int fd)
 		}
 	}
 	
-	if(comm_err_cnt >= HReg[CP_FAULT_TIMES])
+	pthread_rwlock_rdlock(&hreg_rwlock); // 获取HReg的读锁
+	cp_fault_times = HReg[CP_FAULT_TIMES];
+	pthread_rwlock_unlock(&hreg_rwlock); // 释放HReg的读锁
+	if(comm_err_cnt >= cp_fault_times)
 	{
+		pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 		IReg[0]= 1;
+    	pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 	}
 	else
 	{
+		pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 		IReg[0]= 0;
+    	pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 	}
+
+	pthread_rwlock_rdlock(&hreg_rwlock); // 获取HReg的读锁
+	cp_protocol_id = HReg[CP_PROTOCOL_ID];
+	pthread_rwlock_unlock(&hreg_rwlock); // 释放HReg的读锁
 	
-	if(HReg[CP_PROTOCOL_ID]>= PROTOCOL_MAX)
+	if(cp_protocol_id >= PROTOCOL_MAX)
 	{
+    	pthread_rwlock_wrlock(&hreg_rwlock); // 获取HReg的写锁
 		HReg[CP_PROTOCOL_ID]= PROTOCOL_MAX;
+   		pthread_rwlock_unlock(&hreg_rwlock); // 释放HReg的写锁
 	}
 }
 

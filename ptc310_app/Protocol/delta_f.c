@@ -72,6 +72,7 @@ uint8_t DELTAF_Analysis(uint16_t len)
 	
 	if(deltaf_check_sum(len))
 	{
+		pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 		switch(*(serial_buff + 2))
 		{
 		case 0x00:
@@ -84,13 +85,13 @@ uint8_t DELTAF_Analysis(uint16_t len)
 			{
 				protocol_buff[5]= _get_int16_int8_big_endian(serial_buff+4);
 				protocol_buff[4]= _get_int16_int8_big_endian(serial_buff+6);
-				printf("DELTAF_Analysis::little_endian\r\n");
+				// printf("DELTAF_Analysis::little_endian\r\n");
 			}
 			else
 			{
 				protocol_buff[4]= _get_int16_int8_big_endian(serial_buff+4);
 				protocol_buff[5]= _get_int16_int8_big_endian(serial_buff+6); 
-				printf("DELTAF_Analysis::big_endian\r\n");
+				// printf("DELTAF_Analysis::big_endian\r\n");
 			}
 			break;
 		case 0x66:
@@ -108,6 +109,7 @@ uint8_t DELTAF_Analysis(uint16_t len)
 		default:
 			break;
 		}
+    	pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 		err= 0;
 	}
 
@@ -131,6 +133,7 @@ uint16_t DELTAF_DataOutput(char* strOutput)
 	float * floatO2ppb  = (float *)cO2ppbBuffer;
 	float * floatHO2ppb = (float *)cHO2ppbBuffer;
 	
+	pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁
 	if(little_endian)
 	{
 		cO2ppbBuffer[3] = protocol_buff[5]>>8;
@@ -157,6 +160,7 @@ uint16_t DELTAF_DataOutput(char* strOutput)
 		cHO2ppbBuffer[0] = protocol_buff[7]&0x00FF;
 		//		printf("DELTAF_DataOutput::big_endian\r\n");
 	}
+    pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
 	
 //	// PPM -> PPB
 //	if(*floatO2ppb < 0.001)

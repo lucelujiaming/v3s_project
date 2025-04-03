@@ -1,0 +1,24 @@
+﻿<!DOCTYPE html>  
+<html>  
+<head>  
+    <title>High Chart Test</title>  
+</head>  
+<body>
+<script type="text/javascript" src="../js/highcharts.js"></script>
+<script type="text/javascript" src="../js/accessibility.js"></script>
+<div id="chartContainer"></div>
+
+<script type="text/javascript">
+var options = {
+    chart: { type: 'column' },
+    title: { text: '柱状图 + 折线图组合' },
+    xAxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] },
+    yAxis: [{ title: { text: '柱状图数据' } }, { title: { text: '折线图数据', opposite: true } }],
+    series: [{ name: '柱状图', type: 'column', data: [49.9, 71.5, 106.4, 129.2, 144.0, 176.0] }, { name: '折线图', type: 'line', yAxis: 1, data: [50, 75, 100, 125, 150, 175] }]
+
+};
+var chart = Highcharts.chart('chartContainer', options);
+</script>
+<br>
+</body>  
+</html>

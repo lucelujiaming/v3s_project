@@ -102,14 +102,15 @@
     </div>
 </div>
 
-<div class="container widget-container grid-container" style="width:48%;hight:100%;float:left;">
+<div class="container widget-container grid-container" style="width:33%;hight:100%;float:left;">
     <div class="grid-header-container">
         <h3 class="panel-title" style="margin-bottom: 4px;">
-            <span class="panel-title-text">串口状态不可用</span>
+            <span class="panel-title-text">Modbus总线状态</span>
         </h3>
     </div>
     <div class="grid-content-container">
-        <table id = "usart_info" name = "usart_info" class="grid-content-container"  style="margin-top: 0px;margin-left: 2px;">
+        <table id = "modbus_usart_info" name = "modbus_usart_info" 
+                 class="grid-content-container"  style="margin-top: 0px;margin-left: 2px;">
             <tr>
                 <th style="width:32%;" >发生时间</th>
                 <th style="width:16%;" >状态</th>
@@ -117,10 +118,26 @@
         </table>
     </div>
 </div>
-<div class="container widget-container grid-container" style="width:48%;hight:100%;float:left;">
+<div class="container widget-container grid-container" style="width:33%;hight:100%;float:left;">
     <div class="grid-header-container">
         <h3 class="panel-title" style="margin-bottom: 4px;">
-        <span class="panel-title-text">电源状态不可用</span>
+            <span class="panel-title-text">仪表状态</span>
+        </h3>
+    </div>
+    <div class="grid-content-container">
+        <table id = "instrument_usart_info" name = "instrument_usart_info" 
+                 class="grid-content-container"  style="margin-top: 0px;margin-left: 2px;">
+            <tr>
+                <th style="width:32%;" >发生时间</th>
+                <th style="width:16%;" >状态</th>
+            </tr>
+        </table>
+    </div>
+</div>
+<div class="container widget-container grid-container" style="width:33%;hight:100%;float:left;">
+    <div class="grid-header-container">
+        <h3 class="panel-title" style="margin-bottom: 4px;">
+        <span class="panel-title-text">电源状态</span>
         </h3>
     </div>
     <div class="grid-content-container">

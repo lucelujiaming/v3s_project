@@ -33,8 +33,8 @@
 // 128 ie the length of following log:
 // [-0.000821,-0.000821,-0.000821,-0.000821,-0.000821,-0.000821,-0.000821,-0.000821,-0.000821,-0.000821],
 #define INSTRUMENT_INFO_STR_LEN     0x70800    
-#define BATTERY_INFO_STR_LEN        1024
-#define USART_INFO_STR_LEN          1024
+#define BATTERY_INFO_STR_LEN        0x15200
+#define USART_INFO_STR_LEN          0x15200
 // ulimit -s is 8192(KB) = 0x800000
 #define INFO_STR_LEN                (INSTRUMENT_INFO_STR_LEN + BATTERY_INFO_STR_LEN + USART_INFO_STR_LEN) // 5120
 
@@ -323,7 +323,7 @@ char * findLastPosOfPreFix(char * sFileDataLine, char * strPreFix)
 /***********************************************************************
  * 函数名：    get_hourdata_from_logfile
  * 入口参数：  iYear/iMonth/iDay/iHour: 年月日和小时。
- *              iChannNum:      数据通道数
+ *              iChannNum:      数据通道数。0表示不区分通道。
  *              strOutput:      对应年月日和小时的日志缓冲区。
  *              iStrOutputLen:  日志缓冲区长度。
  *              filename:       日志文件名。
@@ -365,20 +365,10 @@ int get_hourdata_from_logfile(int iYear, int iMonth, int iDay, int iHour,
     char * sDataLinePtr = NULL;
     
     FILE* fpr;
-    if (NULL == (fpr = fopen(filename, "r")))
-    {
-		printf("logfile read %s failed\n", filename);
-		return -1;// 读取原文件
-    }
 	// 前缀形如："2024-03-24 07"
     sprintf(strPreFix, "%04d-%02d-%02d %02d", iYear, iMonth, iDay, iHour);
     printf("strPreFix = %s. \r\n", strPreFix);
     
-    if(iChannNum <= 0)
-    {
-		printf("iChannNum is %d and <= 0\n", iChannNum);
-		return -1;// 读取原文件
-    }
     // Create cEmptyRecord and cFillRecord by iChannNum
     strcat(cEmptyRecord, "[");
     strcat(cFillRecord, "[");
@@ -389,7 +379,23 @@ int get_hourdata_from_logfile(int iYear, int iMonth, int iDay, int iHour,
     }
     strcat(cEmptyRecord, "0.0] \r\n");
     strcat(cFillRecord, "0.0],\r\n");
-    
+
+    if (NULL == (fpr = fopen(filename, "r")))
+    {
+		printf("logfile read %s failed\n", filename);
+		return -1;// 读取原文件
+    }
+	
+    if(iChannNum < 0)
+    {
+		printf("iChannNum is %d and <= 0\n", iChannNum);
+		
+        strcat(strOutput, cEmptyRecord);
+        printf("整个小时的日志都不存在. \r\n");
+        iLineCount = 1;
+		return 1;// 读取原文件
+    }
+	
     // Get log data
     while (NULL != fgets(sFileDataLine, 1024, fpr)) {
         if(iLineCount > 3600)
@@ -444,7 +450,10 @@ int get_hourdata_from_logfile(int iYear, int iMonth, int iDay, int iHour,
                 iLineCount = iTotalSecond;
             }
             // Truncate sDataLine
-            truncateLoglineWithChannelNum(sDataLinePtr + strlen(cTimeStampExampleTemplate), iChannNum);
+            if(iChannNum > 0)
+            {
+            	truncateLoglineWithChannelNum(sDataLinePtr + strlen(cTimeStampExampleTemplate), iChannNum);
+            }
             // iFillOutputLen = strlen(strOutput) + strlen(sDataLinePtr) - strlen(cTimeStampExampleTemplate);
             iFillOutputLen = iFillOutputLen + strlen(sDataLinePtr) - strlen(cTimeStampExampleTemplate);
             // printf("iFillOutputLen = %d, iStrOutputLen = %d. \r\n", iFillOutputLen, iStrOutputLen);
@@ -467,8 +476,8 @@ int get_hourdata_from_logfile(int iYear, int iMonth, int iDay, int iHour,
     // 如果整个小时的日志都不存在。
     if(iLineCount == 0)
     {
-        printf("整个小时的日志都不存在. \r\n");
         strcat(strOutput, cEmptyRecord);
+        printf("整个小时的日志都不存在. \r\n");
         iLineCount = 1;
     }
     return iLineCount;
@@ -796,7 +805,8 @@ void statusProc(Webs *wp)
     {
         char *instrument_info_string_ptr = (char *)malloc(INSTRUMENT_INFO_STR_LEN);
         char *battery_info_string_ptr = (char *)malloc(BATTERY_INFO_STR_LEN);
-        char *usart_info_string_ptr = (char *)malloc(USART_INFO_STR_LEN);
+        char *modbus_usart_info_string_ptr = (char *)malloc(USART_INFO_STR_LEN);
+        char *instrument_usart_info_string_ptr = (char *)malloc(USART_INFO_STR_LEN);
 
         pRecordDate = websGetVar(wp, "record_date", "");
 		pRecordTime = websGetVar(wp, "record_time", "");
@@ -818,7 +828,7 @@ void statusProc(Webs *wp)
             int iInstrumentInfoFileSize = 0;
             struct stat stInstrumentInfoFile;
             sprintf(info_first_str, 
-                "/root/sdcard/app/instrument_info/%s/instrument_history_record_%s.txt", 
+                "/root/sdcard/app/instrument_info/%s/instrument_reading_chart_history_record_%s.txt", 
                 pRecordDate, pRecordDate);
             if(stat(info_first_str, &stInstrumentInfoFile) == 0)
 			{
@@ -828,23 +838,36 @@ void statusProc(Webs *wp)
             //         __FILE__, __FUNCTION__, __LINE__, 
             //         pRecordDate, pRecordDate, iInstrumentInfoFileSize);
 			
-            int iUsartInfoFileSize = 0;
-            struct stat stUsartInfoFile;
+            int iModbusUsartInfoFileSize = 0;
+            struct stat stModbusUsartInfoFile;
             sprintf(info_first_str, 
-                "/root/sdcard/app/instrument_info/%s/usart_info_record_unixtime_%s.txt", 
+                "/root/sdcard/app/instrument_info/%s/modbus_usart_info_chart_history_record_%s.txt", 
                 pRecordDate, pRecordDate);
-            if(stat(info_first_str, &stUsartInfoFile) == 0)
+            if(stat(info_first_str, &stModbusUsartInfoFile) == 0)
 			{
-                iUsartInfoFileSize = stUsartInfoFile.st_size;
+                iModbusUsartInfoFileSize = stModbusUsartInfoFile.st_size;
             }
             // trace(2, "[%s:%s:%d] /root/sdcard/app/instrument_info/%s/usart_info_record_unixtime_%s.txt = %d", 
             //         __FILE__, __FUNCTION__, __LINE__, 
             //         pRecordDate, pRecordDate, iUsartInfoFileSize);
 			
+            int iInstrumentUsartInfoFileSize = 0;
+            struct stat stInstrumentUsartInfoFile;
+            sprintf(info_first_str, 
+                "/root/sdcard/app/instrument_info/%s/modbus_usart_info_chart_history_record_%s.txt", 
+                pRecordDate, pRecordDate);
+            if(stat(info_first_str, &stInstrumentUsartInfoFile) == 0)
+			{
+                iInstrumentUsartInfoFileSize = stInstrumentUsartInfoFile.st_size;
+            }
+            // trace(2, "[%s:%s:%d] /root/sdcard/app/instrument_info/%s/usart_info_record_unixtime_%s.txt = %d", 
+            //         __FILE__, __FUNCTION__, __LINE__, 
+            // 
+            
             int iBatteryInfoFileSize = 0;
             struct stat stBatteryInfoFile;
             sprintf(info_first_str, 
-                "/root/sdcard/app/instrument_info/%s/battery_info_record_unixtime_%s.txt", 
+                "/root/sdcard/app/instrument_info/%s/battery_usart_info_chart_history_record_%s.txt", 
                 pRecordDate, pRecordDate);
             if(stat(info_first_str, &stBatteryInfoFile) == 0)
 			{
@@ -867,7 +890,7 @@ void statusProc(Webs *wp)
 				memcpy(cYear, pRecordDate, 4);
 				memcpy(cMonth, pRecordDate + 5, 2);
 				memcpy(cDay, pRecordDate + 8, 2);
-                sprintf(info_first_str, "/root/sdcard/app/instrument_info/%s/instrument_history_record_%s.txt", 
+                sprintf(info_first_str, "/root/sdcard/app/instrument_info/%s/instrument_reading_chart_history_record_%s.txt", 
                      pRecordDate, pRecordDate);
 				memset(instrument_info_string_ptr, 0x00, INSTRUMENT_INFO_STR_LEN);
                 trace(2, "[%s:%s:%d] get Year/Month/Day/Hour = '%d/%d/%d/%d/' from %s", __FILE__, __FUNCTION__, __LINE__, 
@@ -891,41 +914,82 @@ void statusProc(Webs *wp)
                 // sprintf(instrument_info_string_ptr, "[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]");
                 sprintf(instrument_info_string_ptr, 
                     createEmptyRecordWithChannelNum(instrument_info_string_ptr, INSTRUMENT_INFO_STR_LEN, iChannNum));
-                
             }
 			
-			if(iBatteryInfoFileSize > 0)
+			if((iBatteryInfoFileSize > 0) && (iRecordTime > 0) 
+				&& (strlen(pRecordDate) == strlen("1979_01_01")))
 			{
-                sprintf(info_first_str, 
-                    "head -%d /root/sdcard/app/instrument_info/%s/battery_info_record_unixtime_%s.txt", 
-                    HOUR_SCALE, pRecordDate, pRecordDate);
-	            get_cmd_printf(info_first_str, battery_info_string_ptr, BATTERY_INFO_STR_LEN);
+				char cYear[8] = {0}, cMonth[4] = {0}, cDay[4] = {0}; 
+				memcpy(cYear, pRecordDate, 4);
+				memcpy(cMonth, pRecordDate + 5, 2);
+				memcpy(cDay, pRecordDate + 8, 2);
+                sprintf(info_first_str, "/root/sdcard/app/instrument_info/%s/battery_usart_info_chart_history_record_%s.txt", 
+                    pRecordDate, pRecordDate);
+				memset(battery_info_string_ptr, 0x00, BATTERY_INFO_STR_LEN);
+                trace(2, "[%s:%s:%d] get Year/Month/Day/Hour = '%d/%d/%d/%d/' from %s", __FILE__, __FUNCTION__, __LINE__, 
+					atoi(cYear), atoi(cMonth), atoi(cDay), iRecordTime - 1, info_first_str);
+				get_hourdata_from_logfile(atoi(cYear), atoi(cMonth), atoi(cDay), iRecordTime - 1, 
+							0, battery_info_string_ptr, BATTERY_INFO_STR_LEN, info_first_str);
                 // Remove last ",\r\n"
-                battery_info_string_ptr[strlen(battery_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
-                trace(2, "[%s:%s:%d] battery_info_string_ptr = %s", __FILE__, __FUNCTION__, __LINE__, battery_info_string_ptr);
+                battery_info_string_ptr[strlen(battery_info_string_ptr) - INFO_STR_LAST_COMMA - 1] = '\0';
+                // trace(2, "[%s:%s:%d] battery_info_string_ptr = %s", __FILE__, __FUNCTION__, __LINE__, battery_info_string_ptr);
 			}
 			else 
             {
             	sprintf(battery_info_string_ptr, "0");
             }
-			
-			if(iUsartInfoFileSize > 0)
+
+			if((iModbusUsartInfoFileSize > 0) && (iRecordTime > 0) 
+				&& (strlen(pRecordDate) == strlen("1979_01_01")))
 			{
-                sprintf(info_first_str, 
-                    "head -%d /root/sdcard/app/instrument_info/%s/usart_info_record_unixtime_%s.txt", 
-                    HOUR_SCALE, pRecordDate, pRecordDate);
-	            get_cmd_printf(info_first_str, usart_info_string_ptr, USART_INFO_STR_LEN);
+				char cYear[8] = {0}, cMonth[4] = {0}, cDay[4] = {0}; 
+				memcpy(cYear, pRecordDate, 4);
+				memcpy(cMonth, pRecordDate + 5, 2);
+				memcpy(cDay, pRecordDate + 8, 2);
+				memset(modbus_usart_info_string_ptr, 0x00, USART_INFO_STR_LEN);
+                sprintf(info_first_str, "/root/sdcard/app/instrument_info/%s/modbus_usart_info_chart_history_record_%s.txt", 
+                    pRecordDate, pRecordDate);
+                trace(2, "[%s:%s:%d] get Year/Month/Day/Hour = '%d/%d/%d/%d/' from %s", __FILE__, __FUNCTION__, __LINE__, 
+					atoi(cYear), atoi(cMonth), atoi(cDay), iRecordTime - 1, info_first_str);
+				get_hourdata_from_logfile(atoi(cYear), atoi(cMonth), atoi(cDay), iRecordTime - 1, 
+							0, modbus_usart_info_string_ptr, USART_INFO_STR_LEN, info_first_str);
                 // Remove last ",\r\n"
-                usart_info_string_ptr[strlen(usart_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
+                modbus_usart_info_string_ptr[strlen(modbus_usart_info_string_ptr) - INFO_STR_LAST_COMMA - 1] = '\0';
 			}
 			else 
             {
-            	sprintf(usart_info_string_ptr, "0");
+            	sprintf(modbus_usart_info_string_ptr, "0");
+            }
+
+			if((iInstrumentUsartInfoFileSize > 0) && (iRecordTime > 0) 
+				&& (strlen(pRecordDate) == strlen("1979_01_01")))
+			{
+				char cYear[8] = {0}, cMonth[4] = {0}, cDay[4] = {0}; 
+				memcpy(cYear, pRecordDate, 4);
+				memcpy(cMonth, pRecordDate + 5, 2);
+				memcpy(cDay, pRecordDate + 8, 2);
+				memset(instrument_usart_info_string_ptr, 0x00, USART_INFO_STR_LEN);
+                sprintf(info_first_str, "/root/sdcard/app/instrument_info/%s/instrument_usart_info_chart_history_record_%s.txt", 
+                    pRecordDate, pRecordDate);
+                trace(2, "[%s:%s:%d] get Year/Month/Day/Hour = '%d/%d/%d/%d/' from %s", __FILE__, __FUNCTION__, __LINE__, 
+					atoi(cYear), atoi(cMonth), atoi(cDay), iRecordTime - 1, info_first_str);
+				get_hourdata_from_logfile(atoi(cYear), atoi(cMonth), atoi(cDay), iRecordTime - 1, 
+							0, instrument_usart_info_string_ptr, USART_INFO_STR_LEN, info_first_str);
+                // Remove last ",\r\n"
+                instrument_usart_info_string_ptr[strlen(instrument_usart_info_string_ptr) - INFO_STR_LAST_COMMA - 1] = '\0';
+			}
+			else 
+            {
+            	sprintf(instrument_usart_info_string_ptr, "0");
             }
 
             snprintf(info_str, INFO_STR_LEN, 
-                "{  \"Scale\": %d, \"ChannNum\": %d, \"InstrumentInfo\": [ %s ], \r\n\"BatteryInfo\": [ %s ], \r\n\"UsartInfo\": [ %s ] }", 
-                HOUR_SCALE, iChannNum, instrument_info_string_ptr, battery_info_string_ptr, usart_info_string_ptr);
+                "{  \"Scale\": %d, \"ChannNum\": %d, "
+                   "\"InstrumentInfo\": [ %s ], \r\n \"BatteryInfo\": [ %s ], \r\n"
+                   "\"ModbusUsartInfo\": [ %s ], \r\n \"InstrumentUsartInfo\": [ %s ] }", 
+                HOUR_SCALE, iChannNum, 
+                instrument_info_string_ptr, battery_info_string_ptr, 
+                modbus_usart_info_string_ptr, instrument_usart_info_string_ptr);
             
             trace(2, "[%s:%s:%d] info_str = %s", __FILE__, __FUNCTION__, __LINE__, info_str);
             trace(2, "[%s:%s:%d] strlen(info_str) = %d", __FILE__, __FUNCTION__, __LINE__, strlen(info_str));
@@ -939,11 +1003,14 @@ void statusProc(Webs *wp)
         trace(2, "[%s:%s:%d] websFlush end", __FILE__, __FUNCTION__, __LINE__);
 		free(instrument_info_string_ptr);
 		free(battery_info_string_ptr);
-		free(usart_info_string_ptr);
+		free(modbus_usart_info_string_ptr);
+		free(instrument_usart_info_string_ptr);
     }
     else if(strcmp(pMode, "get_battery_info") == 0)
     {
-        char *battery_info_string_ptr = (char *)malloc(BATTERY_INFO_STR_LEN);
+		// Use larger buffer
+        // char *battery_info_string_ptr = (char *)malloc(BATTERY_INFO_STR_LEN);
+        char *battery_info_string_ptr = (char *)malloc(BATTERY_INFO_STR_LEN * 10);
         pRecordDate = websGetVar(wp, "record_date", "");
         trace(2, "[%s:%s:%d] %ld - websWrite::pRecordDate = %s",
                       __FILE__, __FUNCTION__, __LINE__, time(NULL), pRecordDate);
@@ -952,35 +1019,47 @@ void statusProc(Webs *wp)
             int iBatteryInfoFileSize = 0;
             struct stat stBatteryInfoFile;
             sprintf(info_first_str, 
-                "/root/sdcard/app/instrument_info/%s/battery_info_switch_record_%s.txt", 
+                "/root/sdcard/app/instrument_info/%s/battery_info_record_%s.txt", 
                 pRecordDate, pRecordDate);
             if(stat(info_first_str, &stBatteryInfoFile) == 0)
 			{
                 iBatteryInfoFileSize = stBatteryInfoFile.st_size;
             }
-            trace(2, "[%s:%s:%d] /root/sdcard/app/instrument_info/%s/battery_info_switch_record_%s.txt = %d", 
+            trace(2, "[%s:%s:%d] /root/sdcard/app/instrument_info/%s/battery_info_record_%s.txt = %d", 
                     __FILE__, __FUNCTION__, __LINE__, 
                     pRecordDate, pRecordDate, iBatteryInfoFileSize);
                     
+            char battery_start_usart_info[64] = {0};
             if((iBatteryInfoFileSize < INFO_STR_LEN) && (iBatteryInfoFileSize > 0))
 			{
                 sprintf(info_first_str, 
-                    "cat /root/sdcard/app/instrument_info/%s/battery_info_switch_record_%s.txt", 
+                    "cat /root/sdcard/app/instrument_info/%s/battery_info_record_%s.txt", 
                     pRecordDate, pRecordDate);
-	            get_cmd_printf(info_first_str, battery_info_string_ptr, USART_INFO_STR_LEN);
+
+				// // 首先假设本日开始的时候，串口可用，
+				// // 1 - 电池可用
+                // sprintf(battery_start_usart_info, "[\"%s 00:00:00\",1], \r\n", pRecordDate);
+                // // Change ["2024_07_22 ..."] into ["2024-07-22 ..."]
+                // battery_start_usart_info[6] = '-';
+                // battery_start_usart_info[9] = '-';
+				// // 之后添加日志中的数据。
+	            get_cmd_printf(info_first_str, battery_info_string_ptr, BATTERY_INFO_STR_LEN * 10);
                 // Remove last ",\r\n"
                 battery_info_string_ptr[strlen(battery_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
-                trace(2, "[%s:%s:%d] battery_info_string_ptr = %s", 
-                            __FILE__, __FUNCTION__, __LINE__, battery_info_string_ptr);
+                // trace(2, "[%s:%s:%d] battery_info_string_ptr = %s", 
+                //             __FILE__, __FUNCTION__, __LINE__, battery_info_string_ptr);
 			}
+			// 日志不存在，或者是数据太多，无法显示。
             else
             {
-                sprintf(battery_info_string_ptr, "\"%s 00:00:00\",0", pRecordDate);
-                // Change "2024_07_22 ..." into "2024-07-22 ..."
-                battery_info_string_ptr[5] = '-';
-                battery_info_string_ptr[8] = '-';
+				// 1 - 电池可用
+                sprintf(battery_info_string_ptr, "[\"%s 00:00:00\",1]", pRecordDate);
+                // Change ["2024_07_22 ..."] into ["2024-07-22 ..."]
+                battery_info_string_ptr[6] = '-';
+                battery_info_string_ptr[9] = '-';
             }
-            snprintf(info_str, INFO_STR_LEN, "{  \"BatteryInfo\": [ %s ] }", battery_info_string_ptr);
+            snprintf(info_str, INFO_STR_LEN, "{  \"BatteryInfo\": [ %s %s ] }", 
+            				battery_start_usart_info, battery_info_string_ptr);
             
             trace(2, "[%s:%s:%d] info_str = %s", __FILE__, __FUNCTION__, __LINE__, info_str);
             websSetStatus(wp, 200);
@@ -994,42 +1073,115 @@ void statusProc(Webs *wp)
     }
     else if(strcmp(pMode, "get_usart_info") == 0)
     {
-        char *usart_info_string_ptr = (char *)malloc(USART_INFO_STR_LEN);
+		// Use larger buffer
+        // char *modbus_usart_info_string_ptr = (char *)malloc(USART_INFO_STR_LEN);
+        char *modbus_usart_info_string_ptr = (char *)malloc(USART_INFO_STR_LEN * 10);
+        // char *instrument_usart_info_string_ptr = (char *)malloc(USART_INFO_STR_LEN);
+        char *instrument_usart_info_string_ptr = (char *)malloc(USART_INFO_STR_LEN * 10);
         pRecordDate = websGetVar(wp, "record_date", "");
         if(strlen(pRecordDate) > 0)
         {
-            int iUsartInfoFileSize = 0;
-            struct stat stUsartInfoFile;
+			// Deal Modbus Usart
+            int iModbusUsartInfoFileSize = 0;
+            struct stat stModbusUsartInfoFile;
             sprintf(info_first_str, 
-                "/root/sdcard/app/instrument_info/%s/usart_info_switch_record_%s.txt", 
+                "/root/sdcard/app/instrument_info/%s/modbus_usart_info_record_%s.txt", 
                 pRecordDate, pRecordDate);
-            if(stat(info_first_str, &stUsartInfoFile) == 0)
+            if(stat(info_first_str, &stModbusUsartInfoFile) == 0)
 			{
-                iUsartInfoFileSize = stUsartInfoFile.st_size;
+                iModbusUsartInfoFileSize = stModbusUsartInfoFile.st_size;
             }
-            trace(2, "[%s:%s:%d] /root/sdcard/app/instrument_info/%s/usart_info_switch_record_%s.txt = %d", 
+            trace(2, "[%s:%s:%d] /root/sdcard/app/instrument_info/%s/modbus_usart_info_record_%s.txt = %d", 
                     __FILE__, __FUNCTION__, __LINE__, 
-                    pRecordDate, pRecordDate, iUsartInfoFileSize);
+                    pRecordDate, pRecordDate, iModbusUsartInfoFileSize);
                     
-            if((iUsartInfoFileSize < INFO_STR_LEN) && (iUsartInfoFileSize > 0))
+            // char modbus_start_usart_info[64] = {0};
+            if((iModbusUsartInfoFileSize < INFO_STR_LEN) && (iModbusUsartInfoFileSize > 0))
 			{
                 sprintf(info_first_str, 
-                    "cat /root/sdcard/app/instrument_info/%s/usart_info_switch_record_%s.txt", 
+                    "cat /root/sdcard/app/instrument_info/%s/modbus_usart_info_record_%s.txt", 
                     pRecordDate, pRecordDate);
-	            get_cmd_printf(info_first_str, usart_info_string_ptr, USART_INFO_STR_LEN);
+				
+				//  // 首先假设本日开始的时候，串口可用，
+				//  // 3 - Modbus总线可用
+                //  sprintf(modbus_start_usart_info, "[\"%s 00:00:00\",3], \r\n", pRecordDate);
+                //  // Change ["2024_07_22 ..."] into ["2024-07-22 ..."]
+                //  modbus_start_usart_info[6] = '-';
+                //  modbus_start_usart_info[9] = '-';
+				//  // 之后添加日志中的数据。
+	            get_cmd_printf(info_first_str, 
+	            		modbus_usart_info_string_ptr, 
+	            		USART_INFO_STR_LEN * 10);
                 // Remove last ",\r\n"
-                usart_info_string_ptr[strlen(usart_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
-                trace(2, "[%s:%s:%d] usart_info_string_ptr = %s", 
-                            __FILE__, __FUNCTION__, __LINE__, usart_info_string_ptr);
+                modbus_usart_info_string_ptr[strlen(modbus_usart_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
+                // trace(2, "[%s:%s:%d] modbus_usart_info_string_ptr = %s", 
+                //             __FILE__, __FUNCTION__, __LINE__, modbus_usart_info_string_ptr);
 			}
+			// 日志不存在，或者是数据太多，无法显示。
             else
             {
-                sprintf(usart_info_string_ptr, "\"%s 00:00:00\",0", pRecordDate);
-                // Change "2024_07_22 ..." into "2024-07-22 ..."
-                usart_info_string_ptr[5] = '-';
-                usart_info_string_ptr[8] = '-';
+				// 3 - Modbus总线可用
+                sprintf(modbus_usart_info_string_ptr, "[\"%s 00:00:00\",3]", pRecordDate);
+                // Change ["2024_07_22 ..."] into ["2024-07-22 ..."]
+                modbus_usart_info_string_ptr[6] = '-';
+                modbus_usart_info_string_ptr[9] = '-';
             }
-            snprintf(info_str, INFO_STR_LEN, "{  \"BatteryInfo\": [ %s ] }", usart_info_string_ptr);
+
+			// Deal Instrument Usart
+            int iInstrumentUsartInfoFileSize = 0;
+            struct stat stInstrumentUsartInfoFile;
+            sprintf(info_first_str, 
+                "/root/sdcard/app/instrument_info/%s/instrument_usart_info_record_%s.txt", 
+                pRecordDate, pRecordDate);
+            if(stat(info_first_str, &stInstrumentUsartInfoFile) == 0)
+			{
+                iInstrumentUsartInfoFileSize = stInstrumentUsartInfoFile.st_size;
+            }
+            trace(2, "[%s:%s:%d] /root/sdcard/app/instrument_info/%s/instrument_usart_info_record_%s.txt = %d", 
+                    __FILE__, __FUNCTION__, __LINE__, 
+                    pRecordDate, pRecordDate, iInstrumentUsartInfoFileSize);
+
+            // char instrument_start_usart_info[64] = {0};
+            if((iInstrumentUsartInfoFileSize < INFO_STR_LEN) && (iInstrumentUsartInfoFileSize > 0))
+			{
+                sprintf(info_first_str, 
+                    "cat /root/sdcard/app/instrument_info/%s/instrument_usart_info_record_%s.txt", 
+                    pRecordDate, pRecordDate);
+				
+				// // 首先假设本日开始的时候，串口可用，
+				// // 5 - 仪表可用
+                // sprintf(instrument_start_usart_info, "[\"%s 00:00:00\",5], \r\n", pRecordDate);
+                // // Change ["2024_07_22 ..."] into ["2024-07-22 ..."]
+                // instrument_start_usart_info[6] = '-';
+                // instrument_start_usart_info[9] = '-';
+				// // 之后添加日志中的数据。
+	            get_cmd_printf(info_first_str, 
+	            		instrument_usart_info_string_ptr, 
+	            		USART_INFO_STR_LEN * 10);
+                // Remove last ",\r\n"
+                instrument_usart_info_string_ptr[strlen(instrument_usart_info_string_ptr) - INFO_STR_LAST_COMMA] = '\0';
+                // trace(2, "[%s:%s:%d] instrument_usart_info_string_ptr = %s", 
+                //             __FILE__, __FUNCTION__, __LINE__, instrument_usart_info_string_ptr);
+			}
+			// 日志不存在，或者是数据太多，无法显示。
+            else
+            {
+				// 5 - 仪表可用
+                sprintf(instrument_usart_info_string_ptr, "[\"%s 00:00:00\",5]", pRecordDate);
+                // Change ["2024_07_22 ..."] into ["2024-07-22 ..."]
+                instrument_usart_info_string_ptr[6] = '-';
+                instrument_usart_info_string_ptr[9] = '-';
+            }
+            // trace(2, "[%s:%s:%d] modbus_usart_info_string_ptr = %s", 
+            //                __FILE__, __FUNCTION__, __LINE__, modbus_usart_info_string_ptr);
+            // trace(2, "[%s:%s:%d] instrument_usart_info_string_ptr = %s", 
+            //                 __FILE__, __FUNCTION__, __LINE__, instrument_usart_info_string_ptr);
+            snprintf(info_str, INFO_STR_LEN, 
+            		"{  \"ModbusUsartInfo\": [ %s ], \r\n\"InstrumentUsartInfo\": [ %s ] }", 
+            		// modbus_start_usart_info,
+            		modbus_usart_info_string_ptr, 
+            		// instrument_start_usart_info,
+            		instrument_usart_info_string_ptr);
             
             trace(2, "[%s:%s:%d] info_str = %s", __FILE__, __FUNCTION__, __LINE__, info_str);
             websSetStatus(wp, 200);
@@ -1039,7 +1191,8 @@ void statusProc(Webs *wp)
             websFlush(wp);
         }
         websDone(wp);
-		free(usart_info_string_ptr);
+		free(modbus_usart_info_string_ptr);
+		free(instrument_usart_info_string_ptr);
     }
     else
     {

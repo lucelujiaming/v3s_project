@@ -54,11 +54,6 @@
 #define    INSTRUMENT_HISTORY_TIME_SCALE    (24 * 60 * 60 / INSTRUMENT_HISTORY_TIME_SPAN)
 // #define    NEW_YEAR_DAY_2024    1704038400
 
-#define  INSTRUMENT_ONLINE             0
-#define  BATTERY_OFFLINE               1
-#define  USART_OFFLINE                 2
-#define  INSTRUMENT_STATUS             3
-
 char modbus_uart_device[20];
 char instrument_uart_device[20];
 // int  modbus_uart_response_interval = 20000;
@@ -71,6 +66,9 @@ char instrument_uart_device[20];
 struct tm    log_record_tm;
 // last_log_record_tm会在启动时设置为当天，并在日期变化的时候更新。
 struct tm    last_log_record_tm;
+
+PTC310_INTERFACE_STATUS g_iModbusUsartOfflineStatus = MODBUS_USART_ONLINE;
+PTC310_INTERFACE_STATUS g_iBatteryOfflineStatus = BATTERY_ONLINE;
 
 
 // 数据格式参见《PTC310_V2.7.3用户手册》
@@ -86,12 +84,19 @@ const uint16_t CP_DefaultValue[CP_EEP_MAX]=
 	0,            // 扩展寄存器： 40007 - 保留位
 	0             // 扩展寄存器： 40008 - 保留位
 };
+	
 
 // output_mix_history_trend ends
 static int get_cmd_printf(char *cmd, char *buf, int bufSize);
 int append_logcontent_to_file(char * cFileName, char * cFileContent);
 
 
+/***********************************************************************
+ * 函数名：open_and_new_rtu_slave
+ *   功能：打开Modbus协议的端口。
+ * 入口参数： 用于保存原有配置信息的termios结构体对象。
+ *   返回值： 返回端口文件句柄。
+ ***********************************************************************/
 int open_and_new_rtu_slave(struct termios* old_tios)
 {
     char cDevicePath[20];
@@ -123,6 +128,13 @@ int open_and_new_rtu_slave(struct termios* old_tios)
 	
 }
 
+/***********************************************************************
+ * 函数名：close_and_free_rtu_slave
+ *   功能：关闭Modbus协议的端口。
+ * 入口参数： 端口文件句柄和保存了原有配置信息的termios结构体对象。
+ *   返回值： 关闭成功返回0，关闭失败返回-1。
+ ***********************************************************************/
+
 int close_and_free_rtu_slave(int modbus_fd, struct termios* old_tios)
 {
     if (modbus_fd != -1) {
@@ -133,7 +145,12 @@ int close_and_free_rtu_slave(int modbus_fd, struct termios* old_tios)
 	return 0;
 }
 
-
+/***********************************************************************
+ * 函数名：open_and_new_rtu_slave
+ *   功能：打开仪表协议的端口。
+ * 入口参数： 无。
+ *   返回值： 返回端口文件句柄。
+ ***********************************************************************/
 int open_ptc_port()
 {
     char cDevicePath[20];
@@ -160,11 +177,17 @@ int open_ptc_port()
 	return instrument_fd;
 }
 
-void out_instrument_history_record(time_t iFakeTimeStamp)
+/***********************************************************************
+ * 函数名：out_instrument_reading_chart_history_record
+ *   功能：记录一次最新仪表读数。
+ * 入口参数： 记录仪表读数使用的时间戳，为当前时间。
+ *   返回值： 无须返回。
+ ***********************************************************************/
+void out_instrument_reading_chart_history_record(time_t iFakeTimeStamp)
 {
-    char cFileName[128];
-    char cFileContent[1024];
-    char cProtocolDataOutput[1024];
+    char cFileName[128] = {0};
+    char cFileContent[1024] = {0};
+    char cProtocolDataOutput[1024] = {0};
 
     time_t timeNow;
     if(iFakeTimeStamp == 0)
@@ -177,6 +200,7 @@ void out_instrument_history_record(time_t iFakeTimeStamp)
     }
     struct tm*     tmNow    = localtime(&timeNow);
 
+    // 1. 获得仪表读数。
 	Protocol_DataOutput(cProtocolDataOutput);
 	
 	// printf("cProtocolDataOutput = [%s] at %04d-%02d-%02d %02d:%02d:%02d\r\n", 
@@ -184,34 +208,63 @@ void out_instrument_history_record(time_t iFakeTimeStamp)
     //        tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, 
 	//		tmNow->tm_hour, tmNow->tm_min, tmNow->tm_sec);
 
+	// 2. 为仪表读数添加时间。
     sprintf(cFileContent, "%04d-%02d-%02d %02d:%02d:%02d,[%s],\r\n",
             tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, 
             tmNow->tm_hour, tmNow->tm_min, tmNow->tm_sec,
             cProtocolDataOutput);
 
-    sprintf(cFileName, "instrument_history_record_%04d_%02d_%02d.txt", 
+    sprintf(cFileName, "instrument_reading_chart_history_record_%04d_%02d_%02d.txt", 
             tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
+	// 3. 记录到文件中。
     append_logcontent_to_file(cFileName, cFileContent);
 	
-//    struct tm*     tmToday  = localtime(&timeNow);
-//    tmToday->tm_hour = tmToday->tm_min = tmToday->tm_sec = 0;
-//    // time_t timeToday = mktime(tmToday);
-//    
-//    // sprintf(cFileContent, "[%ld,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d],\r\n",
-//    sprintf(cFileContent, "[%s],\r\n",
-//            // timeNow - timeToday,
-//            cProtocolDataOutput);
-//
-//    sprintf(cFileName, "instrument_history_info_record_unixtime_%04d_%02d_%02d.txt", 
-//            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
-//    // printf("We output the instrument_history_info_record_unixtime_%04d_%02d_%02d.txt at %ld.\r\n",
-//    //         tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, timeNow);
-//    append_logcontent_to_file(cFileName, cFileContent);
+	// 4. 为电池状态添加时间。
+	memset(cFileContent, 0x00, 1024);
+    sprintf(cFileContent, "%04d-%02d-%02d %02d:%02d:%02d,[%d],\r\n",
+            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, 
+            tmNow->tm_hour, tmNow->tm_min, tmNow->tm_sec,
+            g_iBatteryOfflineStatus);
+	memset(cFileName, 0x00, 128);
+    sprintf(cFileName, "battery_usart_info_chart_history_record_%04d_%02d_%02d.txt", 
+            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
+	// 5. 记录到文件中。
+    append_logcontent_to_file(cFileName, cFileContent);
+	
+	// 6. 为Modbus串口状态添加时间。
+	memset(cFileContent, 0x00, 1024);
+    sprintf(cFileContent, "%04d-%02d-%02d %02d:%02d:%02d,[%d],\r\n",
+            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, 
+            tmNow->tm_hour, tmNow->tm_min, tmNow->tm_sec,
+            g_iModbusUsartOfflineStatus);
+	memset(cFileName, 0x00, 128);
+    sprintf(cFileName, "modbus_usart_info_chart_history_record_%04d_%02d_%02d.txt", 
+            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
+	// 7. 记录到文件中。
+    append_logcontent_to_file(cFileName, cFileContent);
+	
+	// 8. 为仪表串口状态添加时间。
+	memset(cFileContent, 0x00, 1024);
+    sprintf(cFileContent, "%04d-%02d-%02d %02d:%02d:%02d,[%d],\r\n",
+            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, 
+            tmNow->tm_hour, tmNow->tm_min, tmNow->tm_sec,
+            g_iInstrumentUsartOfflineStatus);
+	memset(cFileName, 0x00, 128);
+    sprintf(cFileName, "instrument_usart_info_chart_history_record_%04d_%02d_%02d.txt", 
+            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
+	// 9. 记录到文件中。
+    append_logcontent_to_file(cFileName, cFileContent);
 }
 
-void out_battery_info_record(int iOfflineStatus, time_t iFakeTimeStamp)
+/***********************************************************************
+ * 函数名：out_battery_info_record
+ *   功能：记录一次电源状态。
+ *         记录格式为状态变化时间和变化的状态。
+ * 入口参数： 电源状态和记录电源状态使用的时间戳，为当前时间。
+ *   返回值： 无须返回。
+ ***********************************************************************/
+void out_battery_info_record(PTC310_INTERFACE_STATUS iOfflineStatus, time_t iFakeTimeStamp)
 {
-    static int iLastOfflineStatus = INSTRUMENT_STATUS;
     char cFileName[128];
     char cFileContent[1024];
 
@@ -220,7 +273,7 @@ void out_battery_info_record(int iOfflineStatus, time_t iFakeTimeStamp)
     {
         timeNow = time(NULL);
     }
-    else 
+    else
     {
         timeNow = iFakeTimeStamp;
     }
@@ -232,35 +285,46 @@ void out_battery_info_record(int iOfflineStatus, time_t iFakeTimeStamp)
 
     sprintf(cFileName, "battery_info_record_%04d_%02d_%02d.txt", 
             tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
-    append_logcontent_to_file(cFileName, cFileContent);
-    
-    if(iLastOfflineStatus != iOfflineStatus)
-    {
-        iLastOfflineStatus = iOfflineStatus;
-        
-        sprintf(cFileName, "battery_info_switch_record_%04d_%02d_%02d.txt", 
-                tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
-        append_logcontent_to_file(cFileName, cFileContent);
-    }
-	
-    struct tm*     tmToday  = localtime(&timeNow);
-    tmToday->tm_hour = tmToday->tm_min = tmToday->tm_sec = 0;
-    // time_t timeToday = mktime(tmToday);
-	
-    // sprintf(cFileContent, "[%ld,%d],\r\n",
-    //        timeNow - timeToday, iOfflineStatus);
-    sprintf(cFileContent, "%d,\r\n", iOfflineStatus);
-
-    sprintf(cFileName, "battery_info_record_unixtime_%04d_%02d_%02d.txt", 
-            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
-    // printf("We output the battery_info_record_unixtime_%04d_%02d_%02d.txt at %ld.\r\n",
-    //         tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, timeNow);
-    append_logcontent_to_file(cFileName, cFileContent);
+    append_logcontent_to_file(cFileName, cFileContent);    
 }
 
-void out_usart_info_record(int iOfflineStatus, time_t iFakeTimeStamp)
+
+/***********************************************************************
+ * 函数名：check_battery_info_record
+ *   功能：如果当天没有记录电源串口状态。
+ *         记录一次。格式为状态变化时间和变化的状态。
+ * 入口参数： 串口状态。
+ *   返回值： 无须返回。
+ ***********************************************************************/
+void check_battery_info_record(PTC310_INTERFACE_STATUS iOfflineStatus)
 {
-    static int iLastOfflineStatus = INSTRUMENT_STATUS;
+	struct stat st;
+    char cFileName[128];
+    time_t timeNow;
+	
+    timeNow = time(NULL);
+    struct tm*     tmNow  = localtime(&timeNow);
+	
+    sprintf(cFileName, "/root/app/instrument_info/battery_info_record_%04d_%02d_%02d.txt", 
+            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
+
+    if (stat(cFileName, &st) == 0) {
+        return ; // 存在
+    } else {
+    	printf("check_modbus_usart_info_record is %s...\n", cFileName);
+        out_battery_info_record(iOfflineStatus, timeNow);
+    }
+}
+
+/***********************************************************************
+ * 函数名：out_modbus_usart_info_record
+ *   功能：记录一次Modbus串口状态。
+ *         记录格式为状态变化时间和变化的状态。
+ * 入口参数： 串口状态和记录串口状态使用的时间戳，为当前时间。
+ *   返回值： 无须返回。
+ ***********************************************************************/
+void out_modbus_usart_info_record(PTC310_INTERFACE_STATUS iOfflineStatus, time_t iFakeTimeStamp)
+{
     char cFileName[128];
     char cFileContent[1024];
 
@@ -279,32 +343,95 @@ void out_usart_info_record(int iOfflineStatus, time_t iFakeTimeStamp)
             tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, 
             tmNow->tm_hour, tmNow->tm_min, tmNow->tm_sec, iOfflineStatus);
 
-    sprintf(cFileName, "usart_info_record_%04d_%02d_%02d.txt", 
+    sprintf(cFileName, "modbus_usart_info_record_%04d_%02d_%02d.txt", 
             tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
     append_logcontent_to_file(cFileName, cFileContent);
-	
-    if(iLastOfflineStatus != iOfflineStatus)
-    {
-        iLastOfflineStatus = iOfflineStatus;
-        
-        sprintf(cFileName, "usart_info_switch_record_%04d_%02d_%02d.txt", 
-                tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
-        append_logcontent_to_file(cFileName, cFileContent);
-    }
-    
-    struct tm*     tmToday  = localtime(&timeNow);
-    tmToday->tm_hour = tmToday->tm_min = tmToday->tm_sec = 0;
-    // time_t timeToday = mktime(tmToday);
-    
-    // sprintf(cFileContent, "[%ld,%d],\r\n",
-    //        timeNow - timeToday, iOfflineStatus);
-    sprintf(cFileContent, "%d,\r\n", iOfflineStatus);
+}
 
-    sprintf(cFileName, "usart_info_record_unixtime_%04d_%02d_%02d.txt", 
+/***********************************************************************
+ * 函数名：check_modbus_usart_info_record
+ *   功能：如果当天没有记录Modbus串口状态。
+ *         记录一次。格式为状态变化时间和变化的状态。
+ * 入口参数： 串口状态。
+ *   返回值： 无须返回。
+ ***********************************************************************/
+void check_modbus_usart_info_record(PTC310_INTERFACE_STATUS iOfflineStatus)
+{
+	struct stat st;
+    char cFileName[128];
+    time_t timeNow;
+	
+    timeNow = time(NULL);
+    struct tm*     tmNow  = localtime(&timeNow);
+	
+    sprintf(cFileName, "/root/app/instrument_info/modbus_usart_info_record_%04d_%02d_%02d.txt", 
             tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
-    // printf("We output the usart_info_record_unixtime_%04d_%02d_%02d.txt at %ld.\r\n",
-    //         tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, timeNow);
+
+    if (stat(cFileName, &st) == 0) {
+        return ; // 存在
+    } else {
+    	printf("check_modbus_usart_info_record is %s...\n", cFileName);
+        out_modbus_usart_info_record(iOfflineStatus, timeNow);
+    }
+}
+
+/***********************************************************************
+ * 函数名：out_instrument_usart_info_record
+ *   功能：记录一次instrument串口状态。
+ *         记录格式为状态变化时间和变化的状态。
+ * 入口参数： 串口状态和记录串口状态使用的时间戳，为当前时间。
+ *   返回值： 无须返回。
+ ***********************************************************************/
+void out_instrument_usart_info_record(PTC310_INTERFACE_STATUS iOfflineStatus, time_t iFakeTimeStamp)
+{
+    char cFileName[128];
+    char cFileContent[1024];
+
+    time_t timeNow;
+    if(iFakeTimeStamp == 0)
+    {
+        timeNow = time(NULL);
+    }
+    else 
+    {
+        timeNow = iFakeTimeStamp;
+    }
+    struct tm*     tmNow  = localtime(&timeNow);
+
+    sprintf(cFileContent, "[\"%04d-%02d-%02d %02d:%02d:%02d\",%d],\r\n",
+            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, 
+            tmNow->tm_hour, tmNow->tm_min, tmNow->tm_sec, iOfflineStatus);
+
+    sprintf(cFileName, "instrument_usart_info_record_%04d_%02d_%02d.txt", 
+            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
     append_logcontent_to_file(cFileName, cFileContent);
+}
+
+/***********************************************************************
+ * 函数名：check_instrument_usart_info_record
+ *   功能：如果当天没有记录instrument串口状态。
+ *         记录一次。格式为状态变化时间和变化的状态。
+ * 入口参数： 串口状态。
+ *   返回值： 无须返回。
+ ***********************************************************************/
+void check_instrument_usart_info_record(PTC310_INTERFACE_STATUS iOfflineStatus)
+{
+	struct stat st;
+    char cFileName[128];
+    time_t timeNow;
+	
+    timeNow = time(NULL);
+    struct tm*     tmNow  = localtime(&timeNow);
+	
+    sprintf(cFileName, "/root/app/instrument_info/instrument_usart_info_record_%04d_%02d_%02d.txt", 
+            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
+
+    if (stat(cFileName, &st) == 0) {
+        return ; // 存在
+    } else {
+    	printf("check_instrument_usart_info_record is %s...\n", cFileName);
+        out_instrument_usart_info_record(iOfflineStatus, timeNow);
+    }
 }
 
 // #define BATTERY_UART_DEVICE_TO        5
@@ -403,6 +530,7 @@ static int get_cmd_printf(char *cmd, char *buf, int bufSize)
     return -1;
 }
 
+// 获得电池状态。
 int get_battery_status()
 {
     unsigned int uRet = V3S_GPIO_GetPin(V3S_PE, 0);
@@ -413,10 +541,11 @@ int get_battery_status()
     }
     else 
     {
-        return INSTRUMENT_ONLINE;
+        return BATTERY_ONLINE;
     }
 }
 
+// 该文件目前未使用。
 int append_file(char * cFileName, char * cFileContent)
 {
 	int iRet = 0;
@@ -473,7 +602,7 @@ int dir_exists(const char *path) {
 
 
 /********************************************************************
- * 这个函数用于处理SD卡无法写入问题。
+ * 这个函数用于处理SD卡概率性无法写入的问题。
  * 详细流程参见《SD卡无法写入问题的规避方法》。
  ********************************************************************/
 #define   PRINT_MKDIR_OUTPUT_ON   1
@@ -602,6 +731,12 @@ void sdcard_operation_process()
 	}
 }
 
+/***********************************************************************
+ * 函数名：append_logcontent_to_file
+ *   功能：把记录内容写入文件。
+ * 入口参数： 文件名和文件内容。
+ *   返回值： 写入成功返回0，写入失败返回-1。
+ ***********************************************************************/
 int append_logcontent_to_file(char * cFileName, char * cFileContent)
 {
     char cMkdirOutput[256] = {0};
@@ -647,9 +782,10 @@ int append_logcontent_to_file(char * cFileName, char * cFileContent)
 void out_instrument_history_timer_handler(int signum) {
     // 执行定时器到期时需要做的操作
     // 注意：定时器处理函数应该尽量保持简短，避免执行耗时操作
-	out_instrument_history_record(time(NULL));
+	out_instrument_reading_chart_history_record(time(NULL));
 }
 
+/* 启动一个定时器，用于记录仪表读数。 */
 void set_out_instrument_history_timer(int seconds) {
     struct itimerval timer;
     timer.it_value.tv_sec = seconds;  // 第一次定时器到期的秒数
@@ -680,16 +816,26 @@ void delete_out_instrument_history_setitimer()
     setitimer(ITIMER_REAL, &value, NULL); 
 }
 
+/***********************************************************************
+ * 函数名：thread_instrument_Protocol
+ *   功能：仪表协议通信线程。
+ * 入口参数： 无。
+ *   返回值： 无须返回。
+ ***********************************************************************/
 static void* thread_instrument_Protocol(void *arg)
 {
     int   convert_protocol_fd = 0; // , send_res;
 	convert_protocol_fd = open_ptc_port();
     // printf("uart Open...\n");
  
+	pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 	memset(IReg, 0x00, sizeof(int16_t) * IREG_MAX);
+    pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
     // 2.1 设置串口参数
 	Protocol_Init(convert_protocol_fd);
+    // 2.2 启动一个定时器。每隔INSTRUMENT_HISTORY_TIME_SPAN秒记录一次仪表读数。
 	set_out_instrument_history_timer(INSTRUMENT_HISTORY_TIME_SPAN);
+    // 2.3 处理仪表通信。
 	while (1)
 	{
 		Protocol_Proc(convert_protocol_fd);
@@ -699,8 +845,7 @@ static void* thread_instrument_Protocol(void *arg)
     return (void*)NULL;
 }
 
-
-#define   SYS_CONFIG_FILE_NAME    "sys_config.ini"
+#define   SYS_CONFIG_FILE_NAME    "/root/app/sys_config.ini"
 void SysConfig_Init() {
     if(access(SYS_CONFIG_FILE_NAME, F_OK) != 0) 
 	{
@@ -709,6 +854,12 @@ void SysConfig_Init() {
 	}
 }
 
+/***********************************************************************
+ * 函数名：thread_modbus_operation
+ *   功能：Modbus协议通信线程。
+ * 入口参数： 无。
+ *   返回值： 无须返回。
+ ***********************************************************************/
 static void* thread_modbus_operation(void *arg)
 {
 	int iServerID = SERVER_ID;
@@ -716,6 +867,7 @@ static void* thread_modbus_operation(void *arg)
 	int modbus_fd = 0;
 	struct termios old_tios;
 		
+    g_iModbusUsartOfflineStatus = MODBUS_USART_ONLINE;
     time_t timeNow = time(NULL);
 	uint8_t query[MODBUS_MAX_ADU_LENGTH];
 	
@@ -806,19 +958,57 @@ static void* thread_modbus_operation(void *arg)
 		}
 		// We do not receive any data
 		// else if (ret == 0) 
-		// USART_OFFLINE
+		
+		// Check MODBUS_USART_ONLINE or MODBUS_USART_OFFLINE
+		if (ret > 0) {
+			timeNow = time(NULL);
+			if(g_iModbusUsartOfflineStatus == MODBUS_USART_OFFLINE)
+			{
+				g_iModbusUsartOfflineStatus = MODBUS_USART_ONLINE;
+				printf("[%s:%s:%d] start out_usart_info_record ONLINE because modbus_receive returns %d\n",
+						__FILE__, __FUNCTION__, __LINE__, ret);
+				out_modbus_usart_info_record(g_iModbusUsartOfflineStatus, timeNow);
+			}
+		}
+		else if (ret == 0)
+		{
+			if(g_iModbusUsartOfflineStatus == MODBUS_USART_ONLINE)
+			{
+				// 只有在连续5秒钟接收不到数据情况下，才会认为Modbus总线无数据。
+				if(time(NULL) - timeNow > 10)
+				{
+					printf("[%s:%s:%d] time(NULL) - timeNow = %d\n",
+							__FILE__, __FUNCTION__, __LINE__, (int)(time(NULL) - timeNow));
+					g_iModbusUsartOfflineStatus = MODBUS_USART_OFFLINE;
+					timeNow = time(NULL);
+					printf("[%s:%s:%d] start out_usart_info_record OFFLINE because modbus_receive returns %d\n",
+							__FILE__, __FUNCTION__, __LINE__, ret);
+					out_modbus_usart_info_record(g_iModbusUsartOfflineStatus, timeNow);
+				}
+			}
+		}
 		else if (ret < 0)
 		{
-			timeNow = time(NULL);
-			printf("start out_usart_info_record USART_OFFLINE because modbus_receive returns %d\n", ret);
-			out_usart_info_record(USART_OFFLINE, timeNow);
-			printf("end out_usart_info_record USART_OFFLINE because modbus_receive returns %d\n", ret);
+			if(g_iModbusUsartOfflineStatus == MODBUS_USART_ONLINE)
+			{
+				g_iModbusUsartOfflineStatus = MODBUS_USART_OFFLINE;
+				timeNow = time(NULL);
+				printf("[%s:%s:%d] start out_usart_info_record OFFLINE because modbus_receive returns %d\n",
+						__FILE__, __FUNCTION__, __LINE__, ret);
+				out_modbus_usart_info_record(g_iModbusUsartOfflineStatus, timeNow);
+			}
 		}
+		check_modbus_usart_info_record(g_iModbusUsartOfflineStatus);
 		// Unit Reset
 	    // printf("Unit Reset with iSpanCount = %d\n", iSpanCount);
-		if(HReg[HR_UNIT_RESET])
+	    
+		uint16_t hr_unit_reset;
+		pthread_rwlock_rdlock(&hreg_rwlock); // 获取HReg的读锁
+		hr_unit_reset = HReg[HR_UNIT_RESET];
+		pthread_rwlock_unlock(&hreg_rwlock); // 释放HReg的读锁
+		if(hr_unit_reset)
 		{
-	        printf("Unit Reset with HReg[HR_UNIT_RESET] = %d\n", HReg[HR_UNIT_RESET]);
+	        printf("Unit Reset with HReg[HR_UNIT_RESET] = %d\n", hr_unit_reset);
 			// while(1)
 			// {
 			// }
@@ -835,6 +1025,13 @@ static void* thread_modbus_operation(void *arg)
 }
 
 
+/***********************************************************************
+ * 函数名：thread_v3s_udp_controller
+ *   功能：读取Modbus配置信息，修改Modbus配置信息
+ *         获取最新仪表读数。
+ * 入口参数： 无。
+ *   返回值： 无须返回。
+ ***********************************************************************/
 #define V3S_UDP_CONTROLLER_BUFFER_SIZE 1024
 static void* thread_v3s_udp_controller(void *arg)
 {
@@ -886,10 +1083,12 @@ static void* thread_v3s_udp_controller(void *arg)
 				cSendBuffer[0] = MODBUS_CONFIG_GET_RESPONSE;
 				cSendBuffer[1] = 0x00;
 				cSendBuffer[2] = 0x06;
+				pthread_rwlock_rdlock(&hreg_rwlock); // 获取HReg的读锁
 				for(int i = 0; i < MODBUS_CONFIG_CP_REGISTER_ADDR_MAX; i++)
 				{
 					cSendBuffer[i + 3] = HReg[i];
 				}
+				pthread_rwlock_unlock(&hreg_rwlock); // 释放HReg的读锁
 	        	sendto(sockfd, cSendBuffer, MODBUS_CONFIG_CP_REGISTER_ADDR_MAX + 3, 
 	        				0, (struct sockaddr *)&client_addr, addr_len);
             	// printf("[%s:%s:%d] GET_REQUEST OK: ReceiveData length is %d and data length is %d.\n", 
@@ -901,7 +1100,9 @@ static void* thread_v3s_udp_controller(void *arg)
 	        {
 				for(int i = 0; i < iDataLen; i++)
 				{
+	    			pthread_rwlock_wrlock(&hreg_rwlock); // 获取HReg的写锁
 					HReg[i] = cReceiveBuffer[i + 3];
+	    			pthread_rwlock_unlock(&hreg_rwlock); // 释放HReg的写锁
 					PARAM_Save(i, cReceiveBuffer[i + 3]); 
 				}
 				// Update Protocol Config
@@ -1008,8 +1209,7 @@ int main(int argc, char ** argv)
     V3S_GPIO_ConfigPin(V3S_PB, 2, V3S_OUT);
     V3S_GPIO_ConfigPin(V3S_PE, 0, V3S_IN);
 	
-    // int iUsartOfflineStatus   = INSTRUMENT_ONLINE;
-    int iBatteryOfflineStatus = INSTRUMENT_ONLINE;
+    g_iBatteryOfflineStatus = BATTERY_ONLINE;
     time_t timeNow = time(NULL);
 	// log_record_tm =  = localtime(&timeNow);
     memcpy(&log_record_tm, localtime(&timeNow), sizeof(struct tm));
@@ -1034,14 +1234,26 @@ int main(int argc, char ** argv)
 	// Init_All_Periph
 	PARAM_Init();
 	SysConfig_Init();
+	// Init HReg without any lock
 	memcpy(&HReg[CP_EEP_BASE], &CP_DefaultValue[0], sizeof(uint16_t) * CP_EEP_MAX);
 	PARAM_Reload(0, (uint16_t*)&HReg[CP_EEP_BASE], CP_EEP_MAX);
 	HReg[HR_SW_VERSION]= FIRMWARE_VERSION;
 
+	// 初始化HReg的读写锁
+    if (pthread_rwlock_init(&hreg_rwlock, NULL) != 0) {
+        printf("Failed to initialize rwlock\n");
+        return 1;
+    }
+	// 初始化IReg的读写锁
+    if (pthread_rwlock_init(&ireg_rwlock, NULL) != 0) {
+        printf("Failed to initialize rwlock\n");
+        return 1;
+    }
+
 	pthread_create(&modbus_operation_thread, NULL, thread_modbus_operation, NULL);
 	// printf("Start Protocol_Proc and ret return %d\n", ret);
 	pthread_create(&instrument_thread, NULL, thread_instrument_Protocol, NULL);
-	
+	// 读取Modbus配置信息，修改Modbus配置信息。         获取最新仪表读数。
 	pthread_create(&instrument_control_thread, NULL, thread_v3s_udp_controller, NULL);
 	
 	//5. 循环接受客户端请求，并且响应客户端
@@ -1050,20 +1262,27 @@ int main(int argc, char ** argv)
 		//////////////////////////////////////////////////////////////////////////
 		// Check battery status
 		if((get_battery_status() == BATTERY_OFFLINE)
-			&& (iBatteryOfflineStatus == INSTRUMENT_ONLINE))
+			&& (g_iBatteryOfflineStatus == BATTERY_ONLINE))
 		{
-			iBatteryOfflineStatus = BATTERY_OFFLINE;
-			out_battery_info_record(iBatteryOfflineStatus, timeNow);
-		}
-		else if((get_battery_status() == INSTRUMENT_ONLINE)
-			&& (iBatteryOfflineStatus == BATTERY_OFFLINE))
-		{
-			iBatteryOfflineStatus = INSTRUMENT_ONLINE;
+			g_iBatteryOfflineStatus = BATTERY_OFFLINE;
 			timeNow = time(NULL);
-			out_battery_info_record(iBatteryOfflineStatus, timeNow);
+			out_battery_info_record(g_iBatteryOfflineStatus, timeNow);
 		}
+		else if((get_battery_status() == BATTERY_ONLINE)
+			&& (g_iBatteryOfflineStatus == BATTERY_OFFLINE))
+		{
+			g_iBatteryOfflineStatus = BATTERY_ONLINE;
+			timeNow = time(NULL);
+			out_battery_info_record(g_iBatteryOfflineStatus, timeNow);
+		}
+		check_battery_info_record(g_iBatteryOfflineStatus);
 		sleep(10);
 	}
+
+    // 销毁HReg的读写锁
+    pthread_rwlock_destroy(&hreg_rwlock);
+    // 销毁IReg的读写锁
+    pthread_rwlock_destroy(&ireg_rwlock);
 
 	printf("Quit the loop: %s\n", strerror(errno));
 	return 0;
