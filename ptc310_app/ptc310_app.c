@@ -122,7 +122,7 @@ int open_and_new_rtu_slave(struct termios* old_tios)
 	}
 	else
 	{
-		printf("设置串口信息成功\n");
+		printf("串口信息设置成功！！\n");
 	}
 	return modbus_fd;
 	
@@ -546,48 +546,48 @@ int get_battery_status()
 }
 
 // 该文件目前未使用。
-int append_file(char * cFileName, char * cFileContent)
-{
-	int iRet = 0;
-    char cMkdirOutput[256];
-    char cRemountOutput[256];
-	
-    char cFilePathWithName[128];
-    char cFilePathMkdirCommand[128];
-    int   append_fd; // , send_res;
-    time_t timeNow = time(NULL);
-    struct tm*     tmNow    = localtime(&timeNow);
-	
-    sprintf(cFilePathWithName, "/root/sdcard/app/instrument_info/%d_%02d_%02d/%s",
-            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, cFileName);
-    // 2. 打开PTC私有协议对应的串口
-    append_fd = open(cFilePathWithName, O_RDWR | O_APPEND);
-    if (append_fd == -1) {
-		// 这里的2>&1表示将标准错误（文件描述符2）重定向到标准输出（文件描述符1）。
-	    sprintf(cFilePathMkdirCommand, "mkdir -p /root/sdcard/app/instrument_info/%d_%02d_%02d/ 2>&1",
-	            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
-		memset(cMkdirOutput, 0x00, 256);
-	    iRet = get_cmd_printf(cFilePathMkdirCommand, cMkdirOutput, 256);
-	    printf("get_cmd_printf(%s) return %d\n",cFilePathMkdirCommand, iRet);
-		if(strlen(cMkdirOutput) > 0)
-		{
-	        printf("Command <%s> error: errorInfo is %s\n", cFilePathMkdirCommand, cMkdirOutput);
-			memset(cRemountOutput, 0x00, 256);
-			get_cmd_printf("/root/app/www/remount_sdcard.sh", cRemountOutput, 256);
-	        printf("remount_sdcard return %s\n", cRemountOutput);
-		}
-		
-        append_fd = open(cFilePathWithName, O_RDWR | O_CREAT);
-        if (append_fd == -1) {
-	        printf("append_file: open failed return %d\n", append_fd);
-            return -1;
-        }
-    }
-	// printf("append_file: write %s return %d\n", cFileContent, append_fd);
-	write(append_fd, cFileContent, strlen(cFileContent));
-	close(append_fd);
-    return 0;
-}
+//	int append_file(char * cFileName, char * cFileContent)
+//	{
+//		int iRet = 0;
+//	    char cMkdirOutput[256];
+//	    char cRemountOutput[256];
+//		
+//	    char cFilePathWithName[128];
+//	    char cFilePathMkdirCommand[128];
+//	    int   append_fd; // , send_res;
+//	    time_t timeNow = time(NULL);
+//	    struct tm*     tmNow    = localtime(&timeNow);
+//		
+//	    sprintf(cFilePathWithName, "/root/sdcard/app/instrument_info/%d_%02d_%02d/%s",
+//	            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday, cFileName);
+//	    // 2. 打开PTC私有协议对应的串口
+//	    append_fd = open(cFilePathWithName, O_RDWR | O_APPEND);
+//	    if (append_fd == -1) {
+//			// 这里的2>&1表示将标准错误（文件描述符2）重定向到标准输出（文件描述符1）。
+//		    sprintf(cFilePathMkdirCommand, "mkdir -p /root/sdcard/app/instrument_info/%d_%02d_%02d/ 2>&1",
+//		            tmNow->tm_year + 1900, tmNow->tm_mon + 1, tmNow->tm_mday);
+//			memset(cMkdirOutput, 0x00, 256);
+//		    iRet = get_cmd_printf(cFilePathMkdirCommand, cMkdirOutput, 256);
+//		    printf("get_cmd_printf(%s) return %d\n",cFilePathMkdirCommand, iRet);
+//			if(strlen(cMkdirOutput) > 0)
+//			{
+//		        printf("Command <%s> error: errorInfo is %s\n", cFilePathMkdirCommand, cMkdirOutput);
+//				memset(cRemountOutput, 0x00, 256);
+//				get_cmd_printf("/root/app/www/remount_sdcard.sh", cRemountOutput, 256);
+//		        printf("remount_sdcard return %s\n", cRemountOutput);
+//			}
+//			
+//	        append_fd = open(cFilePathWithName, O_RDWR | O_CREAT);
+//	        if (append_fd == -1) {
+//		        printf("append_file: open failed return %d\n", append_fd);
+//	            return -1;
+//	        }
+//	    }
+//		// printf("append_file: write %s return %d\n", cFileContent, append_fd);
+//		write(append_fd, cFileContent, strlen(cFileContent));
+//		close(append_fd);
+//	    return 0;
+//	}
 
 #define   DIR_HAS_EXISTED      1
 #define   DIR_NOT_EXISTS       0
@@ -749,7 +749,8 @@ int append_logcontent_to_file(char * cFileName, char * cFileContent)
 	// return append_file(cFileName, cFileContent);
 	// Write log , We must do it firstly otherwise the following operation would make timestamp error.
     sprintf(cFilePathWithName, "/root/app/instrument_info/%s", cFileName);
-    append_fd = open(cFilePathWithName, O_RDWR | O_APPEND);
+    append_fd = open(cFilePathWithName, O_RDWR | O_APPEND,
+		S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH);
     if (append_fd == -1) {
 		memset(cFilePathCommand, 0x00, 128);
 	    sprintf(cFilePathCommand, "mkdir -p /root/app/instrument_info/ 2>&1");
@@ -759,7 +760,8 @@ int append_logcontent_to_file(char * cFileName, char * cFileContent)
 		{
 		    printf("Command <%s> error: errorInfo is %s\n", cFilePathCommand, cMkdirOutput);
 		}
-        append_fd = open(cFilePathWithName, O_RDWR | O_CREAT);
+        append_fd = open(cFilePathWithName, O_RDWR | O_CREAT, 
+			S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH);
         if (append_fd == -1) {
 	        printf("append_file: O_CREAT failed return %d\n", append_fd);
             return -1;
@@ -769,6 +771,30 @@ int append_logcontent_to_file(char * cFileName, char * cFileContent)
 	// printf("append_file: write %s in the %s.\n", cFileContent, cFileName);
 	close(append_fd);
 	// End of Write log 
+    
+	struct stat st;
+    if (stat(cFilePathWithName, &st) == 0) {
+        // printf("[%s:%s:%d] -----------------(%s)的文件权限: %o\n",
+        //         __FILE__, __FUNCTION__, __LINE__, 
+        //         cFilePathWithName, st.st_mode & 0777);
+        if((st.st_mode | (S_IRUSR | S_IWUSR | S_IXUSR)) == 0)
+        {
+            printf("[%s:%s:%d] -----------------Call open(%s)\n",
+                                __FILE__, __FUNCTION__, __LINE__, cFilePathWithName);
+            system("ls -l /root/app/instrument_info/");
+            mode_t mode = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH;
+            chmod(cFilePathWithName, mode);
+            if (chmod(cFilePathWithName, mode) == 0) {
+                ;// printf("权限修改成功\n");
+            } else {
+                printf("Call chmod(%s) error\n", cFilePathWithName);
+                perror("Call chmod失败"); // 打印错误信息
+            }
+            system("ls -l /root/app/instrument_info/");
+            printf("[%s:%s:%d] -----------------Call open(%s)\n",
+                                __FILE__, __FUNCTION__, __LINE__, cFilePathWithName);
+        }
+    }
 	
 	/********************************************************************
  	 * 当天的日志写在内部存储上，每当日期变化，把之前的日志移动到SD卡上。
