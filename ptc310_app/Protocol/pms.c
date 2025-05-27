@@ -91,6 +91,7 @@ uint8_t PMS_PDS_PA_Analysis(uint16_t len)
 			f_value= atof(data_temp);
 			u32_value= real_to_u32(f_value);
 			
+			pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 			if(little_endian)
 			{
 				protocol_buff[1 + 2*i + 50*j]= _low_word_int32(u32_value);
@@ -101,6 +102,7 @@ uint8_t PMS_PDS_PA_Analysis(uint16_t len)
 				protocol_buff[1 + 2*i + 50*j]= _high_word_int32(u32_value);
 				protocol_buff[2 + 2*i + 50*j]= _low_word_int32(u32_value);
 			}
+            pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 			pos+= 10;
 		}
 		
@@ -115,6 +117,7 @@ uint8_t PMS_PDS_PA_Analysis(uint16_t len)
 			f_value= atof(data_temp);
 			u32_value= real_to_u32(f_value);
 			
+			pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 			if(little_endian)
 			{
 				protocol_buff[17 + i*50]= _low_word_int32(u32_value);
@@ -125,6 +128,7 @@ uint8_t PMS_PDS_PA_Analysis(uint16_t len)
 				protocol_buff[17 + i*50]= _high_word_int32(u32_value);
 				protocol_buff[18 + i*50]= _low_word_int32(u32_value);
 			}
+            pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 			
 			pos+= 10;
 		}
@@ -138,6 +142,7 @@ uint8_t PMS_PDS_PA_Analysis(uint16_t len)
 			f_value= atof(data_temp);
 			u32_value= real_to_u32(f_value);
 			
+			pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 			if(little_endian)
 			{
 				protocol_buff[19 + 2*i]= _low_word_int32(u32_value);
@@ -148,6 +153,7 @@ uint8_t PMS_PDS_PA_Analysis(uint16_t len)
 				protocol_buff[19 + 2*i]= _high_word_int32(u32_value);
 				protocol_buff[20 + 2*i]= _low_word_int32(u32_value);
 			}
+            pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 			pos+= 10;
 		}
 		
@@ -214,6 +220,7 @@ uint16_t PMS_PDS_PA_DataOutput(char* strOutput)
           floatCounterThree[2],          floatCounterFive[2],
           floatLaserRef[2];
 
+    pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁 
 	if(little_endian)
 	{
 		cCounterZeroPointOneBuffer[3] = protocol_buff[2]>>8;
@@ -437,6 +444,7 @@ uint16_t PMS_PDS_PA_DataOutput(char* strOutput)
 		cLaserRefBuffer[0] = protocol_buff[68]&0x00FF;
         floatLaserRef[1] = *floatLaserRefBufferPtr;
 	}
+    pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
 
 	// printf("DELTAF_DataOutput::cO2ppbBuffer = [%02X, %02X, %02X, %02X]\r\n", 
 	// 	cO2ppbBuffer[0], cO2ppbBuffer[1], cO2ppbBuffer[2], cO2ppbBuffer[3]);
@@ -499,6 +507,7 @@ uint8_t PMS_HPGP_101_Analysis(uint16_t len)
 			f_value= atof(data_temp);
 			u32_value= real_to_u32(f_value);
 			
+            pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 			if(little_endian)
 			{
 				protocol_buff[1 + 2*i]= _low_word_int32(u32_value);
@@ -509,7 +518,7 @@ uint8_t PMS_HPGP_101_Analysis(uint16_t len)
 				protocol_buff[1 + 2*i]= _high_word_int32(u32_value);
 				protocol_buff[2 + 2*i]= _low_word_int32(u32_value);
 			}
-			
+            pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 			pos+= 10;
 		}
 		
@@ -523,6 +532,7 @@ uint8_t PMS_HPGP_101_Analysis(uint16_t len)
 			f_value= atof(data_temp);
 			u32_value= real_to_u32(f_value);
 			
+            pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 			if(little_endian)
 			{
 				protocol_buff[17 + 2*i]= _low_word_int32(u32_value);
@@ -533,6 +543,7 @@ uint8_t PMS_HPGP_101_Analysis(uint16_t len)
 				protocol_buff[17 + 2*i]= _high_word_int32(u32_value);
 				protocol_buff[18 + 2*i]= _low_word_int32(u32_value);
 			}
+            pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 			pos+= 10;
 		}
 		
@@ -585,6 +596,7 @@ uint8_t PMS_LASAIR_III_Analysis(uint16_t len)
 		ptr= eptr + 1;
 	}
 	//Laser OK
+	pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 	if(*ptr== '0')
 	{
 		protocol_buff[15]= 0;
@@ -593,6 +605,7 @@ uint8_t PMS_LASAIR_III_Analysis(uint16_t len)
 	{
 		protocol_buff[15]= 1;
 	}
+	pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 	//
 
 	for(i= 0;i<7;i++)
@@ -631,6 +644,7 @@ uint8_t PMS_LASAIR_III_Analysis(uint16_t len)
 			f_value= atof(data_temp);
 			u32_value= real_to_u32(f_value);
 			
+            pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 			if(little_endian)
 			{
 				protocol_buff[1]= _low_word_int32(u32_value);
@@ -641,6 +655,7 @@ uint8_t PMS_LASAIR_III_Analysis(uint16_t len)
 				protocol_buff[1]= _high_word_int32(u32_value);
 				protocol_buff[2]= _low_word_int32(u32_value);
 			}
+            pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 		}
 		else
 		{
@@ -658,6 +673,7 @@ uint8_t PMS_LASAIR_III_Analysis(uint16_t len)
 				f_value= atof(data_temp);
 				u32_value= real_to_u32(f_value);
 				
+           		pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 				if(little_endian)
 				{
 					protocol_buff[3]= _low_word_int32(u32_value);
@@ -668,6 +684,7 @@ uint8_t PMS_LASAIR_III_Analysis(uint16_t len)
 					protocol_buff[3]= _high_word_int32(u32_value);
 					protocol_buff[4]= _low_word_int32(u32_value);
 				}
+            	pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 			}
 			else
 			{
@@ -685,6 +702,7 @@ uint8_t PMS_LASAIR_III_Analysis(uint16_t len)
 					f_value= atof(data_temp);
 					u32_value= real_to_u32(f_value);
 					
+            		pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 					if(little_endian)
 					{
 						protocol_buff[5]= _low_word_int32(u32_value);
@@ -695,6 +713,7 @@ uint8_t PMS_LASAIR_III_Analysis(uint16_t len)
 						protocol_buff[5]= _high_word_int32(u32_value);
 						protocol_buff[6]= _low_word_int32(u32_value);
 					}
+            		pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 				}
 				else
 				{
@@ -712,6 +731,7 @@ uint8_t PMS_LASAIR_III_Analysis(uint16_t len)
 						f_value= atof(data_temp);
 						u32_value= real_to_u32(f_value);
 						
+            			pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 						if(little_endian)
 						{
 							protocol_buff[7]= _low_word_int32(u32_value);
@@ -722,6 +742,7 @@ uint8_t PMS_LASAIR_III_Analysis(uint16_t len)
 							protocol_buff[7]= _high_word_int32(u32_value);
 							protocol_buff[8]= _low_word_int32(u32_value);
 						}
+            			pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 					}
 					else
 					{
@@ -739,6 +760,7 @@ uint8_t PMS_LASAIR_III_Analysis(uint16_t len)
 							f_value= atof(data_temp);
 							u32_value= real_to_u32(f_value);
 							
+            				pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 							if(little_endian)
 							{
 								protocol_buff[9]= _low_word_int32(u32_value);
@@ -748,7 +770,8 @@ uint8_t PMS_LASAIR_III_Analysis(uint16_t len)
 							{
 								protocol_buff[9]= _high_word_int32(u32_value);
 								protocol_buff[10]= _low_word_int32(u32_value);
-							}	
+							}
+            				pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 						}
 						else
 						{
@@ -766,6 +789,7 @@ uint8_t PMS_LASAIR_III_Analysis(uint16_t len)
 								f_value= atof(data_temp);
 								u32_value= real_to_u32(f_value);
 								
+            					pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 								if(little_endian)
 								{
 									protocol_buff[11]= _low_word_int32(u32_value);
@@ -775,7 +799,8 @@ uint8_t PMS_LASAIR_III_Analysis(uint16_t len)
 								{
 									protocol_buff[11]= _high_word_int32(u32_value);
 									protocol_buff[12]= _low_word_int32(u32_value);
-								}	
+								}
+            					pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 							}
 							else
 							{
@@ -792,6 +817,7 @@ uint8_t PMS_LASAIR_III_Analysis(uint16_t len)
 									
 									f_value= atof(data_temp);
 									u32_value= real_to_u32(f_value);
+            						pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 									if(little_endian)
 									{
 										protocol_buff[13]= _low_word_int32(u32_value);
@@ -801,7 +827,8 @@ uint8_t PMS_LASAIR_III_Analysis(uint16_t len)
 									{
 										protocol_buff[13]= _high_word_int32(u32_value);
 										protocol_buff[14]= _low_word_int32(u32_value);
-									}	
+									}
+            						pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 								}
 							}
 						}
@@ -851,6 +878,7 @@ uint16_t PMS_LASAIR_III_DataOutput(char* strOutput)
 	float * floatTwenyFive       = (float *)cTwenyFiveBuffer;
 	// int   * floatRefGood         = (int   *)cRefGoodBuffer;
     
+    pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁
 	if(little_endian)
 	{
 		cZeroPointThreeBuffer[3] = protocol_buff[2]>>8;
@@ -939,6 +967,8 @@ uint16_t PMS_LASAIR_III_DataOutput(char* strOutput)
 		
 		//		printf("DELTAF_DataOutput::big_endian\r\n");
 	}
+    pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
+    
     sprintf(strOutput, "%f,%f,%f,%f,%f,%f,%f,%.1f,%.1f,%.1f",
             *floatZeroPointThree, // 	30002	    Real	0.3
             *floatZeroPointFive,  // 	30004	    Real	0.5
@@ -998,7 +1028,8 @@ uint8_t PMS_PDS_E_Analysis(uint16_t len)		//PMS Mode
 	
 	f_value= atof(data_temp);
 	u32_value= real_to_u32(f_value);
-		
+
+    pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 	if(little_endian)
 	{
 		protocol_buff[17]= _low_word_int32(u32_value);
@@ -1009,6 +1040,7 @@ uint8_t PMS_PDS_E_Analysis(uint16_t len)		//PMS Mode
 		protocol_buff[17]= _high_word_int32(u32_value);
 		protocol_buff[18]= _low_word_int32(u32_value);
 	}
+    pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 	
 	//Find Particles Position
 	for(i= 0;i<3;i++)
@@ -1054,6 +1086,7 @@ uint8_t PMS_PDS_E_Analysis(uint16_t len)		//PMS Mode
 		
 		u32_value= real_to_u32(f_value);
 		
+        pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 		if(little_endian)
 		{
 			protocol_buff[1 + 2*i]= _low_word_int32(u32_value);
@@ -1064,6 +1097,7 @@ uint8_t PMS_PDS_E_Analysis(uint16_t len)		//PMS Mode
 			protocol_buff[1 + 2*i]= _high_word_int32(u32_value);
 			protocol_buff[2 + 2*i]= _low_word_int32(u32_value);
 		}
+        pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 	}
 
 	return 0;
@@ -1112,6 +1146,7 @@ uint16_t PMS_PDS_E_DataOutput(char* strOutput)
     
 	float * floatLaserRefBuffer = (float *)(cLaserRefBuffer);
 	
+    pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁
 	if(little_endian)
 	{
 		cCounterZeroPointOneBuffer[3] = protocol_buff[2]>>8;
@@ -1208,6 +1243,7 @@ uint16_t PMS_PDS_E_DataOutput(char* strOutput)
 		cLaserRefBuffer[0] = protocol_buff[18]&0x00FF;
 		//		printf("DELTAF_DataOutput::big_endian\r\n");
 	}
+    pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
 
 	// printf("DELTAF_DataOutput::cO2ppbBuffer = [%02X, %02X, %02X, %02X]\r\n", 
 	// 	cO2ppbBuffer[0], cO2ppbBuffer[1], cO2ppbBuffer[2], cO2ppbBuffer[3]);

@@ -22,6 +22,7 @@
 
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <netinet/tcp.h>
 
 #include "param.h"
 
@@ -32,6 +33,9 @@
 #include "Protocol/Modbus/ModbusSlave.h"
 
 #include "modbus_rtu.h"
+#include "modbus_udp.h"
+#include "modbus_tcp.h"
+
 #include "config_operation.h"
 
 #include "v3s_gpio_operation.h"
@@ -54,9 +58,25 @@
 #define    INSTRUMENT_HISTORY_TIME_SCALE    (24 * 60 * 60 / INSTRUMENT_HISTORY_TIME_SPAN)
 // #define    NEW_YEAR_DAY_2024    1704038400
 
-char modbus_uart_device[20];
-char instrument_uart_device[20];
+
+typedef enum {
+    MODBUS_MODE_UNKNOWN = 0,   // Not used
+    MODBUS_MODE_UART            = 1,
+    MODBUS_MODE_RTU_OVER_UDP    = 2,
+    MODBUS_MODE_UDP             = 3,
+    MODBUS_MODE_RTU_OVER_TCP    = 4,
+    MODBUS_MODE_TCP             = 5,
+    MODBUS_MODE_MAX             = 6, 
+} PTC310_MODBUS_MODE;
+
+
+PTC310_MODBUS_MODE  modbus_mode  = MODBUS_MODE_UART;
+int  modbus_udp_device_port = 0;
+
+char modbus_uart_device[32];
+char instrument_uart_device[32];
 // int  modbus_uart_response_interval = 20000;
+char instrument_uart_device_protocal[32];
 
 // localtime()函数返回的是一个静态变量的指针，这个指针指向的内存是由C标准库管理的，属于静态存储区。
 // 每次调用localtime()时，它都会返回一个指向同一个静态区域内存的指针，
@@ -90,6 +110,46 @@ const uint16_t CP_DefaultValue[CP_EEP_MAX]=
 static int get_cmd_printf(char *cmd, char *buf, int bufSize);
 int append_logcontent_to_file(char * cFileName, char * cFileContent);
 
+/***********************************************************************
+ * 函数名：open_and_new_tcp_slave
+ *   功能：打开Modbus协议的端口。
+ * 入口参数： 用于保存原有配置信息的termios结构体对象。
+ *   返回值： 返回端口文件句柄。
+ ***********************************************************************/
+int open_and_new_udp_server()
+{
+	int modbus_fd = 0;
+    // 1. 打开Modbus口
+    if(modbus_udp_device_port > 0)
+    {
+		modbus_fd = modbus_udp_server_init(modbus_udp_device_port);
+    }
+	else
+    {
+    	printf("Modbus default path is %s...\n", INSTRUMENT_UART_DEVICE);
+	}
+	if (-1 == modbus_fd)
+	{
+		fprintf(stderr, "Error: %s\n", strerror(errno));
+		return -1;
+	}
+	else
+	{
+		printf("串口信息设置成功！！\n");
+	}
+	return modbus_fd;
+	
+}
+
+
+int close_and_free_udp_server(int modbus_fd)
+{
+    if (modbus_fd != -1) {
+        close(modbus_fd);
+        modbus_fd = -1;
+    }
+	return 0;
+}
 
 /***********************************************************************
  * 函数名：open_and_new_rtu_slave
@@ -134,7 +194,6 @@ int open_and_new_rtu_slave(struct termios* old_tios)
  * 入口参数： 端口文件句柄和保存了原有配置信息的termios结构体对象。
  *   返回值： 关闭成功返回0，关闭失败返回-1。
  ***********************************************************************/
-
 int close_and_free_rtu_slave(int modbus_fd, struct termios* old_tios)
 {
     if (modbus_fd != -1) {
@@ -171,7 +230,7 @@ int open_ptc_port()
     }
 	printf("open_ptc_port: open return %d\n", instrument_fd);
     if (instrument_fd == -1) {
-        perror("INSTRUMENT_UART_DEVICE open error");
+        printf("INSTRUMENT_UART_DEVICE open error");
         exit(1);
     }
 	return instrument_fd;
@@ -852,7 +911,7 @@ static void* thread_instrument_Protocol(void *arg)
 {
     int   convert_protocol_fd = 0; // , send_res;
 	convert_protocol_fd = open_ptc_port();
-    // printf("uart Open...\n");
+    printf("uart Open...\n");
  
 	pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 	memset(IReg, 0x00, sizeof(int16_t) * IREG_MAX);
@@ -861,6 +920,12 @@ static void* thread_instrument_Protocol(void *arg)
 	Protocol_Init(convert_protocol_fd);
     // 2.2 启动一个定时器。每隔INSTRUMENT_HISTORY_TIME_SPAN秒记录一次仪表读数。
 	set_out_instrument_history_timer(INSTRUMENT_HISTORY_TIME_SPAN);
+    printf("uart set_out_instrument_history_timer...\n");
+	if(strcmp(instrument_uart_device_protocal, "232") == 0)
+	{
+		// printf("V3S_GPIO_SetPin(V3S_PB, 2, 1) \n");
+		V3S_GPIO_SetPin(V3S_PB, 2, 1);
+	}
     // 2.3 处理仪表通信。
 	while (1)
 	{
@@ -881,12 +946,655 @@ void SysConfig_Init() {
 }
 
 /***********************************************************************
- * 函数名：thread_modbus_operation
- *   功能：Modbus协议通信线程。
+ * 函数名：thread_modbus_udp_operation
+ *   功能：Modbus协议udp通信线程。
  * 入口参数： 无。
  *   返回值： 无须返回。
  ***********************************************************************/
-static void* thread_modbus_operation(void *arg)
+static void* thread_modbus_udp_operation(void *arg)
+{
+	int iServerID = SERVER_ID;
+	// int iSpanCount = 0 ;	
+	int modbus_fd = 0;
+    struct sockaddr_in client_addr;
+    socklen_t addr_len;
+		
+    g_iModbusUsartOfflineStatus = MODBUS_USART_ONLINE;
+    time_t timeNow = time(NULL);
+	uint8_t query[MODBUS_MAX_ADU_LENGTH];
+	
+    char value[20] = { 0 };
+	int iRet = get_ini_key_string("System", "ServiceID", value, SYS_CONFIG_FILE_NAME);
+	printf("thread_modbus_udp_operation::get_ini_key_string get %s and return %d\n", value, iRet);
+    if(iRet == 0)
+    {
+		iServerID = atoi(value);
+    }
+	 
+	modbus_fd = open_and_new_udp_server();
+	printf("open_and_new_tcp_server return %d\n", modbus_fd);
+	Modbus_Init(iServerID, query);
+	printf("Modbus_Init set iServerID = %d\n", iServerID);
+	
+	while (1)
+	{
+		//获取查询请求报文
+		int ret = 0;
+        addr_len = sizeof(client_addr);
+		ret = recvfrom(modbus_fd, query, MODBUS_MAX_ADU_LENGTH, 0,
+						(struct sockaddr *)&client_addr, &addr_len);
+		
+		if (ret >= 8)
+		{
+			// printf("read ends with ctx_modbus_uart = %d and return %d\n", 
+			//					modbus_fd, ret);
+			ret = ModbusUDP_FrameAnalysis(ret);
+			// printf("Start of ModbusUDP_FrameAnalysis return %d\n", ret);
+			// for(int i = 0 ; i < ret; i++)
+			// {
+			// 		printf("<%02X>", query[i]);
+			// }
+			// printf("\nEnd of Modbus_FrameAnalysis return %d\n", ret);
+			
+		    // 做一点延时，避免发的太快，导致电脑时序混乱。
+			usleep(500);
+			sendto(modbus_fd, query, ret,
+						0, (struct sockaddr *)&client_addr, addr_len);
+			// printf("write socket_id %d and select for %d\n", ret, iSpanCount);
+			// iSpanCount = 0;
+		}
+		else if (ret > 0) {
+			printf("Wrong Length: mb_data_buf[0] check failed and mb_data_buf[0] is %d\n", query[0]);
+			printf("Start of recv and frm_len is %d\n", ret);
+			for(int i = 0 ; i < ret; i++)
+			{
+				printf("<%02X> ", query[i]);
+			}
+			printf("\nEnd of recv and frm_len is %d\n", ret);
+		}
+		// We do not receive any data
+		// else if (ret == 0) 
+		
+		// Check MODBUS_USART_ONLINE or MODBUS_USART_OFFLINE
+		if (ret > 0) {
+			timeNow = time(NULL);
+			if(g_iModbusUsartOfflineStatus == MODBUS_USART_OFFLINE)
+			{
+				g_iModbusUsartOfflineStatus = MODBUS_USART_ONLINE;
+				printf("[%s:%s:%d] start out_usart_info_record ONLINE because modbus_receive returns %d\n",
+						__FILE__, __FUNCTION__, __LINE__, ret);
+				out_modbus_usart_info_record(g_iModbusUsartOfflineStatus, timeNow);
+			}
+		}
+		else if (ret == 0)
+		{
+			if(g_iModbusUsartOfflineStatus == MODBUS_USART_ONLINE)
+			{
+				// 只有在连续10秒钟接收不到数据情况下，才会认为Modbus总线无数据。
+				if(time(NULL) - timeNow > MODBUS_USART_OFFLINE_TO)
+				{
+					printf("[%s:%s:%d] time(NULL) - timeNow = %d\n",
+							__FILE__, __FUNCTION__, __LINE__, (int)(time(NULL) - timeNow));
+					g_iModbusUsartOfflineStatus = MODBUS_USART_OFFLINE;
+					timeNow = time(NULL);
+					printf("[%s:%s:%d] start out_usart_info_record OFFLINE because modbus_receive returns %d\n",
+							__FILE__, __FUNCTION__, __LINE__, ret);
+					out_modbus_usart_info_record(g_iModbusUsartOfflineStatus, timeNow);
+					// We can restart udp_server
+					printf("[%s:%s:%d] We can restart udp_server\n", __FILE__, __FUNCTION__, __LINE__);
+					close_and_free_udp_server(modbus_fd);
+					modbus_fd = open_and_new_udp_server();
+				}
+			}
+		}
+		else if (ret < 0)
+		{
+			if(g_iModbusUsartOfflineStatus == MODBUS_USART_ONLINE)
+			{
+				g_iModbusUsartOfflineStatus = MODBUS_USART_OFFLINE;
+				timeNow = time(NULL);
+				printf("[%s:%s:%d] start out_usart_info_record OFFLINE because modbus_receive returns %d\n",
+						__FILE__, __FUNCTION__, __LINE__, ret);
+				out_modbus_usart_info_record(g_iModbusUsartOfflineStatus, timeNow);
+			}
+		}
+		check_modbus_usart_info_record(g_iModbusUsartOfflineStatus);
+		// Unit Reset
+	    // printf("Unit Reset with iSpanCount = %d\n", iSpanCount);
+	    
+		uint16_t hr_unit_reset;
+		pthread_rwlock_rdlock(&hreg_rwlock); // 获取HReg的读锁
+		hr_unit_reset = HReg[HR_UNIT_RESET];
+		pthread_rwlock_unlock(&hreg_rwlock); // 释放HReg的读锁
+		if(hr_unit_reset)
+		{
+	        printf("Unit Reset with HReg[HR_UNIT_RESET] = %d\n", hr_unit_reset);
+			// while(1)
+			// {
+			// }
+			system("reboot");
+			break;
+		}
+
+	}
+
+	close_and_free_udp_server(modbus_fd);
+
+    printf("TCP Close...\n");
+    return (void*)NULL;
+}
+
+
+/***********************************************************************
+ * 函数名：thread_modbus_rtu_over_udp_operation
+ *   功能：Modbus协议rtu通信线程。
+ * 入口参数： 无。
+ *   返回值： 无须返回。
+ ***********************************************************************/
+static void* thread_modbus_rtu_over_udp_operation(void *arg)
+{
+	int iServerID = SERVER_ID;
+	// int iSpanCount = 0 ;	
+	int modbus_fd = 0;
+    struct sockaddr_in client_addr;
+    socklen_t addr_len;
+		
+    g_iModbusUsartOfflineStatus = MODBUS_USART_ONLINE;
+    time_t timeNow = time(NULL);
+	uint8_t query[MODBUS_MAX_ADU_LENGTH];
+	
+    char value[20] = { 0 };
+	int iRet = get_ini_key_string("System", "ServiceID", value, SYS_CONFIG_FILE_NAME);
+	printf("thread_modbus_rtu_over_udp_operation::get_ini_key_string get %s and return %d\n", value, iRet);
+    if(iRet == 0)
+    {
+		iServerID = atoi(value);
+    }
+	 
+	modbus_fd = open_and_new_udp_server();
+	printf("open_and_new_tcp_server return %d\n", modbus_fd);
+	Modbus_Init(iServerID, query);
+	printf("Modbus_Init set iServerID = %d\n", iServerID);
+	
+	while (1)
+	{
+		//获取查询请求报文
+		int ret = 0;
+        addr_len = sizeof(client_addr);
+		ret = recvfrom(modbus_fd, query, MODBUS_MAX_ADU_LENGTH, 0,
+						(struct sockaddr *)&client_addr, &addr_len);
+		
+		if (ret >= 8)
+		{
+			// printf("read ends with ctx_modbus_uart = %d and return %d\n", 
+			//					modbus_fd, ret);
+			ret = ModbusRTU_FrameAnalysis(ret);
+			// printf("Start of Modbus_FrameAnalysis return %d\n", ret);
+			// for(int i = 0 ; i < ret; i++)
+			// {
+			// 		printf("<%02X> ", query[i]);
+			// }
+			// printf("\nEnd of Modbus_FrameAnalysis return %d\n", ret);
+			
+		    // 做一点延时，避免发的太快，导致电脑时序混乱。
+			usleep(500);
+			sendto(modbus_fd, query, ret,
+						0, (struct sockaddr *)&client_addr, addr_len);
+			// printf("write socket_id %d and select for %d\n", ret, iSpanCount);
+			// iSpanCount = 0;
+		}
+		else if (ret > 0) {
+			printf("Wrong Length: mb_data_buf[0] check failed and mb_data_buf[0] is %d\n", query[0]);
+			printf("Start of recv and frm_len is %d\n", ret);
+			for(int i = 0 ; i < ret; i++)
+			{
+				printf("<%02X> ", query[i]);
+			}
+			printf("\nEnd of recv and frm_len is %d\n", ret);
+		}
+		// We do not receive any data
+		// else if (ret == 0) 
+		
+		// Check MODBUS_USART_ONLINE or MODBUS_USART_OFFLINE
+		if (ret > 0) {
+			timeNow = time(NULL);
+			if(g_iModbusUsartOfflineStatus == MODBUS_USART_OFFLINE)
+			{
+				g_iModbusUsartOfflineStatus = MODBUS_USART_ONLINE;
+				printf("[%s:%s:%d] start out_usart_info_record ONLINE because modbus_receive returns %d\n",
+						__FILE__, __FUNCTION__, __LINE__, ret);
+				out_modbus_usart_info_record(g_iModbusUsartOfflineStatus, timeNow);
+			}
+		}
+		else if (ret == 0)
+		{
+			if(g_iModbusUsartOfflineStatus == MODBUS_USART_ONLINE)
+			{
+				// 只有在连续10秒钟接收不到数据情况下，才会认为Modbus总线无数据。
+				if(time(NULL) - timeNow > MODBUS_USART_OFFLINE_TO)
+				{
+					printf("[%s:%s:%d] time(NULL) - timeNow = %d\n",
+							__FILE__, __FUNCTION__, __LINE__, (int)(time(NULL) - timeNow));
+					g_iModbusUsartOfflineStatus = MODBUS_USART_OFFLINE;
+					timeNow = time(NULL);
+					printf("[%s:%s:%d] start out_usart_info_record OFFLINE because modbus_receive returns %d\n",
+							__FILE__, __FUNCTION__, __LINE__, ret);
+					out_modbus_usart_info_record(g_iModbusUsartOfflineStatus, timeNow);
+					// We can restart udp_server
+					printf("[%s:%s:%d] We can restart udp_server\n", __FILE__, __FUNCTION__, __LINE__);
+					close_and_free_udp_server(modbus_fd);
+					modbus_fd = open_and_new_udp_server();
+				}
+			}
+		}
+		else if (ret < 0)
+		{
+			if(g_iModbusUsartOfflineStatus == MODBUS_USART_ONLINE)
+			{
+				g_iModbusUsartOfflineStatus = MODBUS_USART_OFFLINE;
+				timeNow = time(NULL);
+				printf("[%s:%s:%d] start out_usart_info_record OFFLINE because modbus_receive returns %d\n",
+						__FILE__, __FUNCTION__, __LINE__, ret);
+				out_modbus_usart_info_record(g_iModbusUsartOfflineStatus, timeNow);
+			}
+		}
+		check_modbus_usart_info_record(g_iModbusUsartOfflineStatus);
+		// Unit Reset
+	    // printf("Unit Reset with iSpanCount = %d\n", iSpanCount);
+	    
+		uint16_t hr_unit_reset;
+		pthread_rwlock_rdlock(&hreg_rwlock); // 获取HReg的读锁
+		hr_unit_reset = HReg[HR_UNIT_RESET];
+		pthread_rwlock_unlock(&hreg_rwlock); // 释放HReg的读锁
+		if(hr_unit_reset)
+		{
+	        printf("Unit Reset with HReg[HR_UNIT_RESET] = %d\n", hr_unit_reset);
+			// while(1)
+			// {
+			// }
+			system("reboot");
+			break;
+		}
+
+	}
+
+	close_and_free_udp_server(modbus_fd);
+
+    printf("TCP Close...\n");
+    return (void*)NULL;
+}
+
+
+/***********************************************************************
+ * 函数名：thread_modbus_udp_operation
+ *   功能：Modbus协议udp通信线程。
+ * 入口参数： 无。
+ *   返回值： 无须返回。
+ ***********************************************************************/
+static void* thread_modbus_tcp_operation(void *arg)
+{
+	int iServerID = SERVER_ID;
+	// int iSpanCount = 0 ;	
+	int modbus_fd = 0, new_socket = 0;
+	
+    struct sockaddr_in server_addr;
+	int addrlen = sizeof(server_addr);
+		
+    g_iModbusUsartOfflineStatus = MODBUS_USART_ONLINE;
+    time_t timeNow = time(NULL);
+	uint8_t query[MODBUS_MAX_ADU_LENGTH];
+	
+    char value[20] = { 0 };
+	int iRet = get_ini_key_string("System", "ServiceID", value, SYS_CONFIG_FILE_NAME);
+	printf("thread_modbus_tcp_operation::get_ini_key_string get %s and return %d\n", value, iRet);
+    if(iRet == 0)
+    {
+		iServerID = atoi(value);
+    }
+	 
+	// 1. 打开Modbus口
+    if(modbus_udp_device_port > 0)
+    {
+		modbus_fd = modbus_tcp_server_init(modbus_udp_device_port, &server_addr);
+    }
+	else
+    {
+    	printf("Modbus default path is %s...\n", INSTRUMENT_UART_DEVICE);
+	}
+	if (-1 == modbus_fd)
+	{
+		fprintf(stderr, "Error: %s\n", strerror(errno));
+		return (void*)NULL;
+	}
+	else
+	{
+		printf("串口信息设置成功！！\n");
+	}
+	printf("thread_modbus_tcp_operation::open_and_new_tcp_server return %d\n", modbus_fd);
+	Modbus_Init(iServerID, query);
+	printf("Modbus_Init set iServerID = %d\n", iServerID);
+	
+	while (1)
+	{
+		// 接受客户端连接
+		if ((new_socket = accept(modbus_fd, (struct sockaddr *)&server_addr, (socklen_t*)&addrlen)) < 0) {
+			perror("Accept failed");
+			close(modbus_fd);
+			exit(EXIT_FAILURE);
+		}
+		printf("accept return new_socket = %d\n", new_socket);
+	
+		while (1)
+		{
+			//获取查询请求报文
+			int ret = 0;
+			ret = read(new_socket, query, MODBUS_MAX_ADU_LENGTH);
+			
+			if (ret >= 8)
+			{
+				// printf("read ends with ctx_modbus_uart = %d and return %d\n", 
+				//					modbus_fd, ret);
+				ret = ModbusUDP_FrameAnalysis(ret);
+				// printf("Start of ModbusUDP_FrameAnalysis return %d\n", ret);
+				// for(int i = 0 ; i < ret; i++)
+				// {
+				// 		printf("<%02X>", query[i]);
+				// }
+				// printf("\nEnd of Modbus_FrameAnalysis return %d\n", ret);
+				
+			    // 做一点延时，避免发的太快，导致电脑时序混乱。
+				usleep(500);
+				send(new_socket, query, ret, 0);
+				// printf("write socket_id %d and select for %d\n", ret, iSpanCount);
+				// iSpanCount = 0;
+			}
+			else if (ret > 0) {
+				printf("Wrong Length: mb_data_buf[0] check failed and mb_data_buf[0] is %d\n", query[0]);
+				printf("Start of recv and frm_len is %d\n", ret);
+				for(int i = 0 ; i < ret; i++)
+				{
+					printf("<%02X> ", query[i]);
+				}
+				printf("\nEnd of recv and frm_len is %d\n", ret);
+			}
+			else  if (ret == 0)
+			{
+				struct tcp_info info; 
+				int len = sizeof(info); 
+				getsockopt(new_socket, IPPROTO_TCP, TCP_INFO, &info, (socklen_t *)&len); 
+				if((info.tcpi_state==TCP_ESTABLISHED)) 
+				{ 
+					//printf("socket connected\n");
+					;
+				} 
+				else 
+				{ 
+					printf("socket disconnected\n");
+					close(new_socket);
+					break; 
+				} 
+			}
+			// We do not receive any data
+			// else if (ret == 0) 
+			
+			// Check MODBUS_USART_ONLINE or MODBUS_USART_OFFLINE
+			if (ret > 0) {
+				timeNow = time(NULL);
+				if(g_iModbusUsartOfflineStatus == MODBUS_USART_OFFLINE)
+				{
+					g_iModbusUsartOfflineStatus = MODBUS_USART_ONLINE;
+					printf("[%s:%s:%d] start out_usart_info_record ONLINE because modbus_receive returns %d\n",
+							__FILE__, __FUNCTION__, __LINE__, ret);
+					out_modbus_usart_info_record(g_iModbusUsartOfflineStatus, timeNow);
+				}
+			}
+			else if (ret == 0)
+			{
+				if(g_iModbusUsartOfflineStatus == MODBUS_USART_ONLINE)
+				{
+					// 只有在连续10秒钟接收不到数据情况下，才会认为Modbus总线无数据。
+					if(time(NULL) - timeNow > MODBUS_USART_OFFLINE_TO)
+					{
+						printf("[%s:%s:%d] time(NULL) - timeNow = %d\n",
+								__FILE__, __FUNCTION__, __LINE__, (int)(time(NULL) - timeNow));
+						g_iModbusUsartOfflineStatus = MODBUS_USART_OFFLINE;
+						timeNow = time(NULL);
+						printf("[%s:%s:%d] start out_usart_info_record OFFLINE because modbus_receive returns %d\n",
+								__FILE__, __FUNCTION__, __LINE__, ret);
+						out_modbus_usart_info_record(g_iModbusUsartOfflineStatus, timeNow);
+						// We can restart udp_server
+						printf("[%s:%s:%d] We can restart udp_server\n", __FILE__, __FUNCTION__, __LINE__);
+						// close_and_free_udp_server(modbus_fd);
+						// modbus_fd = open_and_new_udp_server();
+					}
+				}
+			}
+			else if (ret < 0)
+			{
+				if(g_iModbusUsartOfflineStatus == MODBUS_USART_ONLINE)
+				{
+					g_iModbusUsartOfflineStatus = MODBUS_USART_OFFLINE;
+					timeNow = time(NULL);
+					printf("[%s:%s:%d] start out_usart_info_record OFFLINE because modbus_receive returns %d\n",
+							__FILE__, __FUNCTION__, __LINE__, ret);
+					out_modbus_usart_info_record(g_iModbusUsartOfflineStatus, timeNow);
+				}
+			}
+			check_modbus_usart_info_record(g_iModbusUsartOfflineStatus);
+			// Unit Reset
+		    // printf("Unit Reset with iSpanCount = %d\n", iSpanCount);
+		    
+			uint16_t hr_unit_reset;
+			pthread_rwlock_rdlock(&hreg_rwlock); // 获取HReg的读锁
+			hr_unit_reset = HReg[HR_UNIT_RESET];
+			pthread_rwlock_unlock(&hreg_rwlock); // 释放HReg的读锁
+			if(hr_unit_reset)
+			{
+		        printf("Unit Reset with HReg[HR_UNIT_RESET] = %d\n", hr_unit_reset);
+				// while(1)
+				// {
+				// }
+				system("reboot");
+				break;
+			}
+
+		}
+	}
+	modbus_tcp_server_uninit(modbus_fd);
+
+    printf("TCP Close...\n");
+    return (void*)NULL;
+}
+
+
+/***********************************************************************
+ * 函数名：thread_modbus_rtu_over_udp_operation
+ *   功能：Modbus协议rtu通信线程。
+ * 入口参数： 无。
+ *   返回值： 无须返回。
+ ***********************************************************************/
+static void* thread_modbus_rtu_over_tcp_operation(void *arg)
+{
+	int iServerID = SERVER_ID;
+	// int iSpanCount = 0 ;	
+	int modbus_fd = 0, new_socket = 0;
+	
+    struct sockaddr_in server_addr;
+	int addrlen = sizeof(server_addr);
+		
+    g_iModbusUsartOfflineStatus = MODBUS_USART_ONLINE;
+    time_t timeNow = time(NULL);
+	uint8_t query[MODBUS_MAX_ADU_LENGTH];
+	
+    char value[20] = { 0 };
+	int iRet = get_ini_key_string("System", "ServiceID", value, SYS_CONFIG_FILE_NAME);
+	printf("thread_modbus_rtu_over_tcp_operation::get_ini_key_string get %s and return %d\n", value, iRet);
+    if(iRet == 0)
+    {
+		iServerID = atoi(value);
+    }
+	 
+	// 1. 打开Modbus口
+    if(modbus_udp_device_port > 0)
+    {
+		modbus_fd = modbus_tcp_server_init(modbus_udp_device_port, &server_addr);
+    }
+	else
+    {
+    	printf("Modbus default path is %s...\n", INSTRUMENT_UART_DEVICE);
+	}
+	if (-1 == modbus_fd)
+	{
+		fprintf(stderr, "Error: %s\n", strerror(errno));
+		return (void*)NULL;
+	}
+	else
+	{
+		printf("串口信息设置成功！！\n");
+	}
+	printf("thread_modbus_rtu_over_tcp_operation::open_and_new_tcp_server return %d\n", modbus_fd);
+	Modbus_Init(iServerID, query);
+	printf("Modbus_Init set iServerID = %d\n", iServerID);
+
+	while (1)
+	{
+		// 接受客户端连接
+		if ((new_socket = accept(modbus_fd, (struct sockaddr *)&server_addr, (socklen_t*)&addrlen)) < 0) {
+			perror("Accept failed");
+			close(modbus_fd);
+			exit(EXIT_FAILURE);
+		}
+		printf("accept return new_socket = %d\n", new_socket);
+		
+		while (1)
+		{
+			//获取查询请求报文
+			int ret = 0;
+			ret = read(new_socket, query, MODBUS_MAX_ADU_LENGTH);
+			// printf("read ends with ctx_modbus_uart = %d and return %d\n", modbus_fd, ret);
+			
+			if (ret >= 8)
+			{
+				// printf("read ends with ctx_modbus_uart = %d and return %d\n", modbus_fd, ret);
+				ret = ModbusRTU_FrameAnalysis(ret);
+				// printf("Start of Modbus_FrameAnalysis return %d\n", ret);
+				// for(int i = 0 ; i < ret; i++)
+				// {
+				// 		printf("<%02X> ", query[i]);
+				// }
+				// printf("\nEnd of Modbus_FrameAnalysis return %d\n", ret);
+				
+			    // 做一点延时，避免发的太快，导致电脑时序混乱。
+				usleep(500);
+				send(new_socket, query, ret, 0);
+				// printf("write socket_id %d and select for %d\n", ret, iSpanCount);
+				// iSpanCount = 0;
+			}
+			else if (ret > 0) {
+				printf("Wrong Length: mb_data_buf[0] check failed and mb_data_buf[0] is %d\n", query[0]);
+				printf("Start of recv and frm_len is %d\n", ret);
+				for(int i = 0 ; i < ret; i++)
+				{
+					printf("<%02X> ", query[i]);
+				}
+				printf("\nEnd of recv and frm_len is %d\n", ret);
+			}
+			else  if (ret == 0)
+			{
+				struct tcp_info info; 
+				int len = sizeof(info); 
+				getsockopt(new_socket, IPPROTO_TCP, TCP_INFO, &info, (socklen_t *)&len); 
+				if((info.tcpi_state==TCP_ESTABLISHED)) 
+				{ 
+					//printf("socket connected\n");
+					;
+				} 
+				else 
+				{ 
+					printf("socket disconnected\n");
+					close(new_socket);
+					break; 
+				} 
+			}
+			// We do not receive any data
+			// else if (ret == 0) 
+			
+			// Check MODBUS_USART_ONLINE or MODBUS_USART_OFFLINE
+			if (ret > 0) {
+				timeNow = time(NULL);
+				if(g_iModbusUsartOfflineStatus == MODBUS_USART_OFFLINE)
+				{
+					g_iModbusUsartOfflineStatus = MODBUS_USART_ONLINE;
+					printf("[%s:%s:%d] start out_usart_info_record ONLINE because modbus_receive returns %d\n",
+							__FILE__, __FUNCTION__, __LINE__, ret);
+					out_modbus_usart_info_record(g_iModbusUsartOfflineStatus, timeNow);
+				}
+			}
+			else if (ret == 0)
+			{
+				if(g_iModbusUsartOfflineStatus == MODBUS_USART_ONLINE)
+				{
+					// 只有在连续10秒钟接收不到数据情况下，才会认为Modbus总线无数据。
+					if(time(NULL) - timeNow > MODBUS_USART_OFFLINE_TO)
+					{
+						printf("[%s:%s:%d] time(NULL) - timeNow = %d\n",
+								__FILE__, __FUNCTION__, __LINE__, (int)(time(NULL) - timeNow));
+						g_iModbusUsartOfflineStatus = MODBUS_USART_OFFLINE;
+						timeNow = time(NULL);
+						printf("[%s:%s:%d] start out_usart_info_record OFFLINE because modbus_receive returns %d\n",
+								__FILE__, __FUNCTION__, __LINE__, ret);
+						out_modbus_usart_info_record(g_iModbusUsartOfflineStatus, timeNow);
+						// We can restart udp_server
+						printf("[%s:%s:%d] We can restart udp_server\n", __FILE__, __FUNCTION__, __LINE__);
+						close_and_free_udp_server(modbus_fd);
+						modbus_fd = open_and_new_udp_server();
+					}
+				}
+			}
+			else if (ret < 0)
+			{
+				if(g_iModbusUsartOfflineStatus == MODBUS_USART_ONLINE)
+				{
+					g_iModbusUsartOfflineStatus = MODBUS_USART_OFFLINE;
+					timeNow = time(NULL);
+					printf("[%s:%s:%d] start out_usart_info_record OFFLINE because modbus_receive returns %d\n",
+							__FILE__, __FUNCTION__, __LINE__, ret);
+					out_modbus_usart_info_record(g_iModbusUsartOfflineStatus, timeNow);
+				}
+			}
+			check_modbus_usart_info_record(g_iModbusUsartOfflineStatus);
+			// Unit Reset
+		    // printf("Unit Reset with iSpanCount = %d\n", iSpanCount);
+		    
+			uint16_t hr_unit_reset;
+			pthread_rwlock_rdlock(&hreg_rwlock); // 获取HReg的读锁
+			hr_unit_reset = HReg[HR_UNIT_RESET];
+			pthread_rwlock_unlock(&hreg_rwlock); // 释放HReg的读锁
+			if(hr_unit_reset)
+			{
+		        printf("Unit Reset with HReg[HR_UNIT_RESET] = %d\n", hr_unit_reset);
+				// while(1)
+				// {
+				// }
+				system("reboot");
+				break;
+			}
+		}
+	}
+	modbus_tcp_server_uninit(modbus_fd);
+
+    printf("TCP Close...\n");
+    return (void*)NULL;
+}
+
+
+/***********************************************************************
+ * 函数名：thread_modbus_rtu_operation
+ *   功能：Modbus协议rtu通信线程。
+ * 入口参数： 无。
+ *   返回值： 无须返回。
+ ***********************************************************************/
+static void* thread_modbus_rtu_operation(void *arg)
 {
 	int iServerID = SERVER_ID;
 	int iSpanCount = 0 ;	
@@ -899,7 +1607,7 @@ static void* thread_modbus_operation(void *arg)
 	
     char value[20] = { 0 };
 	int iRet = get_ini_key_string("System", "ServiceID", value, SYS_CONFIG_FILE_NAME);
-	printf("get_ini_key_string get %s and return %d\n", value, iRet);
+	printf("thread_modbus_rtu_operation::get_ini_key_string get %s and return %d\n", value, iRet);
     if(iRet == 0)
     {
 		iServerID = atoi(value);
@@ -918,7 +1626,10 @@ static void* thread_modbus_operation(void *arg)
 	// 	iServerID, modbus_uart_response_interval);
 	printf("Modbus_Init set iServerID = %d\n", iServerID);
 	// TimerInit();
-	V3S_GPIO_SetPin(V3S_PB, 2, 0);
+    // Modbus使用UART1_RTX。
+    // UARTI_RTX为PE23。
+    // UARTI_RTX为低电平时从外接接收信息，为高电平发送信息。
+	V3S_GPIO_SetPin(V3S_PE, 23, 0);
 	usleep(5);
 	
 	while (1)
@@ -945,7 +1656,7 @@ static void* thread_modbus_operation(void *arg)
 		{
 			// printf("read ends with ctx_modbus_uart = %d and return %d\n", 
 			//					modbus_fd, ret);
-			ret = Modbus_FrameAnalysis(ret);
+			ret = ModbusRTU_FrameAnalysis(ret);
 			// printf("Start of Modbus_FrameAnalysis return %d\n", ret);
 			// for(int i = 0 ; i < ret; i++)
 			// {
@@ -961,14 +1672,16 @@ static void* thread_modbus_operation(void *arg)
 			// 当PC端发送时间间隔为20ms的时候，数据收发没有错误。
 			// 当然如果PC端发送时间间隔过短，例如小于10ms还是会出现非常低概率的错误。
 			usleep(3000);
-			V3S_GPIO_SetPin(V3S_PB, 2, 1);
+            // UARTI_RTX为低电平时从外接接收信息，为高电平发送信息。UARTI_RTX为PE23。
+            V3S_GPIO_SetPin(V3S_PE, 23, 1);
 		    // 做一点延时，避免发的太快，导致电脑时序混乱。
 			usleep(500);
 			write(modbus_fd, query, ret);
 			// 等待数据发送完成
 			tcdrain(modbus_fd);
 			usleep(100);
-	        V3S_GPIO_SetPin(V3S_PB, 2, 0);
+            // UARTI_RTX为低电平时从外接接收信息，为高电平发送信息。UARTI_RTX为PE23。
+            V3S_GPIO_SetPin(V3S_PE, 23, 0);
 			
 			// printf("write socket_id %d and select for %d\n", ret, iSpanCount);
 			iSpanCount = 0;
@@ -1001,7 +1714,7 @@ static void* thread_modbus_operation(void *arg)
 			if(g_iModbusUsartOfflineStatus == MODBUS_USART_ONLINE)
 			{
 				// 只有在连续5秒钟接收不到数据情况下，才会认为Modbus总线无数据。
-				if(time(NULL) - timeNow > 10)
+				if(time(NULL) - timeNow > MODBUS_USART_OFFLINE_TO)
 				{
 					printf("[%s:%s:%d] time(NULL) - timeNow = %d\n",
 							__FILE__, __FUNCTION__, __LINE__, (int)(time(NULL) - timeNow));
@@ -1232,18 +1945,127 @@ int main(int argc, char ** argv)
     pthread_t modbus_operation_thread;
 	// int ret = 0;
 	V3S_GPIO_Init();
+	// UART1_RTS
+    V3S_GPIO_ConfigPin(V3S_PE, 23, V3S_OUT);
+	// UART2_RTS
     V3S_GPIO_ConfigPin(V3S_PB, 2, V3S_OUT);
+	// UART2_CTS
+    V3S_GPIO_ConfigPin(V3S_PB, 3, V3S_OUT);
+	// gpio_battery_info
     V3S_GPIO_ConfigPin(V3S_PE, 0, V3S_IN);
+	// 232/485/422 switch - RLY1/RLY2 - PG4/PG3
+	V3S_GPIO_ConfigPin(V3S_PG, 3, V3S_OUT);
+	V3S_GPIO_ConfigPin(V3S_PG, 4, V3S_OUT);
 	
     g_iBatteryOfflineStatus = BATTERY_ONLINE;
     time_t timeNow = time(NULL);
 	// log_record_tm =  = localtime(&timeNow);
     memcpy(&log_record_tm, localtime(&timeNow), sizeof(struct tm));
     memcpy(&last_log_record_tm, localtime(&timeNow), sizeof(struct tm));
+	
+	modbus_mode = MODBUS_MODE_UART;
+	modbus_udp_device_port = 0;
+	memset(modbus_uart_device, 0x00, 32);
+	memset(instrument_uart_device, 0x00, 32);
+	memset(instrument_uart_device_protocal, 0x00, 32);
 
-	memset(modbus_uart_device, 0x00, 20);
-	memset(instrument_uart_device, 0x00, 20);
-	if(argc == 3) {
+	// Use 485 as default setting
+	// RLY1/RLY2 - PG4/PG3 - 0/0 -- 
+	V3S_GPIO_SetPin(V3S_PG, 4, 0);
+	V3S_GPIO_SetPin(V3S_PG, 3, 0);
+	strncpy(instrument_uart_device_protocal, "485", strlen("485"));
+	
+	if((argc == 4) || (argc == 5)) {
+		if(strcmp(argv[1], "uart") == 0)
+		{
+			if(strcmp(argv[2], argv[3]) != 0)
+			{
+				if(strlen(argv[2]) <= 32)
+				{
+					strncpy(modbus_uart_device, argv[2], strlen(argv[2]));
+				}
+				if(strlen(argv[3]) <= 32)
+				{
+					strncpy(instrument_uart_device, argv[3], strlen(argv[3]));
+				}
+			}
+		}
+		else if((strcmp(argv[1], "udpRTU") == 0) || (strcmp(argv[1], "udp") == 0)
+		      ||(strcmp(argv[1], "tcpRTU") == 0) || (strcmp(argv[1], "tcp") == 0))
+		{
+			if(strcmp(argv[1], "udpRTU") == 0)
+			{
+				modbus_mode = MODBUS_MODE_RTU_OVER_UDP;
+			}
+			else if(strcmp(argv[1], "udp") == 0)
+			{
+				modbus_mode = MODBUS_MODE_UDP;
+			}
+			else if(strcmp(argv[1], "tcpRTU") == 0)
+			{
+				modbus_mode = MODBUS_MODE_RTU_OVER_TCP;
+			}
+			else if(strcmp(argv[1], "tcp") == 0)
+			{
+				modbus_mode = MODBUS_MODE_TCP;
+			}
+			
+			if(strlen(argv[2]) <= 20)
+			{
+				modbus_udp_device_port = atoi(argv[2]);
+				if(modbus_udp_device_port == SERVER_PORT)
+				{
+			        printf("[%s:%s:%d] PORT %d used and please use other port(Such as 12346).\n",
+			            __FILE__, __FUNCTION__, __LINE__, SERVER_PORT);
+				    exit(1);
+				}
+			}
+			if(strlen(argv[3]) <= 32)
+			{
+				strncpy(instrument_uart_device, argv[3], strlen(argv[3]));
+			}
+		}
+		else {
+	        printf("[%s:%s:%d] ptc310_app uses UART as default setting. "
+				    "So we can use it like this: \n", 
+	            __FILE__, __FUNCTION__, __LINE__);
+	    	printf("ptc310_app <modbusUART> <instrumentUART>\n");
+	        printf("ptc310_app <uart/udp/udpRTU> <PORT/modbusUART> <instrumentUART>\n");
+	        printf("ptc310_app <uart/udp/udpRTU> <PORT/modbusUART> <instrumentUART> <instrumentUARTProtocol>\n");
+	        printf("ptc310_app only support <udpRTU> <PORT> <instrumentUART> <instrumentUARTProtocol>\n");
+			return 1;
+		}
+		// instrumentUARTProtocol
+		if(argc == 5)
+		{
+			strncpy(instrument_uart_device_protocal, argv[4], strlen(argv[4]));
+			if(strcmp(argv[4], "232") == 0)
+			{
+			    printf("[%s:%s:%d] instrumentUARTProtocol = %s.\n",
+			            __FILE__, __FUNCTION__, __LINE__, argv[4]);
+				// RLY1/RLY2 - PG4/PG3 - 1/X -- 232
+            	V3S_GPIO_SetPin(V3S_PG, 4, 1);
+            	V3S_GPIO_SetPin(V3S_PG, 3, 0);
+			}
+			else if(strcmp(argv[4], "485") == 0)
+			{
+			    printf("[%s:%s:%d] instrumentUARTProtocol = %s.\n",
+			            __FILE__, __FUNCTION__, __LINE__, argv[4]);
+				// RLY1/RLY2 - PG4/PG3 - 0/0 -- 485
+            	V3S_GPIO_SetPin(V3S_PG, 4, 0);
+            	V3S_GPIO_SetPin(V3S_PG, 3, 0);
+			}
+			else if(strcmp(argv[4], "422") == 0)
+			{
+			    printf("[%s:%s:%d] instrumentUARTProtocol = %s.\n",
+			            __FILE__, __FUNCTION__, __LINE__, argv[4]);
+				// RLY1/RLY2 - PG4/PG3 - 0/1 -- 422
+            	V3S_GPIO_SetPin(V3S_PG, 4, 0);
+            	V3S_GPIO_SetPin(V3S_PG, 3, 1);
+			}
+		}
+	}
+	else if(argc == 3) {
 		if(strcmp(argv[1], argv[2]) != 0)
 		{
 			if(strlen(argv[1]) <= 20)
@@ -1255,6 +2077,16 @@ int main(int argc, char ** argv)
 				strncpy(instrument_uart_device, argv[2], strlen(argv[2]));
 			}
 		}
+	}
+	else {
+        printf("[%s:%s:%d] ptc310_app uses UART as default setting. "
+			    "So we can use it like this: \n", 
+            __FILE__, __FUNCTION__, __LINE__);
+    	printf("ptc310_app <modbusUART> <instrumentUART>\n");
+        printf("ptc310_app <uart/udp/udpRTU> <PORT/modbusUART> <instrumentUART>\n");
+        printf("ptc310_app <uart/udp/udpRTU> <PORT/modbusUART> <instrumentUART> <instrumentUARTProtocol>\n");
+        printf("ptc310_app only support <udpRTU> <PORT> <instrumentUART> <instrumentUARTProtocol>\n");
+		return 1;
 	}
 
 	// Init_All_Periph
@@ -1276,7 +2108,31 @@ int main(int argc, char ** argv)
         return 1;
     }
 
-	pthread_create(&modbus_operation_thread, NULL, thread_modbus_operation, NULL);
+	if(modbus_mode == MODBUS_MODE_RTU_OVER_UDP)
+	{
+		pthread_create(&modbus_operation_thread, NULL, thread_modbus_rtu_over_udp_operation, NULL);
+	}
+	else if(modbus_mode == MODBUS_MODE_UDP)
+	{
+		pthread_create(&modbus_operation_thread, NULL, thread_modbus_udp_operation, NULL);
+	}
+	else if(modbus_mode == MODBUS_MODE_RTU_OVER_TCP)
+	{
+		pthread_create(&modbus_operation_thread, NULL, thread_modbus_rtu_over_tcp_operation, NULL);
+	}
+	else if(modbus_mode == MODBUS_MODE_TCP)
+	{
+		pthread_create(&modbus_operation_thread, NULL, thread_modbus_tcp_operation, NULL);
+	}
+	else if(modbus_mode == MODBUS_MODE_UART)
+	{
+		pthread_create(&modbus_operation_thread, NULL, thread_modbus_rtu_operation, NULL);
+	}
+	else
+	{
+        printf("Failed to initialize modbus_operation_thread\n");
+        return 1;
+	}
 	// printf("Start Protocol_Proc and ret return %d\n", ret);
 	pthread_create(&instrument_thread, NULL, thread_instrument_Protocol, NULL);
 	// 读取Modbus配置信息，修改Modbus配置信息。         获取最新仪表读数。

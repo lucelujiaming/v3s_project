@@ -48,6 +48,8 @@ typedef enum {
     INSTRUMENT_USART_OFFLINE  = 6,
     INSTRUMENT_STATUS_MAX     = 7, 
 } PTC310_INTERFACE_STATUS;
+	
+#define MODBUS_USART_OFFLINE_TO				10
 
 
 void Protocol_Init(int fd);

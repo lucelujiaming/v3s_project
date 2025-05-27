@@ -11,7 +11,7 @@
 
 #include "config_operation.h"
 
-#define   PARAM_CONFIG_FILE_NAME    "param_config.ini"
+#define   PARAM_CONFIG_FILE_NAME    "/root/app/param_config.ini"
 
 void PARAM_Init(void)
 {

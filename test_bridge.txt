@@ -1,0 +1,112 @@
+写在前面。
+这个操作步骤的前提是，设备有一个看门狗程序。
+会自动把两个网口的IP设定为192.168.168.129和192.168.168.130。
+因此上需要杀掉看门狗，并且清除两个网口的IP。
+而且因为第二个网口是使用USB转网口做出来的。默认MAC地址为全零。
+因此上，还需要为第二个网口指定MAC地址。
+另外模拟出来的桥接网口，也需要设置MAC地址和IP地址。
+并指定路由。
+--------------------------------------------------------------------
+ps | grep start_ethernet
+kill -9 126
+ip addr del 192.168.168.129/24 dev eth0
+ip addr del 192.168.168.130/24 dev eth1
+
+# eth0      Link encap:Ethernet  HWaddr 76:D7:12:71:00:CE
+# eth1      Link encap:Ethernet  HWaddr 76:D6:12:71:00:CE
+
+brctl addbr br0
+brctl addif br0 eth0
+brctl addif br0 eth1
+brctl stp br0 on
+
+ifconfig br0 192.168.7.11 netmask 255.255.255.0 up
+route add default gw 192.168.7.1
+ifconfig br0 down
+ifconfig br0 hw ether D2:7C:4B:7A:80:AB
+ifconfig br0 up
+
+ip route add 192.168.7.0 via 192.168.7.11
+ip link set br0 up
+
+--------------------------------------------------------------------
+ps | grep start_ethernet
+kill -9 126
+
+ip addr del 192.168.168.129/24 dev eth0
+ip addr del 192.168.168.130/24 dev eth1
+
+/sbin/ifconfig eth1 down
+/sbin/ifconfig eth1 hw ether 76:D6:13:71:02:CE
+/sbin/ifconfig eth1 up
+
+brctl addbr br0
+brctl addif br0 eth0
+brctl addif br0 eth1
+brctl stp br0 on
+
+ifconfig br0 192.168.7.21 netmask 255.255.255.0 up
+route add default gw 192.168.7.1
+ifconfig br0 down
+ifconfig br0 hw ether D3:8C:4B:7A:80:AB
+ifconfig br0 up
+
+ip route add 192.168.7.0 via 192.168.7.21
+ip link set br0 up
+
+--------------------------------------------------------------------
+#  cd /usr/sbin/
+#  mv brctl  brctl_old
+
+ps | grep start_ethernet
+kill -9 126
+
+ip addr del 192.168.168.129/24 dev eth0
+ip addr del 192.168.168.130/24 dev eth1
+
+/sbin/ifconfig eth1 down
+/sbin/ifconfig eth1 hw ether 76:D5:12:71:02:CE
+/sbin/ifconfig eth1 up
+
+brctl addbr br0
+brctl addif br0 eth0
+brctl addif br0 eth1
+brctl stp br0 on
+
+ifconfig br0 192.168.7.31 netmask 255.255.255.0 up
+route add default gw 192.168.7.1
+ifconfig br0 down
+ifconfig br0 hw ether D4:8A:4C:7A:80:AB
+ifconfig br0 up
+
+ip route add 192.168.7.0 via 192.168.7.31
+ip link set br0 up
+
+
+
+--------------------------------------------------------------------
+ps | grep start_ethernet
+kill -9 126
+
+ip addr del 192.168.168.129/24 dev eth0
+ip addr del 192.168.168.130/24 dev eth1
+
+/sbin/ifconfig eth1 down
+/sbin/ifconfig eth1 hw ether 76:D6:12:71:03:CE
+/sbin/ifconfig eth1 up
+
+brctl addbr br0
+brctl addif br0 eth0
+brctl addif br0 eth1
+brctl stp br0 on
+
+ifconfig br0 192.168.7.41 netmask 255.255.255.0 up
+route add default gw 192.168.7.1
+ifconfig br0 down
+ifconfig br0 hw ether D4:8E:4B:7A:80:AB
+ifconfig br0 up
+
+ip route add 192.168.7.0 via 192.168.7.41
+ip link set br0 up
+
+

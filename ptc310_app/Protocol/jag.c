@@ -130,6 +130,7 @@ uint8_t JAG_Analysis(uint16_t len)
 					
 					u32_value= real_to_u32(f_value);
 			
+					pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 					if(little_endian)
 					{
 						protocol_buff[3]= _low_word_int32(u32_value);
@@ -140,6 +141,7 @@ uint8_t JAG_Analysis(uint16_t len)
 						protocol_buff[3]= _high_word_int32(u32_value);
 						protocol_buff[4]= _low_word_int32(u32_value);
 					}
+    				pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 					
 					//Status
 //					if(*(serial_buff+ 5+ i+ str_size+ 2)== 'S')	//ST1 & ST2 & STOP
@@ -193,7 +195,9 @@ uint8_t JAG_Analysis(uint16_t len)
 					strncpy((char*)data_temp,(const char*)(serial_buff+4),str_size);
 					data= atoi(data_temp);
 					
+					pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 					protocol_buff[5]= data;
+    				pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 					i= str_size;
 				}
 				
@@ -214,7 +218,9 @@ uint8_t JAG_Analysis(uint16_t len)
 					strncpy((char*)data_temp,(const char*)(serial_buff+4+i+1),str_size);
 					data= atoi(data_temp);
 					
+					pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 					protocol_buff[6]= data;
+    				pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 				}
 				err= 0;
 			}
@@ -242,6 +248,7 @@ uint8_t JAG_Analysis(uint16_t len)
 					
 					u32_value= real_to_u32(f_value);
 			
+					pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 					if(little_endian)
 					{
 						protocol_buff[7]= _low_word_int32(u32_value);
@@ -252,6 +259,7 @@ uint8_t JAG_Analysis(uint16_t len)
 						protocol_buff[7]= _high_word_int32(u32_value);
 						protocol_buff[8]= _low_word_int32(u32_value);
 					}
+    				pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 				}
 				err= 0;
 			}
@@ -268,11 +276,15 @@ uint8_t JAG_Analysis(uint16_t len)
 			{
 				if(serial_buff[8]== 'L')		//LOW
 				{	
+					pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 					protocol_buff[2]= 2;
+    				pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 				}
 				else
 				{
+					pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 					protocol_buff[2]= 1;
+    				pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 				}
 				err= 0;
 			}
@@ -303,6 +315,7 @@ uint16_t JAG_DataOutput(char* strOutput)
 	float * floatMeasuredValue  = (float *)cMeasuredValueBuffer;
 	float * floatC_TEMP = (float *)cC_TEMPBuffer;
     
+	pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁
 	if(little_endian)
 	{
 		cMeasuredValueBuffer[3] = protocol_buff[4]>>8;
@@ -329,6 +342,8 @@ uint16_t JAG_DataOutput(char* strOutput)
 		cC_TEMPBuffer[0] = protocol_buff[8]&0x00FF;
 		//		printf("DELTAF_DataOutput::big_endian\r\n");
 	}
+    pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
+    
     sprintf(strOutput, "%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f",      
             *floatMeasuredValue, // 30004	    Real	Measured Value	
             *floatC_TEMP,        // 30006       Real    Flow Setpoint

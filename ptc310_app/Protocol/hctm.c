@@ -69,6 +69,7 @@ uint8_t HCTM_WCPC0703E_Analysis(uint16_t len)
 		f_value= atof(data_temp);
 		u32_value= real_to_u32(f_value);
 		
+		pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 		if(little_endian)
 		{
 			protocol_buff[1 + 2*i]= _low_word_int32(u32_value);
@@ -79,6 +80,7 @@ uint8_t HCTM_WCPC0703E_Analysis(uint16_t len)
 			protocol_buff[1 + 2*i]= _high_word_int32(u32_value);
 			protocol_buff[2 + 2*i]= _low_word_int32(u32_value);
 		}
+    	pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 		
 		ptr= eptr+ 2;
 	}
@@ -104,6 +106,7 @@ uint16_t HCTM_WCPC0703E_DataOutput(char* strOutput)
 	float * floatParticleCM3    = (float *)cParticleCM3Buffer;
 	float * floatTotalParticle  = (float *)cTotalParticleBuffer;
 	
+	pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁
 	if(little_endian)
 	{
 		cParticleSECBuffer[3] = protocol_buff[2]>>8;
@@ -140,6 +143,8 @@ uint16_t HCTM_WCPC0703E_DataOutput(char* strOutput)
 		cTotalParticleBuffer[0] = protocol_buff[6]&0x00FF;
 		//		printf("DELTAF_DataOutput::big_endian\r\n");
 	}
+    pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
+    
     sprintf(strOutput, "%f,%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f",
             *floatParticleSEC,     // 30002	Real	Particle / SEC
             *floatParticleCM3,     // 30004	Real	Particle / cm3

@@ -85,7 +85,9 @@ uint8_t PEAK_Analysis(uint16_t len)
 		strncpy((char*)data_temp,(const char*)(serial_buff+data_pos),str_size);
 		data= atoi(data_temp);
 		
+		pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 		protocol_buff[1]= data;
+    	pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 		data_pos+= str_size + 1;
 	}
 	else
@@ -110,7 +112,9 @@ uint8_t PEAK_Analysis(uint16_t len)
 		strncpy((char*)data_temp,(const char*)(serial_buff+data_pos),str_size);
 		data= atoi(data_temp);
 		
+		pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 		protocol_buff[2]= data;
+    	pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 		data_pos+= str_size + 1;
 	}
 	else
@@ -134,7 +138,9 @@ uint8_t PEAK_Analysis(uint16_t len)
 		
 		if(str_size)
 		{
+    		pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁
 			str_ptr= (uint8_t*)(&protocol_buff[3 + i* 8]);
+    		pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
 			for(j= 0;j< str_size;j++)
 			{
 				str_ptr[j]=  *(serial_buff + data_pos + j);
@@ -166,6 +172,7 @@ uint8_t PEAK_Analysis(uint16_t len)
 				f_value= atof(data_temp);
 				u32_value= real_to_u32(f_value);
 				
+				pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 				if(little_endian)
 				{
 					protocol_buff[7 + 8 * i]= _low_word_int32(u32_value);
@@ -176,6 +183,7 @@ uint8_t PEAK_Analysis(uint16_t len)
 					protocol_buff[7 + 8 * i]= _high_word_int32(u32_value);
 					protocol_buff[8 + 8 * i]= _low_word_int32(u32_value);
 				}
+   				pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 			}
 			data_pos+= str_size + 1;
 		}
@@ -205,6 +213,7 @@ uint8_t PEAK_Analysis(uint16_t len)
 				f_value= atof(data_temp);
 				u32_value= real_to_u32(f_value);
 				
+				pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 				if(little_endian)
 				{
 					protocol_buff[9 + 8 * i]= _low_word_int32(u32_value);
@@ -215,6 +224,7 @@ uint8_t PEAK_Analysis(uint16_t len)
 					protocol_buff[9 + 8 * i]= _high_word_int32(u32_value);
 					protocol_buff[10 + 8 * i]= _low_word_int32(u32_value);
 				}
+   				pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 			}
 			data_pos+= str_size + 1;
 		}
@@ -258,6 +268,7 @@ uint16_t PEAK_DataOutput(char* strOutput)
     
     float  floatArea[4], floatConcent[4];
     
+    pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁
 	if(little_endian)
 	{
         // Area / GAS1	
@@ -366,6 +377,8 @@ uint16_t PEAK_DataOutput(char* strOutput)
 		cConcentBuffer[0] = protocol_buff[34]&0x00FF;
         floatConcent[3] = *floatConcentBufferPtr;
     }
+    pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
+    
     sprintf(strOutput, "%f,%f,%f,%f,%f,%f,%f,%f,%.1f,%.1f",
           floatArea[0],       // Real    Area / GAS1	
           floatConcent[0],    // Real    Concent / GAS1	

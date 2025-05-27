@@ -51,18 +51,23 @@ uint8_t TELEDYNE_Analysis(uint16_t len)
         stop_pos= strstr(start_pos,"%");
         if(stop_pos!= NULL)
         {
+        	pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
             protocol_buff[3]= 1;
+        	pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
         }
         else
         {
             stop_pos= strstr(start_pos,"ppm");
             if(stop_pos!= NULL)
             {
+        		pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
                 protocol_buff[3]= 2;
+       			pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
             }
             else
             {
                 stop_pos= strstr(start_pos,"ppb");
+        		pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
                 if(stop_pos!= NULL)
                 {
                     protocol_buff[3]= 3;
@@ -71,10 +76,15 @@ uint8_t TELEDYNE_Analysis(uint16_t len)
                 {
                     protocol_buff[3]= 0;
                 }
+       			pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
             }
         }
+		
+		pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁
+		int16_t three_flag = protocol_buff[3];
+    	pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
 
-        if(protocol_buff[3])
+        if(three_flag)
         {
             size= stop_pos - start_pos;
             memcpy(data_temp,start_pos,size);
@@ -82,7 +92,8 @@ uint8_t TELEDYNE_Analysis(uint16_t len)
 
             f_value= atof(data_temp);
             u32_value= real_to_u32(f_value);
-
+			
+			pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
             if(little_endian)
             {
                 protocol_buff[1]= _low_word_int32(u32_value);
@@ -93,6 +104,7 @@ uint8_t TELEDYNE_Analysis(uint16_t len)
                 protocol_buff[1]= _high_word_int32(u32_value);
                 protocol_buff[2]= _low_word_int32(u32_value);
             }
+        	pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 
             err= 0;
         }
@@ -112,6 +124,7 @@ uint16_t TELEDYNE_DataOutput(char* strOutput)
 	char cConcentrationBuffer[4] = {0};
 	float * floatConcentration  = (float *)cConcentrationBuffer;
 
+    pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁
 	if(little_endian)
 	{
 		cConcentrationBuffer[3] = protocol_buff[2]>>8;
@@ -128,6 +141,8 @@ uint16_t TELEDYNE_DataOutput(char* strOutput)
 		cConcentrationBuffer[0] = protocol_buff[2]&0x00FF;
 		//		printf("DELTAF_DataOutput::big_endian\r\n");
 	}
+    pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
+    
     sprintf(strOutput, "%f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f",
             *floatConcentration, // 30002       Real    Concentration
             0.0,

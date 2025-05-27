@@ -76,6 +76,7 @@ uint8_t RELIYA_HGPC_100_Analysis(uint16_t len)
 		
 		u32_value= real_to_u32(f_value);
 		
+        pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 		if(little_endian)
 		{
 			protocol_buff[1 + 2*i]= _low_word_int32(u32_value);
@@ -86,6 +87,7 @@ uint8_t RELIYA_HGPC_100_Analysis(uint16_t len)
 			protocol_buff[1 + 2*i]= _high_word_int32(u32_value);
 			protocol_buff[2 + 2*i]= _low_word_int32(u32_value);
 		}
+        pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 	}
 
 	return 0;
@@ -115,6 +117,7 @@ uint16_t RELIYA_HGPC_100_DataOutput(char* strOutput)
 	float * floatCounterZeroPointThreeBuffer = (float *)(cCounterZeroPointThreeBuffer);
 	float * floatCounterZeroPointFiveBuffer  = (float *)(cCounterZeroPointFiveBuffer);
 		
+    pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁
 	if(little_endian)
 	{
 		cCounterZeroPointOneBuffer[3] = protocol_buff[2]>>8;
@@ -161,6 +164,7 @@ uint16_t RELIYA_HGPC_100_DataOutput(char* strOutput)
 		cCounterZeroPointFiveBuffer[0] = protocol_buff[8]&0x00FF;
 		//		printf("DELTAF_DataOutput::big_endian\r\n");
 	}
+    pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
 
 	// printf("DELTAF_DataOutput::cO2ppbBuffer = [%02X, %02X, %02X, %02X]\r\n", 
 	// 	cO2ppbBuffer[0], cO2ppbBuffer[1], cO2ppbBuffer[2], cO2ppbBuffer[3]);

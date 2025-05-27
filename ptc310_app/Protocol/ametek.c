@@ -75,7 +75,8 @@ uint8_t AMETEK_2850_Analysis(uint16_t len)
             data_1= _high_word_int32(u32_value);
             data_2= _low_word_int32(u32_value);
         }
-
+		
+		pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
         switch(cmd_cnt)
         {
         case 0:
@@ -97,6 +98,7 @@ uint8_t AMETEK_2850_Analysis(uint16_t len)
         default:
             break;
         }
+    	pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
     }
 
     return err;
@@ -134,7 +136,8 @@ uint16_t AMETEK_2850_DataOutput(char* strOutput)
 	float * floatConcentrationBufferPtr   = (float *)(cConcentrationBuffer);
 
     float  floatConcentration[6];
-
+	
+	pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁
 	if(little_endian)
 	{
         // Concentration / GAS1
@@ -213,6 +216,8 @@ uint16_t AMETEK_2850_DataOutput(char* strOutput)
 		cConcentrationBuffer[0] = protocol_buff[35]&0x00FF;
         floatConcentration[5] = *floatConcentrationBufferPtr;
     }
+    pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
+    		
     sprintf(strOutput, "%f,%f,%f,%f,%f,%f,%.1f,%.1f,%.1f,%.1f",
           floatConcentration[0],    // Real    Concentration / GAS1
           floatConcentration[1],    // Real    Concentration / GAS2
@@ -256,7 +261,8 @@ uint8_t AMETEK_5000_Analysis(uint16_t len)
 
         f_value= atof(data_temp);
         u32_value= real_to_u32(f_value);
-
+		
+		pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
         if(little_endian)
         {
             protocol_buff[9]= _low_word_int32(u32_value);
@@ -267,6 +273,7 @@ uint8_t AMETEK_5000_Analysis(uint16_t len)
             protocol_buff[9]= _high_word_int32(u32_value);
             protocol_buff[10]= _low_word_int32(u32_value);
         }
+    	pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
     }
 
     return err;
@@ -304,7 +311,8 @@ uint16_t AMETEK_5000_DataOutput(char* strOutput)
 	float * floatConcentrationBufferPtr   = (float *)(cConcentrationBuffer);
 
     float  floatConcentration[6];
-
+	
+	pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁
 	if(little_endian)
 	{
         // Concentration / GAS1
@@ -383,6 +391,8 @@ uint16_t AMETEK_5000_DataOutput(char* strOutput)
 		cConcentrationBuffer[0] = protocol_buff[35]&0x00FF;
         floatConcentration[5] = *floatConcentrationBufferPtr;
     }
+    pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
+    		
     sprintf(strOutput, "%f,%f,%f,%f,%f,%f,%.1f,%.1f,%.1f,%.1f",
           floatConcentration[0],    // Real    Concentration / GAS1
           floatConcentration[1],    // Real    Concentration / GAS2

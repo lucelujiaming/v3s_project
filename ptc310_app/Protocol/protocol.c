@@ -18,6 +18,7 @@
 #include "protocol.h"
 #include "usart_operate.h"
 
+#include "v3s_gpio_operation.h"
 
 #include "pms.h"
 #include "meeco.h"
@@ -58,6 +59,8 @@ char data_temp[100];
 int16_t* protocol_buff;
 uint8_t* serial_buff;
 uint8_t little_endian;
+
+extern char instrument_uart_device_protocal[32];
 
 PTC310_INTERFACE_STATUS g_iInstrumentUsartOfflineStatus = INSTRUMENT_USART_ONLINE;
 
@@ -205,12 +208,34 @@ void Protocol_Proc(int fd)
 	uint8_t err;
 	uint16_t cp_fault_times, cp_protocol_id; 
 	
+    // UART2_RE为低电平时从外接收信息，高电平或者开路禁用接收。UART2_RE为PB2。
+    // UART2_DE为高电平时向外发送信息，低电平或者开路禁用发送。UART2_DE为PB3。
+    // UART2_RE(PB2)为低电平使能接收信息。
+	if(strcmp(instrument_uart_device_protocal, "232") == 0)
+	{
+		// printf("V3S_GPIO_SetPin(V3S_PB, 2, 1) \n");
+		// V3S_GPIO_SetPin(V3S_PB, 2, 1);
+	}
+	else 
+	{
+		// printf("V3S_GPIO_SetPin(V3S_PB, 2, 0) \n");
+		V3S_GPIO_SetPin(V3S_PB, 2, 0);
+	}
+    // UART2_DE(PB3)为低电平禁用发送信息。
+	V3S_GPIO_SetPin(V3S_PB, 3, 0);
+	usleep(500);
 	// len= USART3_FrameReceived();
 	len= Instrument_USART_FrameReceived(fd);
 	// printf("Instrument_USART_FrameReceived read %d\n", len);
 	if(len > 0)
 	{
 		// printf("Protocol_Proc analysis_proc %d\n", len);
+		// for(int i = 0 ; i < len; i++)
+		// {
+		//  	printf("<%02X> ", serial_buff[i]);
+		// }
+		// printf("\nEnd of Protocol_Proc recv and len is %d\n", len);
+		
 		if(g_iInstrumentUsartOfflineStatus == INSTRUMENT_USART_OFFLINE)
 		{
 			g_iInstrumentUsartOfflineStatus = INSTRUMENT_USART_ONLINE;
@@ -247,7 +272,7 @@ void Protocol_Proc(int fd)
 	else if(len == 0)
 	{
 		// printf("\n");
-		printf("Instrument does not work and nothing read\n");
+		// printf("Instrument does not work and nothing read\n");
 		if(g_iInstrumentUsartOfflineStatus == INSTRUMENT_USART_ONLINE)
 		{
 			g_iInstrumentUsartOfflineStatus = INSTRUMENT_USART_OFFLINE;
@@ -278,12 +303,40 @@ void Protocol_Proc(int fd)
 	if(Timer_Expires((MTIMER*)&tm_FrmReq))
 	{
 		len= (*ProtocolConvert->request_proc)();
-		// printf("Protocol_Proc request_proc %d\n", len);
+		// printf("[%s:%s:%d] Protocol_Proc request_proc %d\n",
+		// 				__FILE__, __FUNCTION__, __LINE__, len);
 		
 		if(len)
 		{
 		    // printf("Instrument_USART_Send request_proc %d\n", len);
 			// USART3_Send(len);
+            
+            // UART2_RE为低电平时从外接收信息，高电平或者开路禁用接收。UART2_RE为PB2。
+            // UART2_DE为高电平时向外发送信息，低电平或者开路禁用发送。UART2_DE为PB3。
+            // UART2_RE(PB2)为高电平禁用接收信息。
+            
+			if(strcmp(instrument_uart_device_protocal, "232") == 0)
+			{
+				// printf("V3S_GPIO_SetPin(V3S_PB, 2, 1) \n");
+				// V3S_GPIO_SetPin(V3S_PB, 2, 1);
+			}
+			else 
+			{
+				// printf("V3S_GPIO_SetPin(V3S_PB, 2, 1) \n");
+            	V3S_GPIO_SetPin(V3S_PB, 2, 1);
+			}
+            // UART2_DE(PB3)为高电平使能发送信息。
+            V3S_GPIO_SetPin(V3S_PB, 3, 1);
+		    // 做一点延时，避免发的太快，导致电脑时序混乱。
+			usleep(500);
+			
+			// printf("Protocol_Proc Instrument_USART_Send %d\n", len);
+			// for(int i = 0 ; i < len; i++)
+			// {
+			//  	printf("<%02X> ", serial_buff[i]);
+			// }
+			// printf("\nEnd of Protocol_Proc Instrument_USART_Send and len is %d\n", len);
+		
             Instrument_USART_Send(fd, len);
 		}
 	}

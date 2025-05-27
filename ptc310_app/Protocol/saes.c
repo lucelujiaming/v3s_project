@@ -126,13 +126,17 @@ uint8_t SAES_Analysis(uint16_t len)
         //R/M, 30002
         if((*start_pos)== 'M')
         {
+        	pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
             protocol_buff[1]= 1;
+        	pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
         }
         else
         {
             if((*start_pos)== 'R')
             {
+        		pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
                 protocol_buff[1]= 0;
+        		pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
             }
             else
             {
@@ -144,13 +148,17 @@ uint8_t SAES_Analysis(uint16_t len)
         //E/S, 30003
         if((*start_pos)== 'S')
         {
+        	pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
             protocol_buff[2]= 1;
+        	pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
         }
         else
         {
             if((*start_pos)== 'E')
             {
+        		pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
                 protocol_buff[2]= 0;
+        		pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
             }
             else
             {
@@ -173,7 +181,9 @@ uint8_t SAES_Analysis(uint16_t len)
         
         //Alarm, 30004
         tab[0]= ',';
+    	pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
         protocol_buff[3]= 0;
+        pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
         med_pos= strstr((char*)start_pos,tab);
         if(med_pos!= NULL && med_pos< stop_pos)
         {
@@ -184,7 +194,9 @@ uint8_t SAES_Analysis(uint16_t len)
                 {
                     if((*(start_pos+j))== '1')
                     {
-                        protocol_buff[3]|= 0x01 << (7 - j);
+						pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
+						protocol_buff[3]|= 0x01 << (7 - j);
+						pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
                     }
                 }
                 start_pos= med_pos+1;
@@ -204,7 +216,9 @@ uint8_t SAES_Analysis(uint16_t len)
         for(j= 0;j< 6;j++)
         {
             //Name, 30007
+   			pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁
             str_ptr= (uint8_t*)(&protocol_buff[6 + 5*j]);
+    		pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
             memset(str_ptr,0,6);
 
             med_pos= strstr(start_pos,tab);
@@ -238,6 +252,7 @@ uint8_t SAES_Analysis(uint16_t len)
                 f_value= atof(data_temp);
                 u32_value= real_to_u32(f_value);
                 
+        		pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
                 if(little_endian)
                 {
                     protocol_buff[9 + 5*j]= _low_word_int32(u32_value);
@@ -248,6 +263,7 @@ uint8_t SAES_Analysis(uint16_t len)
                     protocol_buff[9 + 5*j]= _high_word_int32(u32_value);
                     protocol_buff[10 + 5*j]= _low_word_int32(u32_value);
                 }
+        		pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
                 start_pos= med_pos + 1;
             }
             else
@@ -296,6 +312,7 @@ uint16_t SAES_DataOutput(char* strOutput)
     
     float  floatConcentration[6];
     
+    pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁
 	if(little_endian)
 	{
         // Concentration / GAS1
@@ -374,6 +391,8 @@ uint16_t SAES_DataOutput(char* strOutput)
 		cConcentrationBuffer[0] = protocol_buff[35]&0x00FF;
         floatConcentration[5] = *floatConcentrationBufferPtr;
     }
+    pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
+    
     sprintf(strOutput, "%f,%f,%f,%f,%f,%f,%.1f,%.1f,%.1f,%.1f",
           floatConcentration[0],    // Real    Concentration / GAS1	
           floatConcentration[1],    // Real    Concentration / GAS2	

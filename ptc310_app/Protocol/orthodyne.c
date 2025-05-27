@@ -60,7 +60,9 @@ uint8_t ORTHODYNE_Analysis(uint16_t len)
                 med_pos= start_pos;
                 tab_pos= strstr(med_pos,tab);
                 size= tab_pos - med_pos;
+    			pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁
                 str_ptr= (uint8_t*)(&protocol_buff[1 + 8 * j]);
+    			pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
                 memmove(str_ptr, med_pos, size);
 
                 //Concentration
@@ -84,7 +86,8 @@ uint8_t ORTHODYNE_Analysis(uint16_t len)
                 }
 
                 u32_value= real_to_u32(f_value);
-
+				
+				pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
                 if(little_endian)
                 {
                     protocol_buff[5 + 8 * j]= _low_word_int32(u32_value);
@@ -95,6 +98,7 @@ uint8_t ORTHODYNE_Analysis(uint16_t len)
                     protocol_buff[5 + 8 * j]= _high_word_int32(u32_value);
                     protocol_buff[6 + 8 * j]= _low_word_int32(u32_value);
                 }
+    			pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
                 //Alarm
                 med_pos= tab_pos+1;
                 tab_pos= strstr(med_pos,tab);
@@ -103,7 +107,9 @@ uint8_t ORTHODYNE_Analysis(uint16_t len)
                 memset(data_temp,0,20);
                 strncpy(data_temp,(const char*)(med_pos),size);
                 data= atoi(data_temp);
+				pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
                 protocol_buff[8+8*j]= data;
+    			pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
             }
             else
             {
@@ -154,6 +160,7 @@ uint16_t ORTHODYNE_DataOutput(char* strOutput)
 
     float  floatConcent[6];
 
+    pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁
 	if(little_endian)
 	{
         // Concent / GAS1
@@ -232,6 +239,8 @@ uint16_t ORTHODYNE_DataOutput(char* strOutput)
 		cConcentBuffer[0] = protocol_buff[46]&0x00FF;
         floatConcent[5] = *floatConcentBufferPtr;
     }
+    pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
+    
     sprintf(strOutput, "%f,%f,%f,%f,%f,%f,%.1f,%.1f,%.1f,%.1f",
           floatConcent[0],    // Real    Concent / GAS1
           floatConcent[1],    // Real    Concent / GAS2

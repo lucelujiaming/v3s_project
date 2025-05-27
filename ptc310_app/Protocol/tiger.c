@@ -80,7 +80,8 @@ uint8_t TIGER_Analysis(uint16_t len)
 
 			f_value= atof(data_temp);
 			u32_value= real_to_u32(f_value);
-
+			
+			pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 			if(little_endian)
 			{
 				protocol_buff[6]= _low_word_int32(u32_value);
@@ -91,6 +92,7 @@ uint8_t TIGER_Analysis(uint16_t len)
 				protocol_buff[6]= _high_word_int32(u32_value);
 				protocol_buff[7]= _low_word_int32(u32_value);
 			}
+        	pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 
 			err= 0;
 		}
@@ -98,7 +100,9 @@ uint8_t TIGER_Analysis(uint16_t len)
 	case 1:
 		if(*(serial_buff)>= '0' && *(serial_buff)<= '3')
 		{
+        	pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 			protocol_buff[5]= *(serial_buff)- '0';
+        	pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 			err= 0;
 		}
 		break;
@@ -115,7 +119,9 @@ uint8_t TIGER_Analysis(uint16_t len)
 
 		if(str_size)
 		{
+        	pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 			strncpy((char*)&protocol_buff[1],(const char*)(serial_buff),str_size);
+        	pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 			err= 0;
 		}
 		break;
@@ -140,6 +146,7 @@ uint16_t TIGER_DataOutput(char* strOutput)
 	char cConcertrationBuffer[4] = {0};
 	float * floatConcertration  = (float *)cConcertrationBuffer;
 
+    pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁
 	if(little_endian)
 	{
 		cConcertrationBuffer[3] = protocol_buff[7]>>8;
@@ -156,6 +163,8 @@ uint16_t TIGER_DataOutput(char* strOutput)
 		cConcertrationBuffer[0] = protocol_buff[7]&0x00FF;
 		//		printf("DELTAF_DataOutput::big_endian\r\n");
 	}
+    pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
+    
     sprintf(strOutput, "%f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f",
             *floatConcertration, // Real    Concertration(ppb)
             0.0, 0.0, 0.0, 0.0,

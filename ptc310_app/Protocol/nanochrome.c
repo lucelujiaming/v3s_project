@@ -103,7 +103,9 @@ uint8_t SERVOMEX_NANO_Analysis(uint16_t len)
                     buff++;
                 }
                 
+				pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
                 protocol_buff[1]= data;
+    			pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
             }
             break;
         case 1:
@@ -129,6 +131,7 @@ uint8_t SERVOMEX_NANO_Analysis(uint16_t len)
                         f_value= atof(data_temp);
                         u32_value= real_to_u32(f_value);
                         
+						pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
                         if(little_endian)
                         {
                             protocol_buff[2 + 4 * i]= _low_word_int32(u32_value);
@@ -139,6 +142,7 @@ uint8_t SERVOMEX_NANO_Analysis(uint16_t len)
                             protocol_buff[2 + 4 * i]= _high_word_int32(u32_value);
                             protocol_buff[3 + 4 * i]= _low_word_int32(u32_value);
                         }
+    					pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
                         buff+= 10;
                         
                         //
@@ -146,7 +150,9 @@ uint8_t SERVOMEX_NANO_Analysis(uint16_t len)
                         {
                             buff++;
                             
+							pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
                             protocol_buff[4 + 4*i]= *buff - '0';
+    						pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
                             buff++;
                         }
                         else
@@ -158,7 +164,9 @@ uint8_t SERVOMEX_NANO_Analysis(uint16_t len)
                         {
                             buff++;
                             
+							pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
                             protocol_buff[5 + 4*i]= *buff- '0';
+    						pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
                             buff++;
                         }
                         else
@@ -225,6 +233,7 @@ uint16_t SERVOMEX_NANO_DataOutput(char* strOutput)
 
     float  floatConcentration[10];
 
+    pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁
 	if(little_endian)
 	{
         // Concentration_0
@@ -351,6 +360,8 @@ uint16_t SERVOMEX_NANO_DataOutput(char* strOutput)
 		cConcentrationBuffer[0] = protocol_buff[39]&0x00FF;
         floatConcentration[9] = *floatConcentrationrationBufferPtr;
     }
+    pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
+    
     sprintf(strOutput, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f",
           floatConcentration[0],    // Real    Concentration_0
           floatConcentration[1],    // Real    Concentration_1

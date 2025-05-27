@@ -112,6 +112,10 @@ uint8_t DELTAF_Analysis(uint16_t len)
     	pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 		err= 0;
 	}
+	else
+	{
+		printf("deltaf_check_sum error with %d\n", len);
+	}
 
 	return err;
 }

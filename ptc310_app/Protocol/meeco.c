@@ -92,7 +92,9 @@ uint8_t MEECO_Analysis(uint16_t len)
 				strncpy((char*)data_temp,(const char*)(pos+1),str_size);
 				data= atoi(data_temp);
 				
+				pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 				protocol_buff[1]= data;
+    			pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 			}
 			err= 0;
 		}
@@ -129,7 +131,9 @@ uint8_t MEECO_Analysis(uint16_t len)
 				strncpy((char*)data_temp,(const char*)(pos+1),str_size);
 				data= atoi(data_temp);
 				
+				pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 				protocol_buff[2]= data;
+    			pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 			}
 			err= 0;
 		}
@@ -169,6 +173,7 @@ uint8_t MEECO_Analysis(uint16_t len)
 				f_value= atof(data_temp);
 				u32_value= real_to_u32(f_value);
 				
+				pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 				if(little_endian)
 				{
 					protocol_buff[3]= _low_word_int32(u32_value);
@@ -179,6 +184,7 @@ uint8_t MEECO_Analysis(uint16_t len)
 					protocol_buff[3]= _high_word_int32(u32_value);
 					protocol_buff[4]= _low_word_int32(u32_value);
 				}
+    			pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 			}
 			err= 0;
 		}
@@ -217,6 +223,7 @@ uint8_t MEECO_Analysis(uint16_t len)
 				f_value= atof(data_temp);
 				u32_value= real_to_u32(f_value);
 				
+				pthread_rwlock_wrlock(&ireg_rwlock); // 获取IReg的写锁
 				if(little_endian)
 				{
 					protocol_buff[5]= _low_word_int32(u32_value);
@@ -227,6 +234,7 @@ uint8_t MEECO_Analysis(uint16_t len)
 					protocol_buff[5]= _high_word_int32(u32_value);
 					protocol_buff[6]= _low_word_int32(u32_value);
 				}
+    			pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的写锁
 			}
 			err= 0;
 		}
@@ -254,6 +262,7 @@ uint16_t MEECO_DataOutput(char* strOutput)
 	float * floatDisplayValue  = (float *)cDisplayValueBuffer;
 	float * floatFlowSetpoint = (float *)cFlowSetpointBuffer;
     
+    pthread_rwlock_rdlock(&ireg_rwlock); // 获取IReg的读锁
 	if(little_endian)
 	{
 		cDisplayValueBuffer[3] = protocol_buff[4]>>8;
@@ -280,6 +289,8 @@ uint16_t MEECO_DataOutput(char* strOutput)
 		cFlowSetpointBuffer[0] = protocol_buff[6]&0x00FF;
 		//		printf("DELTAF_DataOutput::big_endian\r\n");
 	}
+    pthread_rwlock_unlock(&ireg_rwlock); // 释放IReg的读锁
+    
     sprintf(strOutput, "%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f",
             *floatDisplayValue,  // 30004   Real    Display Value   
             *floatFlowSetpoint,  // 30006   Real    Flow Setpoint
